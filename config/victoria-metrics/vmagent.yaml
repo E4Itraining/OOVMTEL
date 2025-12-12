@@ -1,0 +1,67 @@
+# VMAgent Configuration for Industrial Observability
+# Collects metrics from OTEL and forwards to VictoriaMetrics
+
+global:
+  scrape_interval: 10s
+  scrape_timeout: 5s
+  external_labels:
+    environment: industrial
+    platform: oovmtel
+
+scrape_configs:
+  # SCADA Metrics Simulation
+  - job_name: 'scada-metrics'
+    static_configs:
+      - targets: ['scada-simulator:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: data_source
+        replacement: scada
+
+  # MES Metrics Simulation
+  - job_name: 'mes-metrics'
+    static_configs:
+      - targets: ['mes-simulator:8081']
+    relabel_configs:
+      - target_label: data_source
+        replacement: mes
+
+  # PLM Metrics Simulation
+  - job_name: 'plm-metrics'
+    static_configs:
+      - targets: ['plm-simulator:8082']
+    relabel_configs:
+      - target_label: data_source
+        replacement: plm
+
+  # OPC-UA Gateway Metrics
+  - job_name: 'opcua-gateway'
+    static_configs:
+      - targets: ['opcua-simulator:8083']
+    relabel_configs:
+      - target_label: data_source
+        replacement: opcua
+
+  # OTEL Collector Metrics
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8888']
+
+  # Kafka Metrics (JMX Exporter)
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:7071']
+
+  # Self monitoring
+  - job_name: 'vmagent'
+    static_configs:
+      - targets: ['localhost:8429']
+
+remoteWrite:
+  - url: http://victoria-metrics:8428/api/v1/write
+    queue_config:
+      max_samples_per_send: 10000
+      batch_send_deadline: 5s
+      capacity: 100000
+      max_shards: 30

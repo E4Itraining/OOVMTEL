@@ -1,0 +1,474 @@
+# =============================================================================
+# OOVMTEL - Industrial Observability Platform
+# OpenObserve + VictoriaMetrics + OpenTelemetry + OpenSearch + Kafka
+# Optimized for high-volume IT/OT data streaming
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # KAFKA CLUSTER - Message Buffer for High-Volume Streaming
+  # ===========================================================================
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    container_name: oovmtel-zookeeper
+    hostname: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka
+    hostname: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Performance tuning for high volume
+      KAFKA_NUM_PARTITIONS: 12
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_BYTES: 10737418240
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_MESSAGE_MAX_BYTES: 10485760
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 10485760
+      # JVM tuning
+      KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: oovmtel-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: oovmtel
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - oovmtel-network
+    restart: unless-stopped
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command: |
+      "
+      echo 'Creating Kafka topics for industrial data...'
+
+      # SCADA metrics topic - high throughput
+      kafka-topics --create --if-not-exists --topic scada-metrics \
+        --bootstrap-server kafka:9092 \
+        --partitions 12 --replication-factor 1 \
+        --config retention.ms=86400000 \
+        --config compression.type=lz4
+
+      # MES events topic
+      kafka-topics --create --if-not-exists --topic mes-events \
+        --bootstrap-server kafka:9092 \
+        --partitions 8 --replication-factor 1 \
+        --config retention.ms=86400000
+
+      # PLM data topic
+      kafka-topics --create --if-not-exists --topic plm-data \
+        --bootstrap-server kafka:9092 \
+        --partitions 4 --replication-factor 1 \
+        --config retention.ms=172800000
+
+      # OPC-UA nodes topic
+      kafka-topics --create --if-not-exists --topic opcua-nodes \
+        --bootstrap-server kafka:9092 \
+        --partitions 8 --replication-factor 1 \
+        --config retention.ms=86400000
+
+      # Industrial telemetry (OTLP)
+      kafka-topics --create --if-not-exists --topic industrial-telemetry \
+        --bootstrap-server kafka:9092 \
+        --partitions 12 --replication-factor 1 \
+        --config retention.ms=86400000
+
+      # Processed telemetry output
+      kafka-topics --create --if-not-exists --topic processed-telemetry \
+        --bootstrap-server kafka:9092 \
+        --partitions 6 --replication-factor 1 \
+        --config retention.ms=172800000
+
+      echo 'Kafka topics created successfully!'
+      kafka-topics --list --bootstrap-server kafka:9092
+      "
+    networks:
+      - oovmtel-network
+
+  # ===========================================================================
+  # VICTORIA METRICS - High-Performance Time Series Database
+  # ===========================================================================
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:v1.96.0
+    container_name: oovmtel-victoria-metrics
+    ports:
+      - "8428:8428"
+    command:
+      - "-storageDataPath=/victoria-metrics-data"
+      - "-httpListenAddr=:8428"
+      - "-retentionPeriod=90d"
+      # Performance tuning for high volume
+      - "-search.maxConcurrentRequests=32"
+      - "-search.maxQueueDuration=30s"
+      - "-search.maxUniqueTimeseries=1000000"
+      - "-search.maxSamplesPerSeries=100000000"
+      - "-search.maxSamplesPerQuery=1000000000"
+      # Memory settings
+      - "-memory.allowedPercent=80"
+      # Ingestion settings
+      - "-maxLabelsPerTimeseries=40"
+      - "-maxLabelValueLen=1024"
+      # Deduplication
+      - "-dedup.minScrapeInterval=10s"
+    volumes:
+      - victoria_metrics_data:/victoria-metrics-data
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8428/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  vmagent:
+    image: victoriametrics/vmagent:v1.96.0
+    container_name: oovmtel-vmagent
+    depends_on:
+      victoria-metrics:
+        condition: service_healthy
+    ports:
+      - "8429:8429"
+    command:
+      - "-promscrape.config=/etc/vmagent/vmagent.yaml"
+      - "-remoteWrite.url=http://victoria-metrics:8428/api/v1/write"
+      - "-remoteWrite.tmpDataPath=/tmp/vmagent"
+      # Performance tuning
+      - "-remoteWrite.maxDiskUsagePerURL=1GB"
+      - "-remoteWrite.queues=16"
+      - "-remoteWrite.maxBlockSize=32MB"
+    volumes:
+      - ./config/victoria-metrics/vmagent.yaml:/etc/vmagent/vmagent.yaml:ro
+      - vmagent_data:/tmp/vmagent
+    networks:
+      - oovmtel-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OPENOBSERVE - Logs, Metrics, Traces (All-in-One)
+  # ===========================================================================
+
+  openobserve:
+    image: openobserve/openobserve:v0.10.1
+    container_name: oovmtel-openobserve
+    ports:
+      - "5080:5080"
+      - "5081:5081"
+    environment:
+      ZO_ROOT_USER_EMAIL: "root@example.com"
+      ZO_ROOT_USER_PASSWORD: "Complexpass#123"
+      ZO_DATA_DIR: "/data"
+      # Performance settings
+      ZO_MAX_FILE_SIZE_ON_DISK: 128
+      ZO_MAX_FILE_RETENTION_TIME: 600
+      ZO_COMPACT_ENABLED: "true"
+      ZO_COMPACT_INTERVAL: 60
+      ZO_MEMORY_CACHE_ENABLED: "true"
+      ZO_MEMORY_CACHE_MAX_SIZE: 1024
+      # OTEL settings
+      ZO_OTEL_ENABLED: "true"
+      ZO_PROMETHEUS_ENABLED: "true"
+      # Telemetry
+      ZO_TELEMETRY: "false"
+    volumes:
+      - openobserve_data:/data
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OPENSEARCH - Full-Text Search and Analytics
+  # ===========================================================================
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.1
+    container_name: oovmtel-opensearch
+    environment:
+      - cluster.name=oovmtel-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+      - ./config/opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.1
+    container_name: oovmtel-opensearch-dashboards
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    ports:
+      - "5601:5601"
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+    networks:
+      - oovmtel-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OPENTELEMETRY COLLECTOR - Central Telemetry Pipeline
+  # ===========================================================================
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-otel-collector
+    depends_on:
+      kafka:
+        condition: service_healthy
+      victoria-metrics:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics
+      - "13133:13133" # Health check
+      - "55679:55679" # zPages
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-collector-config.yaml:/etc/otel/config.yaml:ro
+      - industrial_logs:/var/log/industrial
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:13133/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # GRAFANA - Visualization and Dashboards
+  # ===========================================================================
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: oovmtel-grafana
+    depends_on:
+      - victoria-metrics
+      - opensearch
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-opensearch-datasource,victoriametrics-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # INDUSTRIAL DATA SIMULATORS
+  # ===========================================================================
+
+  scada-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-scada-simulator
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_ENDPOINT: http://otel-collector:4318
+      SIMULATOR_TYPE: scada
+      METRICS_PORT: 8080
+      DATA_RATE_PER_SEC: 500
+    ports:
+      - "8080:8080"
+    networks:
+      - oovmtel-network
+    restart: unless-stopped
+
+  mes-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-mes-simulator
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_ENDPOINT: http://otel-collector:4318
+      SIMULATOR_TYPE: mes
+      METRICS_PORT: 8081
+      DATA_RATE_PER_SEC: 100
+    ports:
+      - "8081:8081"
+    networks:
+      - oovmtel-network
+    restart: unless-stopped
+
+  plm-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-plm-simulator
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_ENDPOINT: http://otel-collector:4318
+      SIMULATOR_TYPE: plm
+      METRICS_PORT: 8082
+      DATA_RATE_PER_SEC: 20
+    ports:
+      - "8082:8082"
+    networks:
+      - oovmtel-network
+    restart: unless-stopped
+
+  opcua-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-opcua-simulator
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_ENDPOINT: http://otel-collector:4318
+      SIMULATOR_TYPE: opcua
+      METRICS_PORT: 8083
+      DATA_RATE_PER_SEC: 200
+    ports:
+      - "8083:8083"
+    networks:
+      - oovmtel-network
+    restart: unless-stopped
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+
+networks:
+  oovmtel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+  kafka_data:
+    driver: local
+  victoria_metrics_data:
+    driver: local
+  vmagent_data:
+    driver: local
+  openobserve_data:
+    driver: local
+  opensearch_data:
+    driver: local
+  grafana_data:
+    driver: local
+  industrial_logs:
+    driver: local

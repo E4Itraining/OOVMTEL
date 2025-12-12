@@ -1,0 +1,42 @@
+# Grafana Datasources Configuration
+apiVersion: 1
+
+datasources:
+  # VictoriaMetrics - Time Series Database
+  - name: VictoriaMetrics
+    type: prometheus
+    access: proxy
+    url: http://victoria-metrics:8428
+    isDefault: true
+    jsonData:
+      timeInterval: "10s"
+      httpMethod: POST
+    editable: true
+
+  # OpenSearch - Log Analytics
+  - name: OpenSearch
+    type: grafana-opensearch-datasource
+    access: proxy
+    url: http://opensearch:9200
+    database: "industrial-logs"
+    jsonData:
+      database: "industrial-logs"
+      flavor: "opensearch"
+      version: "2.11.0"
+      timeField: "@timestamp"
+      logLevelField: "level"
+      logMessageField: "message"
+    editable: true
+
+  # OpenSearch - Traces
+  - name: OpenSearch-Traces
+    type: grafana-opensearch-datasource
+    access: proxy
+    url: http://opensearch:9200
+    database: "industrial-traces"
+    jsonData:
+      database: "industrial-traces"
+      flavor: "opensearch"
+      version: "2.11.0"
+      timeField: "@timestamp"
+    editable: true

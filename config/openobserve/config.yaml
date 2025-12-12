@@ -1,0 +1,48 @@
+# OpenObserve Configuration for Industrial Observability
+# High-performance log and trace storage
+
+# Server settings
+ZO_ROOT_USER_EMAIL: "root@example.com"
+ZO_ROOT_USER_PASSWORD: "Complexpass#123"
+
+# HTTP server
+ZO_HTTP_PORT: 5080
+ZO_HTTP_ADDR: "0.0.0.0"
+ZO_GRPC_PORT: 5081
+ZO_GRPC_ADDR: "0.0.0.0"
+
+# Data storage
+ZO_DATA_DIR: "/data"
+ZO_DATA_WAL_DIR: "/data/wal"
+ZO_DATA_STREAM_DIR: "/data/stream"
+
+# Performance settings for high volume
+ZO_MAX_FILE_SIZE_ON_DISK: 128  # MB
+ZO_MAX_FILE_RETENTION_TIME: 600  # seconds
+ZO_FILE_PUSH_INTERVAL: 10  # seconds
+ZO_COMPACT_ENABLED: true
+ZO_COMPACT_INTERVAL: 60  # seconds
+
+# Memory settings
+ZO_MEMORY_CACHE_ENABLED: true
+ZO_MEMORY_CACHE_MAX_SIZE: 1024  # MB
+
+# Query settings
+ZO_QUERY_TIMEOUT: 300  # seconds
+ZO_SEARCH_THREADS: 4
+
+# Ingestion settings
+ZO_INGEST_ALLOWED_UPTO: 24  # hours (allow data up to 24h old)
+ZO_INGEST_MAX_SIZE: 104857600  # 100MB per request
+
+# Telemetry
+ZO_TELEMETRY: false
+
+# Logging
+ZO_LOG_LEVEL: "info"
+
+# Prometheus remote write
+ZO_PROMETHEUS_ENABLED: true
+
+# OTLP ingestion
+ZO_OTEL_ENABLED: true

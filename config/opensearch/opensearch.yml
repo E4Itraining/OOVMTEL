@@ -1,0 +1,37 @@
+# OpenSearch Configuration for Industrial Observability
+# Optimized for high-volume log analytics
+
+cluster.name: industrial-observability
+node.name: opensearch-node1
+network.host: 0.0.0.0
+
+# Discovery settings (single node for dev)
+discovery.type: single-node
+
+# Disable security for development (enable in production)
+plugins.security.disabled: true
+
+# Performance settings for high volume
+indices.memory.index_buffer_size: 20%
+indices.queries.cache.size: 15%
+indices.fielddata.cache.size: 25%
+
+# Thread pool settings
+thread_pool.write.queue_size: 1000
+thread_pool.search.queue_size: 1000
+
+# Index settings
+action.auto_create_index: true
+
+# Logging
+logger.level: INFO
+
+# Path settings
+path.data: /usr/share/opensearch/data
+path.logs: /usr/share/opensearch/logs
+
+# JVM heap (set via environment variable)
+# -Xms4g -Xmx4g recommended for production
+
+# ISM (Index State Management) for log rotation
+# Configured via API after startup

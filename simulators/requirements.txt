@@ -1,0 +1,9 @@
+# Industrial Data Simulator Dependencies
+aiohttp>=3.9.0
+kafka-python>=2.0.2
+prometheus-client>=0.19.0
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-exporter-otlp>=1.21.0
+opentelemetry-instrumentation>=0.42b0
+python-json-logger>=2.0.7
