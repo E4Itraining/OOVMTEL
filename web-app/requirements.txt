@@ -1,0 +1,27 @@
+# OOVMTEL Unified View Web Application
+# Python dependencies
+
+# Web Framework
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+
+# HTTP Client
+httpx==0.26.0
+
+# Data Validation
+pydantic==2.5.3
+
+# WebSocket support (included in uvicorn[standard])
+websockets==12.0
+
+# Async support
+anyio==4.2.0
+
+# JSON handling (standard library, but explicit for clarity)
+# json - standard library
+
+# Optional: For production deployment
+gunicorn==21.2.0
+
+# Optional: For environment variable management
+python-dotenv==1.0.0

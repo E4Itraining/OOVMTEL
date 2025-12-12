@@ -149,6 +149,7 @@ cd OOVMTEL
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
+| **Unified Business-Tech View** | http://localhost:8085 | - |
 | **Grafana** | http://localhost:3000 | admin / admin123 |
 | **OpenObserve** | http://localhost:5080 | root@example.com / Complexpass#123 |
 | **OpenSearch Dashboards** | http://localhost:5601 | - |
@@ -156,6 +157,69 @@ cd OOVMTEL
 | **Victoria Metrics** | http://localhost:8428 | - |
 | **OTEL Collector Health** | http://localhost:13133 | - |
 | **OTEL zPages** | http://localhost:55679 | - |
+
+## Unified Business-Tech View
+
+The platform includes a comprehensive **Unified Business-Tech View** that provides a single-pane-of-glass experience for both business stakeholders and technical teams.
+
+### Features
+
+**Business View:**
+- Overall Equipment Effectiveness (OEE) monitoring
+- Production KPIs (quality rate, cycle time, defects)
+- Equipment status and health monitoring
+- Real-time alarm tracking
+- Process parameters visualization (temperature, pressure, power, vibration)
+
+**Tech View:**
+- Service health status for all platform components
+- Resource utilization (CPU, memory, disk)
+- Data pipeline metrics (ingestion rates, latency, error rates)
+- Storage metrics (VictoriaMetrics, OpenSearch, Kafka)
+- OTEL Collector throughput monitoring
+
+**Unified Insights:**
+- Cross-domain correlation between business and tech events
+- Real-time event timeline combining both domains
+- Automatic metric aggregation and visualization
+
+### Access
+
+The Unified View is available at: **http://localhost:8085**
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Unified Business-Tech View                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐       │
+│  │  Business View  │     │   Unified View  │     │    Tech View    │       │
+│  │  - OEE/KPIs     │     │  - Cross-domain │     │  - Services     │       │
+│  │  - Production   │     │  - Timeline     │     │  - Resources    │       │
+│  │  - Equipment    │     │  - Correlation  │     │  - Pipeline     │       │
+│  └─────────────────┘     └─────────────────┘     └─────────────────┘       │
+│                                   │                                         │
+│                          ┌────────┴────────┐                               │
+│                          │   FastAPI API   │                               │
+│                          │   Port: 8085    │                               │
+│                          └────────┬────────┘                               │
+│                                   │                                         │
+│        ┌──────────────────────────┼──────────────────────────┐             │
+│        │                          │                          │             │
+│        ▼                          ▼                          ▼             │
+│  ┌───────────────┐        ┌───────────────┐        ┌───────────────┐       │
+│  │VictoriaMetrics│        │   OpenSearch  │        │     Kafka     │       │
+│  │   (metrics)   │        │    (logs)     │        │   (events)    │       │
+│  └───────────────┘        └───────────────┘        └───────────────┘       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Grafana Dashboard
+
+A pre-configured Grafana dashboard is also available at **http://localhost:3000** under:
+- **Folder:** Industrial
+- **Dashboard:** Unified Business-Tech View
 
 ## Injection de Données
 
