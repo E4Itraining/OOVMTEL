@@ -96,50 +96,30 @@ services:
       kafka:
         condition: service_healthy
     entrypoint: ["/bin/bash", "-c"]
-    command: |
-      "
-      echo 'Creating Kafka topics for industrial data...'
+    command:
+      - |
+        echo 'Creating Kafka topics for industrial data...'
 
-      # SCADA metrics topic - high throughput
-      kafka-topics --create --if-not-exists --topic scada-metrics \
-        --bootstrap-server kafka:9092 \
-        --partitions 12 --replication-factor 1 \
-        --config retention.ms=86400000 \
-        --config compression.type=lz4
+        # SCADA metrics topic - high throughput
+        kafka-topics --create --if-not-exists --topic scada-metrics --bootstrap-server kafka:9092 --partitions 12 --replication-factor 1 --config retention.ms=86400000 --config compression.type=lz4
 
-      # MES events topic
-      kafka-topics --create --if-not-exists --topic mes-events \
-        --bootstrap-server kafka:9092 \
-        --partitions 8 --replication-factor 1 \
-        --config retention.ms=86400000
+        # MES events topic
+        kafka-topics --create --if-not-exists --topic mes-events --bootstrap-server kafka:9092 --partitions 8 --replication-factor 1 --config retention.ms=86400000
 
-      # PLM data topic
-      kafka-topics --create --if-not-exists --topic plm-data \
-        --bootstrap-server kafka:9092 \
-        --partitions 4 --replication-factor 1 \
-        --config retention.ms=172800000
+        # PLM data topic
+        kafka-topics --create --if-not-exists --topic plm-data --bootstrap-server kafka:9092 --partitions 4 --replication-factor 1 --config retention.ms=172800000
 
-      # OPC-UA nodes topic
-      kafka-topics --create --if-not-exists --topic opcua-nodes \
-        --bootstrap-server kafka:9092 \
-        --partitions 8 --replication-factor 1 \
-        --config retention.ms=86400000
+        # OPC-UA nodes topic
+        kafka-topics --create --if-not-exists --topic opcua-nodes --bootstrap-server kafka:9092 --partitions 8 --replication-factor 1 --config retention.ms=86400000
 
-      # Industrial telemetry (OTLP)
-      kafka-topics --create --if-not-exists --topic industrial-telemetry \
-        --bootstrap-server kafka:9092 \
-        --partitions 12 --replication-factor 1 \
-        --config retention.ms=86400000
+        # Industrial telemetry (OTLP)
+        kafka-topics --create --if-not-exists --topic industrial-telemetry --bootstrap-server kafka:9092 --partitions 12 --replication-factor 1 --config retention.ms=86400000
 
-      # Processed telemetry output
-      kafka-topics --create --if-not-exists --topic processed-telemetry \
-        --bootstrap-server kafka:9092 \
-        --partitions 6 --replication-factor 1 \
-        --config retention.ms=172800000
+        # Processed telemetry output
+        kafka-topics --create --if-not-exists --topic processed-telemetry --bootstrap-server kafka:9092 --partitions 6 --replication-factor 1 --config retention.ms=172800000
 
-      echo 'Kafka topics created successfully!'
-      kafka-topics --list --bootstrap-server kafka:9092
-      "
+        echo 'Kafka topics created successfully!'
+        kafka-topics --list --bootstrap-server kafka:9092
     networks:
       - oovmtel-network
 
