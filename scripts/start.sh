@@ -86,10 +86,46 @@ sleep 5
 echo -e "${YELLOW}Starting visualization services...${NC}"
 docker compose up -d grafana kafka-ui opensearch-dashboards vmagent
 
+# Wait for OTEL Collector health check
+echo -e "${YELLOW}Waiting for OTEL Collector to be ready...${NC}"
+RETRY_COUNT=0
+MAX_RETRIES=30
+until docker compose exec -T otel-collector wget -qO- http://localhost:13133/health 2>/dev/null | grep -q "Server available"; do
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo -e "${YELLOW}OTEL Collector health check timed out, continuing...${NC}"
+        break
+    fi
+    echo "Waiting for OTEL Collector... ($RETRY_COUNT/$MAX_RETRIES)"
+    sleep 2
+done
+echo -e "${GREEN}OTEL Collector is ready!${NC}"
+
+# Launch data ingestion initialization
+echo -e "${YELLOW}Initializing data ingestion...${NC}"
+docker compose up data-ingestion-launcher
+echo -e "${GREEN}Data ingestion initialized!${NC}"
+
 # Build and start simulators
 echo -e "${YELLOW}Building and starting industrial simulators...${NC}"
 docker compose build scada-simulator mes-simulator plm-simulator opcua-simulator
 docker compose up -d scada-simulator mes-simulator plm-simulator opcua-simulator
+
+# Wait for simulators to start generating data
+echo -e "${YELLOW}Waiting for simulators to start...${NC}"
+sleep 10
+
+# Verify data flow
+echo -e "${YELLOW}Verifying data flow...${NC}"
+SCADA_STATUS=$(curl -sf http://localhost:8080/health 2>/dev/null && echo "UP" || echo "DOWN")
+MES_STATUS=$(curl -sf http://localhost:8081/health 2>/dev/null && echo "UP" || echo "DOWN")
+PLM_STATUS=$(curl -sf http://localhost:8082/health 2>/dev/null && echo "UP" || echo "DOWN")
+OPCUA_STATUS=$(curl -sf http://localhost:8083/health 2>/dev/null && echo "UP" || echo "DOWN")
+
+echo -e "  SCADA Simulator:  ${SCADA_STATUS}"
+echo -e "  MES Simulator:    ${MES_STATUS}"
+echo -e "  PLM Simulator:    ${PLM_STATUS}"
+echo -e "  OPC-UA Simulator: ${OPCUA_STATUS}"
 
 echo ""
 echo -e "${GREEN}=============================================="
@@ -121,6 +157,14 @@ echo "  - SCADA:  500 points/sec (port 8080)"
 echo "  - MES:    100 events/sec (port 8081)"
 echo "  - PLM:    20 events/sec  (port 8082)"
 echo "  - OPC-UA: 200 nodes/sec  (port 8083)"
+echo ""
+echo -e "${BLUE}Data Ingestion Endpoints:${NC}"
+echo "  - OTLP gRPC:       localhost:4317"
+echo "  - OTLP HTTP:       localhost:4318"
+echo "  - Prometheus:      localhost:8428/api/v1/write"
+echo "  - Kafka:           localhost:9093 (external)"
+echo ""
+echo -e "${GREEN}Data ingestion is active and receiving data!${NC}"
 echo ""
 echo "To view logs: docker compose logs -f"
 echo "To stop:      ./scripts/stop.sh"
