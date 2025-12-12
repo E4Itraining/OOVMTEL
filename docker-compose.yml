@@ -154,11 +154,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8428/health"]
+      test: ["CMD-SHELL", "wget -q --spider --timeout=3 http://localhost:8428/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 60s
     restart: unless-stopped
 
   vmagent:
