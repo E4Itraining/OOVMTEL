@@ -336,6 +336,40 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
+  # UNIFIED VIEW WEB APPLICATION
+  # ===========================================================================
+
+  unified-view:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    container_name: oovmtel-unified-view
+    depends_on:
+      - victoria-metrics
+      - opensearch
+      - grafana
+    ports:
+      - "8085:8080"
+    environment:
+      VICTORIA_METRICS_URL: http://victoria-metrics:8428
+      OPENSEARCH_URL: http://opensearch:9200
+      KAFKA_URL: kafka:9092
+      OPENOBSERVE_URL: http://openobserve:5080
+      OTEL_COLLECTOR_URL: http://otel-collector:8888
+      GRAFANA_URL: http://grafana:3000
+      REFRESH_INTERVAL: "10"
+      USE_SIMULATED_DATA: "true"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ===========================================================================
   # INDUSTRIAL DATA SIMULATORS
   # ===========================================================================
 

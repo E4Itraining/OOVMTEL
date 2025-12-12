@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOVMTEL - Unified Business & Tech View</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo-section">
+                <div class="logo">
+                    <span class="logo-icon">O</span>
+                    <span class="logo-text">OVMTEL</span>
+                </div>
+                <span class="tagline">Industrial Observability Platform</span>
+            </div>
+            <nav class="view-toggle">
+                <button class="toggle-btn active" data-view="unified">Unified View</button>
+                <button class="toggle-btn" data-view="business">Business View</button>
+                <button class="toggle-btn" data-view="tech">Tech View</button>
+            </nav>
+            <div class="header-actions">
+                <div class="refresh-indicator">
+                    <span class="pulse"></span>
+                    <span class="refresh-text">Live</span>
+                </div>
+                <span class="last-update">Last update: <span id="lastUpdateTime">--:--:--</span></span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Unified View -->
+            <div class="view-panel unified-view active" id="unifiedView">
+                <!-- Business Summary Row -->
+                <section class="metrics-section business-summary">
+                    <h2 class="section-title">
+                        <span class="icon business-icon"></span>
+                        Business KPIs
+                    </h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card primary">
+                            <div class="metric-header">
+                                <span class="metric-label">Overall Equipment Effectiveness</span>
+                                <span class="metric-badge good">Target: 85%</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="oeeValue" class="big-number">--</span>
+                                <span class="unit">%</span>
+                            </div>
+                            <div class="metric-chart" id="oeeChart"></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Quality Rate</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="qualityValue" class="big-number">--</span>
+                                <span class="unit">%</span>
+                            </div>
+                            <div class="metric-trend" id="qualityTrend"></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Production Today</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="productionValue" class="big-number">--</span>
+                                <span class="unit">units</span>
+                            </div>
+                            <div class="metric-trend" id="productionTrend"></div>
+                        </div>
+                        <div class="metric-card warning">
+                            <div class="metric-header">
+                                <span class="metric-label">Active Alarms</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="alarmsValue" class="big-number">--</span>
+                                <span class="unit">critical</span>
+                            </div>
+                            <div class="alarm-list" id="alarmList"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tech Summary Row -->
+                <section class="metrics-section tech-summary">
+                    <h2 class="section-title">
+                        <span class="icon tech-icon"></span>
+                        Infrastructure Health
+                    </h2>
+                    <div class="services-status" id="servicesStatus">
+                        <!-- Services will be populated by JS -->
+                    </div>
+                    <div class="metrics-grid tech-grid">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Metrics Ingestion</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="metricsRateValue" class="big-number">--</span>
+                                <span class="unit">/sec</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Logs Ingestion</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="logsRateValue" class="big-number">--</span>
+                                <span class="unit">/sec</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Pipeline Latency</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="latencyValue" class="big-number">--</span>
+                                <span class="unit">ms</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Error Rate</span>
+                            </div>
+                            <div class="metric-value">
+                                <span id="errorRateValue" class="big-number">--</span>
+                                <span class="unit">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Cross-Domain Insights -->
+                <section class="metrics-section insights-section">
+                    <h2 class="section-title">
+                        <span class="icon insights-icon"></span>
+                        Cross-Domain Insights
+                    </h2>
+                    <div class="insights-grid">
+                        <div class="insight-card" id="correlationCard">
+                            <h3>Business-Tech Correlation</h3>
+                            <div class="correlation-matrix" id="correlationMatrix">
+                                <!-- Correlation data will be populated -->
+                            </div>
+                        </div>
+                        <div class="insight-card" id="timelineCard">
+                            <h3>Event Timeline</h3>
+                            <div class="timeline" id="eventTimeline">
+                                <!-- Timeline events will be populated -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Business View (Full) -->
+            <div class="view-panel business-view" id="businessView">
+                <section class="metrics-section">
+                    <h2 class="section-title">Production & Quality KPIs</h2>
+                    <div class="metrics-grid large-grid">
+                        <div class="metric-card large primary">
+                            <div class="metric-header">
+                                <span class="metric-label">Overall Equipment Effectiveness (OEE)</span>
+                                <span class="metric-badge good">World Class: 85%+</span>
+                            </div>
+                            <div class="gauge-container" id="oeeGauge"></div>
+                            <div class="oee-breakdown">
+                                <div class="oee-component">
+                                    <span class="component-label">Availability</span>
+                                    <div class="progress-bar">
+                                        <div class="progress" id="availabilityBar" style="width: 0%"></div>
+                                    </div>
+                                    <span class="component-value" id="availabilityValue">--%</span>
+                                </div>
+                                <div class="oee-component">
+                                    <span class="component-label">Performance</span>
+                                    <div class="progress-bar">
+                                        <div class="progress" id="performanceBar" style="width: 0%"></div>
+                                    </div>
+                                    <span class="component-value" id="performanceValue">--%</span>
+                                </div>
+                                <div class="oee-component">
+                                    <span class="component-label">Quality</span>
+                                    <div class="progress-bar">
+                                        <div class="progress" id="qualityBar" style="width: 0%"></div>
+                                    </div>
+                                    <span class="component-value" id="qualityBarValue">--%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-card large">
+                            <div class="metric-header">
+                                <span class="metric-label">Production by Product</span>
+                            </div>
+                            <div class="chart-container" id="productionByProductChart"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="metrics-section">
+                    <h2 class="section-title">Equipment Monitoring</h2>
+                    <div class="equipment-grid" id="equipmentGrid">
+                        <!-- Equipment cards will be populated -->
+                    </div>
+                </section>
+
+                <section class="metrics-section">
+                    <h2 class="section-title">Process Parameters</h2>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>Temperature Trends</h3>
+                            <div class="chart-area" id="temperatureChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Pressure Monitoring</h3>
+                            <div class="chart-area" id="pressureChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Power Consumption</h3>
+                            <div class="chart-area" id="powerChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Vibration Analysis</h3>
+                            <div class="chart-area" id="vibrationChart"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Tech View (Full) -->
+            <div class="view-panel tech-view" id="techView">
+                <section class="metrics-section">
+                    <h2 class="section-title">Service Health Overview</h2>
+                    <div class="services-grid" id="servicesDetailGrid">
+                        <!-- Service cards will be populated -->
+                    </div>
+                </section>
+
+                <section class="metrics-section">
+                    <h2 class="section-title">Resource Utilization</h2>
+                    <div class="metrics-grid large-grid">
+                        <div class="metric-card large">
+                            <div class="metric-header">
+                                <span class="metric-label">CPU Usage</span>
+                            </div>
+                            <div class="chart-area" id="cpuChart"></div>
+                        </div>
+                        <div class="metric-card large">
+                            <div class="metric-header">
+                                <span class="metric-label">Memory Usage</span>
+                            </div>
+                            <div class="chart-area" id="memoryChart"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="metrics-section">
+                    <h2 class="section-title">Data Pipeline Metrics</h2>
+                    <div class="pipeline-stats" id="pipelineStats">
+                        <!-- Pipeline stats will be populated -->
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>OTEL Receiver Throughput</h3>
+                            <div class="chart-area" id="otelReceiverChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>OTEL Exporter Throughput</h3>
+                            <div class="chart-area" id="otelExporterChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Kafka Messages/sec</h3>
+                            <div class="chart-area" id="kafkaChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>VictoriaMetrics Write Rate</h3>
+                            <div class="chart-area" id="vmWriteChart"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="metrics-section">
+                    <h2 class="section-title">Storage Metrics</h2>
+                    <div class="storage-stats">
+                        <div class="storage-card">
+                            <h3>VictoriaMetrics</h3>
+                            <div class="storage-metrics">
+                                <div class="storage-metric">
+                                    <span class="label">Active Series</span>
+                                    <span class="value" id="vmActiveSeries">--</span>
+                                </div>
+                                <div class="storage-metric">
+                                    <span class="label">Storage Size</span>
+                                    <span class="value" id="vmStorageSize">--</span>
+                                </div>
+                                <div class="storage-metric">
+                                    <span class="label">Query Latency (P99)</span>
+                                    <span class="value" id="vmQueryLatency">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="storage-card">
+                            <h3>OpenSearch</h3>
+                            <div class="storage-metrics">
+                                <div class="storage-metric">
+                                    <span class="label">Documents</span>
+                                    <span class="value" id="osDocuments">--</span>
+                                </div>
+                                <div class="storage-metric">
+                                    <span class="label">Cluster Health</span>
+                                    <span class="value status-green" id="osHealth">GREEN</span>
+                                </div>
+                                <div class="storage-metric">
+                                    <span class="label">Nodes</span>
+                                    <span class="value" id="osNodes">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="storage-card">
+                            <h3>Kafka</h3>
+                            <div class="storage-metrics">
+                                <div class="storage-metric">
+                                    <span class="label">Topics</span>
+                                    <span class="value" id="kafkaTopics">--</span>
+                                </div>
+                                <div class="storage-metric">
+                                    <span class="label">Partitions</span>
+                                    <span class="value" id="kafkaPartitions">--</span>
+                                </div>
+                                <div class="storage-metric">
+                                    <span class="label">Consumer Lag</span>
+                                    <span class="value" id="kafkaLag">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="footer-info">
+                <span>OOVMTEL - OpenObserve + VictoriaMetrics + OpenTelemetry</span>
+                <span class="separator">|</span>
+                <span>Industrial Observability Platform</span>
+            </div>
+            <div class="footer-links">
+                <a href="http://localhost:3000" target="_blank">Grafana</a>
+                <a href="http://localhost:5080" target="_blank">OpenObserve</a>
+                <a href="http://localhost:8090" target="_blank">Kafka UI</a>
+                <a href="http://localhost:5601" target="_blank">OpenSearch</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
