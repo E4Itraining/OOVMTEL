@@ -252,16 +252,20 @@ services:
       ZO_PROMETHEUS_ENABLED: "true"
       # Telemetry
       ZO_TELEMETRY: "false"
+      # HTTP settings for faster startup
+      ZO_HTTP_PORT: "5080"
+      # Local mode for single-node setup (faster initialization)
+      ZO_LOCAL_MODE: "true"
     volumes:
       - openobserve_data:/data
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:5080/healthz || exit 1"]
-      interval: 30s
+      test: ["CMD-SHELL", "curl -sf http://localhost:5080/healthz || wget -q --spider http://localhost:5080/healthz || exit 1"]
+      interval: 15s
       timeout: 10s
-      retries: 10
-      start_period: 90s
+      retries: 15
+      start_period: 120s
     restart: unless-stopped
 
   # ===========================================================================
@@ -344,6 +348,9 @@ services:
       - "8888:8888"   # Prometheus metrics
       - "13133:13133" # Health check
       - "55679:55679" # zPages
+    environment:
+      # Use GOMEMLIMIT instead of deprecated memory_ballast extension
+      GOMEMLIMIT: 1750MiB
     command: ["--config=/etc/otel/config.yaml"]
     volumes:
       - ./config/otel/otel-collector-config.yaml:/etc/otel/config.yaml:ro
@@ -354,8 +361,8 @@ services:
       test: ["CMD", "wget", "-qO-", "http://localhost:13133/health"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 120s
+      retries: 12
+      start_period: 60s
     restart: unless-stopped
 
   # ===========================================================================
