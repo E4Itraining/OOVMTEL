@@ -442,6 +442,7 @@ services:
       context: ./simulators
       dockerfile: Dockerfile
     container_name: oovmtel-scada-simulator
+    hostname: scada-simulator
     depends_on:
       kafka:
         condition: service_healthy
@@ -468,6 +469,7 @@ services:
       context: ./simulators
       dockerfile: Dockerfile
     container_name: oovmtel-mes-simulator
+    hostname: mes-simulator
     depends_on:
       kafka:
         condition: service_healthy
@@ -494,6 +496,7 @@ services:
       context: ./simulators
       dockerfile: Dockerfile
     container_name: oovmtel-plm-simulator
+    hostname: plm-simulator
     depends_on:
       kafka:
         condition: service_healthy
@@ -520,6 +523,7 @@ services:
       context: ./simulators
       dockerfile: Dockerfile
     container_name: oovmtel-opcua-simulator
+    hostname: opcua-simulator
     depends_on:
       kafka:
         condition: service_healthy

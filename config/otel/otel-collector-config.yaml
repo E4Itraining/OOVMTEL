@@ -78,6 +78,8 @@ receivers:
         - job_name: 'industrial-exporters'
           scrape_interval: 15s
           scrape_timeout: 10s
+          # Explicit scheme to avoid any ambiguity
+          scheme: http
           # Honor timestamps from exporters for accurate time series
           honor_timestamps: true
           # Add metrics path explicitly for clarity
@@ -85,7 +87,10 @@ receivers:
           # Disable HTTP/2 for compatibility
           enable_http2: false
           static_configs:
-            - targets: ['scada-simulator:8080', 'mes-simulator:8081', 'plm-simulator:8082']
+            - targets:
+                - 'scada-simulator:8080'
+                - 'mes-simulator:8081'
+                - 'plm-simulator:8082'
               labels:
                 environment: 'industrial'
                 collector: 'otel'
@@ -93,10 +98,13 @@ receivers:
         - job_name: 'opcua-exporter'
           scrape_interval: 15s
           scrape_timeout: 10s
+          scheme: http
           honor_timestamps: true
           metrics_path: '/metrics'
+          enable_http2: false
           static_configs:
-            - targets: ['opcua-simulator:8083']
+            - targets:
+                - 'opcua-simulator:8083'
               labels:
                 environment: 'industrial'
                 collector: 'otel'
