@@ -46,7 +46,6 @@ services:
       KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - kafka_ot_data:/var/lib/kafka/data
-    user: root
     command: >
       bash -c "
         # Clean up any stale metadata that might cause cluster ID mismatch
@@ -57,10 +56,8 @@ services:
             rm -rf /var/lib/kafka/data/*
           fi
         fi
-        # Set proper ownership
-        chown -R appuser:appuser /var/lib/kafka/data
-        # Start Kafka as appuser
-        exec su-exec appuser /etc/confluent/docker/run
+        # Start Kafka using the standard Confluent entrypoint (handles KRaft formatting automatically)
+        exec /etc/confluent/docker/run
       "
     networks:
       - ot-network
