@@ -240,13 +240,13 @@ services:
       ZO_ROOT_USER_EMAIL: "root@example.com"
       ZO_ROOT_USER_PASSWORD: "Complexpass#123"
       ZO_DATA_DIR: "/data"
-      # Performance settings
-      ZO_MAX_FILE_SIZE_ON_DISK: 128
+      # Performance settings - reduced for faster startup
+      ZO_MAX_FILE_SIZE_ON_DISK: 64
       ZO_MAX_FILE_RETENTION_TIME: 600
       ZO_COMPACT_ENABLED: "true"
-      ZO_COMPACT_INTERVAL: 60
+      ZO_COMPACT_INTERVAL: 120
       ZO_MEMORY_CACHE_ENABLED: "true"
-      ZO_MEMORY_CACHE_MAX_SIZE: 1024
+      ZO_MEMORY_CACHE_MAX_SIZE: 512
       # OTEL settings
       ZO_OTEL_ENABLED: "true"
       ZO_PROMETHEUS_ENABLED: "true"
@@ -256,16 +256,22 @@ services:
       ZO_HTTP_PORT: "5080"
       # Local mode for single-node setup (faster initialization)
       ZO_LOCAL_MODE: "true"
+      # Reduce initial resource usage
+      ZO_COMPACT_MAX_FILE_SIZE: 64
+      ZO_WAL_MEMORY_MODE_ENABLED: "false"
+      # Logging for debugging
+      RUST_LOG: "info"
     volumes:
       - openobserve_data:/data
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:5080/healthz 2>/dev/null || curl -sf http://localhost:5080/healthz > /dev/null 2>&1 || nc -z localhost 5080 2>/dev/null || exit 1"]
-      interval: 20s
-      timeout: 15s
-      retries: 20
-      start_period: 180s
+      # Simple port check - most reliable during startup
+      test: ["CMD-SHELL", "nc -z localhost 5080 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
     restart: unless-stopped
 
   # ===========================================================================
@@ -334,6 +340,8 @@ services:
         condition: service_healthy
       opensearch:
         condition: service_healthy
+      openobserve:
+        condition: service_started
       scada-simulator:
         condition: service_healthy
       mes-simulator:
@@ -358,11 +366,12 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || nc -z localhost 13133 2>/dev/null || exit 1"]
+      # Simple port check - more reliable during startup when config is still loading
+      test: ["CMD-SHELL", "nc -z localhost 13133 || exit 1"]
       interval: 15s
       timeout: 10s
-      retries: 20
-      start_period: 90s
+      retries: 30
+      start_period: 60s
     restart: unless-stopped
 
   # ===========================================================================
