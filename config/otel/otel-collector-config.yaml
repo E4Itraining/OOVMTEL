@@ -164,12 +164,16 @@ exporters:
       Authorization: "Basic cm9vdEBleGFtcGxlLmNvbTpDb21wbGV4cGFzcyMxMjM="
       stream-name: industrial
 
-  # OpenSearch for analytics
-  opensearch:
+  # OpenSearch for analytics (using elasticsearch exporter - OpenSearch is API-compatible)
+  elasticsearch/opensearch:
     endpoints:
       - http://opensearch:9200
     logs_index: industrial-logs
     traces_index: industrial-traces
+    flush:
+      bytes: 5000000
+    retry:
+      max_requests: 3
 
   # Kafka exporter for downstream processing
   kafka:
@@ -229,13 +233,13 @@ service:
     logs:
       receivers: [otlp, filelog]
       processors: [memory_limiter, resourcedetection, attributes/industrial, batch]
-      exporters: [otlphttp/openobserve, opensearch, logging]
+      exporters: [otlphttp/openobserve, elasticsearch/opensearch, logging]
 
     # Traces pipeline
     traces:
       receivers: [otlp]
       processors: [memory_limiter, resourcedetection, attributes/industrial, batch]
-      exporters: [otlphttp/openobserve, opensearch, logging]
+      exporters: [otlphttp/openobserve, elasticsearch/opensearch, logging]
 
   telemetry:
     logs:
