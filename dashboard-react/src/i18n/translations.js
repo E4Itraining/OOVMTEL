@@ -82,7 +82,8 @@ export const translations = {
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
-        observability: 'Observabilité'
+        observability: 'Observabilité',
+        security: 'Sécurité & Conformité'
       },
       // Home page submenus
       home: {
@@ -275,6 +276,99 @@ export const translations = {
       manualResolved: 'Résolu manuellement',
       // Actions
       quickActions: 'Actions Rapides'
+    },
+
+    // Security & Compliance
+    security: {
+      title: 'Sécurité & Conformité',
+      description: 'Gestion des risques, audit de conformité et insights IA',
+      tabs: {
+        overview: 'Vue d\'ensemble',
+        compliance: 'Conformité',
+        vulnerabilities: 'Vulnérabilités',
+        aiInsights: 'Insights IA',
+        audit: 'Audit',
+        policies: 'Politiques'
+      },
+      // Metrics
+      overallScore: 'Score Global',
+      criticalVulns: 'Vulnérabilités Critiques',
+      openVulns: 'Vulnérabilités Ouvertes',
+      aiAlerts: 'Alertes IA',
+      activePolicies: 'Politiques Actives',
+      // Compliance
+      complianceOverview: 'Aperçu Conformité',
+      complianceFrameworks: 'Cadres de Conformité',
+      compliant: 'Conforme',
+      partial: 'Partiel',
+      nonCompliant: 'Non Conforme',
+      controls: 'Contrôles',
+      passed: 'Réussis',
+      failed: 'Échoués',
+      nextAudit: 'Prochain Audit',
+      lastAudit: 'Dernier Audit',
+      auditTimeline: 'Calendrier des Audits',
+      generateReport: 'Générer Rapport',
+      // Vulnerabilities
+      allVulnerabilities: 'Toutes les Vulnérabilités',
+      recentVulnerabilities: 'Vulnérabilités Récentes',
+      vulnDistribution: 'Distribution des Vulnérabilités',
+      allSeverities: 'Toutes les sévérités',
+      critical: 'Critique',
+      high: 'Élevée',
+      medium: 'Moyenne',
+      low: 'Faible',
+      allStatuses: 'Tous les statuts',
+      statusOpen: 'Ouvert',
+      statusInProgress: 'En cours',
+      statusPatched: 'Corrigé',
+      viewDetails: 'Voir Détails',
+      // Security
+      securityTrend: 'Tendance Sécurité',
+      securityScore: 'Score de Sécurité',
+      threatsDetected: 'Menaces Détectées',
+      threatsBlocked: 'Menaces Bloquées',
+      exportReport: 'Exporter Rapport',
+      runScan: 'Lancer Scan',
+      // AI Insights
+      latestAIInsights: 'Derniers Insights IA',
+      aiSecurityInsights: 'Insights Sécurité IA',
+      poweredByAI: 'Propulsé par l\'IA',
+      confidence: 'Confiance',
+      aiType: {
+        anomaly: 'Anomalie',
+        prediction: 'Prédiction',
+        optimization: 'Optimisation'
+      },
+      aiCapabilities: {
+        anomalyDetection: 'Détection d\'Anomalies',
+        anomalyDesc: 'Détection en temps réel des comportements suspects',
+        predictive: 'Analyse Prédictive',
+        predictiveDesc: 'Anticipation des risques et menaces futures',
+        optimization: 'Optimisation',
+        optimizationDesc: 'Recommandations pour améliorer la sécurité'
+      },
+      // Audit
+      auditTrail: 'Journal d\'Audit',
+      auditId: 'ID',
+      action: 'Action',
+      user: 'Utilisateur',
+      resource: 'Ressource',
+      ipAddress: 'Adresse IP',
+      timestamp: 'Horodatage',
+      // Policies
+      securityPolicies: 'Politiques de Sécurité',
+      managePolicies: 'Gérer Politiques',
+      compliance: 'Conformité',
+      violations: 'violations',
+      avgCompliance: 'Conformité Moyenne',
+      enforced: 'Appliquées',
+      totalViolations: 'Total Violations',
+      policyStatus: {
+        enforced: 'Appliquée',
+        partial: 'Partielle',
+        disabled: 'Désactivée'
+      }
     }
   },
 
@@ -347,7 +441,8 @@ export const translations = {
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
-        observability: 'Observability'
+        observability: 'Observability',
+        security: 'Security & Compliance'
       },
       // Home page submenus
       home: {
@@ -540,6 +635,99 @@ export const translations = {
       manualResolved: 'Manually resolved',
       // Actions
       quickActions: 'Quick Actions'
+    },
+
+    // Security & Compliance
+    security: {
+      title: 'Security & Compliance',
+      description: 'Risk management, compliance auditing and AI insights',
+      tabs: {
+        overview: 'Overview',
+        compliance: 'Compliance',
+        vulnerabilities: 'Vulnerabilities',
+        aiInsights: 'AI Insights',
+        audit: 'Audit',
+        policies: 'Policies'
+      },
+      // Metrics
+      overallScore: 'Overall Score',
+      criticalVulns: 'Critical Vulnerabilities',
+      openVulns: 'Open Vulnerabilities',
+      aiAlerts: 'AI Alerts',
+      activePolicies: 'Active Policies',
+      // Compliance
+      complianceOverview: 'Compliance Overview',
+      complianceFrameworks: 'Compliance Frameworks',
+      compliant: 'Compliant',
+      partial: 'Partial',
+      nonCompliant: 'Non-Compliant',
+      controls: 'Controls',
+      passed: 'Passed',
+      failed: 'Failed',
+      nextAudit: 'Next Audit',
+      lastAudit: 'Last Audit',
+      auditTimeline: 'Audit Timeline',
+      generateReport: 'Generate Report',
+      // Vulnerabilities
+      allVulnerabilities: 'All Vulnerabilities',
+      recentVulnerabilities: 'Recent Vulnerabilities',
+      vulnDistribution: 'Vulnerability Distribution',
+      allSeverities: 'All severities',
+      critical: 'Critical',
+      high: 'High',
+      medium: 'Medium',
+      low: 'Low',
+      allStatuses: 'All statuses',
+      statusOpen: 'Open',
+      statusInProgress: 'In Progress',
+      statusPatched: 'Patched',
+      viewDetails: 'View Details',
+      // Security
+      securityTrend: 'Security Trend',
+      securityScore: 'Security Score',
+      threatsDetected: 'Threats Detected',
+      threatsBlocked: 'Threats Blocked',
+      exportReport: 'Export Report',
+      runScan: 'Run Scan',
+      // AI Insights
+      latestAIInsights: 'Latest AI Insights',
+      aiSecurityInsights: 'AI Security Insights',
+      poweredByAI: 'Powered by AI',
+      confidence: 'Confidence',
+      aiType: {
+        anomaly: 'Anomaly',
+        prediction: 'Prediction',
+        optimization: 'Optimization'
+      },
+      aiCapabilities: {
+        anomalyDetection: 'Anomaly Detection',
+        anomalyDesc: 'Real-time detection of suspicious behaviors',
+        predictive: 'Predictive Analysis',
+        predictiveDesc: 'Anticipate future risks and threats',
+        optimization: 'Optimization',
+        optimizationDesc: 'Recommendations to improve security'
+      },
+      // Audit
+      auditTrail: 'Audit Trail',
+      auditId: 'ID',
+      action: 'Action',
+      user: 'User',
+      resource: 'Resource',
+      ipAddress: 'IP Address',
+      timestamp: 'Timestamp',
+      // Policies
+      securityPolicies: 'Security Policies',
+      managePolicies: 'Manage Policies',
+      compliance: 'Compliance',
+      violations: 'violations',
+      avgCompliance: 'Average Compliance',
+      enforced: 'Enforced',
+      totalViolations: 'Total Violations',
+      policyStatus: {
+        enforced: 'Enforced',
+        partial: 'Partial',
+        disabled: 'Disabled'
+      }
     }
   },
 
@@ -612,7 +800,8 @@ export const translations = {
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
-        observability: 'Observabiliteit'
+        observability: 'Observabiliteit',
+        security: 'Beveiliging & Compliance'
       },
       // Home page submenus
       home: {
@@ -805,6 +994,99 @@ export const translations = {
       manualResolved: 'Handmatig opgelost',
       // Actions
       quickActions: 'Snelle Acties'
+    },
+
+    // Security & Compliance
+    security: {
+      title: 'Beveiliging & Compliance',
+      description: 'Risicobeheer, compliance-auditing en AI-inzichten',
+      tabs: {
+        overview: 'Overzicht',
+        compliance: 'Compliance',
+        vulnerabilities: 'Kwetsbaarheden',
+        aiInsights: 'AI Inzichten',
+        audit: 'Audit',
+        policies: 'Beleid'
+      },
+      // Metrics
+      overallScore: 'Totaalscore',
+      criticalVulns: 'Kritieke Kwetsbaarheden',
+      openVulns: 'Open Kwetsbaarheden',
+      aiAlerts: 'AI Alerts',
+      activePolicies: 'Actief Beleid',
+      // Compliance
+      complianceOverview: 'Compliance Overzicht',
+      complianceFrameworks: 'Compliance Kaders',
+      compliant: 'Conform',
+      partial: 'Gedeeltelijk',
+      nonCompliant: 'Niet Conform',
+      controls: 'Controles',
+      passed: 'Geslaagd',
+      failed: 'Gefaald',
+      nextAudit: 'Volgende Audit',
+      lastAudit: 'Laatste Audit',
+      auditTimeline: 'Audit Tijdlijn',
+      generateReport: 'Rapport Genereren',
+      // Vulnerabilities
+      allVulnerabilities: 'Alle Kwetsbaarheden',
+      recentVulnerabilities: 'Recente Kwetsbaarheden',
+      vulnDistribution: 'Kwetsbaarheid Verdeling',
+      allSeverities: 'Alle ernst',
+      critical: 'Kritiek',
+      high: 'Hoog',
+      medium: 'Gemiddeld',
+      low: 'Laag',
+      allStatuses: 'Alle statussen',
+      statusOpen: 'Open',
+      statusInProgress: 'In Behandeling',
+      statusPatched: 'Gepatcht',
+      viewDetails: 'Details Bekijken',
+      // Security
+      securityTrend: 'Beveiligingstrend',
+      securityScore: 'Beveiligingsscore',
+      threatsDetected: 'Bedreigingen Gedetecteerd',
+      threatsBlocked: 'Bedreigingen Geblokkeerd',
+      exportReport: 'Rapport Exporteren',
+      runScan: 'Scan Starten',
+      // AI Insights
+      latestAIInsights: 'Laatste AI Inzichten',
+      aiSecurityInsights: 'AI Beveiligingsinzichten',
+      poweredByAI: 'Aangedreven door AI',
+      confidence: 'Vertrouwen',
+      aiType: {
+        anomaly: 'Anomalie',
+        prediction: 'Voorspelling',
+        optimization: 'Optimalisatie'
+      },
+      aiCapabilities: {
+        anomalyDetection: 'Anomaliedetectie',
+        anomalyDesc: 'Real-time detectie van verdacht gedrag',
+        predictive: 'Predictieve Analyse',
+        predictiveDesc: 'Anticipeer op toekomstige risico\'s en bedreigingen',
+        optimization: 'Optimalisatie',
+        optimizationDesc: 'Aanbevelingen om beveiliging te verbeteren'
+      },
+      // Audit
+      auditTrail: 'Auditspoor',
+      auditId: 'ID',
+      action: 'Actie',
+      user: 'Gebruiker',
+      resource: 'Resource',
+      ipAddress: 'IP Adres',
+      timestamp: 'Tijdstempel',
+      // Policies
+      securityPolicies: 'Beveiligingsbeleid',
+      managePolicies: 'Beleid Beheren',
+      compliance: 'Compliance',
+      violations: 'overtredingen',
+      avgCompliance: 'Gemiddelde Compliance',
+      enforced: 'Afgedwongen',
+      totalViolations: 'Totaal Overtredingen',
+      policyStatus: {
+        enforced: 'Afgedwongen',
+        partial: 'Gedeeltelijk',
+        disabled: 'Uitgeschakeld'
+      }
     }
   }
 }
