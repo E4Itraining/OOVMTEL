@@ -23,13 +23,13 @@ echo -e "${NC}"
 cd "$PROJECT_DIR"
 
 echo -e "${YELLOW}🛑 Stopping DMZ services...${NC}"
-docker-compose -f docker-compose.dmz.yml down 2>/dev/null || true
+docker-compose -f docker-compose.dmz.yml down --remove-orphans 2>/dev/null || true
 
 echo -e "${YELLOW}🛑 Stopping IT services...${NC}"
-docker-compose -f docker-compose.it.yml down 2>/dev/null || true
+docker-compose -f docker-compose.it.yml down --remove-orphans 2>/dev/null || true
 
 echo -e "${YELLOW}🛑 Stopping OT services...${NC}"
-docker-compose -f docker-compose.ot.yml down 2>/dev/null || true
+docker-compose -f docker-compose.ot.yml down --remove-orphans 2>/dev/null || true
 
 echo -e "${YELLOW}🔗 Removing DMZ network...${NC}"
 docker network rm oovmtel_dmz-network 2>/dev/null || true

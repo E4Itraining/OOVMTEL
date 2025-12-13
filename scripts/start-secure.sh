@@ -60,7 +60,7 @@ echo -e "${YELLOW}📦 Building OT simulators...${NC}"
 docker-compose -f docker-compose.ot.yml build --quiet
 
 echo -e "${YELLOW}🚀 Starting OT services...${NC}"
-docker-compose -f docker-compose.ot.yml up -d
+docker-compose -f docker-compose.ot.yml up -d --remove-orphans
 
 echo -e "${YELLOW}⏳ Waiting for Kafka OT...${NC}"
 sleep 10
@@ -96,14 +96,14 @@ echo -e "${BLUE}  PHASE 3: Starting Zone IT (IEC 62443 Level 4/5)               
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
 echo -e "${YELLOW}🚀 Starting IT services...${NC}"
-docker-compose -f docker-compose.it.yml up -d
+docker-compose -f docker-compose.it.yml up -d --remove-orphans
 
 echo -e "${YELLOW}⏳ Waiting for IT services...${NC}"
 sleep 15
 
 wait_for_service "Kafka IT" 9092 60
 wait_for_service "VictoriaMetrics" 8428 60
-wait_for_service "OpenSearch" 9200 60
+wait_for_service "OpenSearch" 9200 90
 wait_for_service "Grafana" 3000 60
 
 echo -e "${GREEN}✅ Zone IT started successfully${NC}"
@@ -120,7 +120,7 @@ echo -e "${YELLOW}🔗 Connecting IT Kafka to DMZ network...${NC}"
 docker network connect oovmtel_dmz-network oovmtel-kafka-it-1 2>/dev/null || true
 
 echo -e "${YELLOW}🚀 Starting DMZ services...${NC}"
-docker-compose -f docker-compose.dmz.yml up -d
+docker-compose -f docker-compose.dmz.yml up -d --remove-orphans
 
 echo -e "${GREEN}✅ DMZ services started${NC}"
 
