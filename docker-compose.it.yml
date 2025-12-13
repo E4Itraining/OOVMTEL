@@ -569,9 +569,16 @@ networks:
       zone: it
       security: iec62443-l4
 
+  # DMZ network - shared with OT zone for unidirectional data flow
+  # Created here if not exists, shared when running with docker-compose.ot.yml
   dmz-network:
-    external: true
-    name: oovmtel_dmz-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+    labels:
+      zone: dmz
+      security: iec62443-l3
 
 # =============================================================================
 # VOLUMES
