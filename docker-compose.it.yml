@@ -7,55 +7,32 @@
 
 services:
   # ===========================================================================
-  # KAFKA CLUSTER IT - 3 brokers pour HA
+  # KAFKA CLUSTER IT - 3 brokers KRaft mode (no Zookeeper)
   # ===========================================================================
-
-  zookeeper-it:
-    image: confluentinc/cp-zookeeper:7.5.3
-    container_name: oovmtel-zookeeper-it
-    hostname: zookeeper-it
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_INIT_LIMIT: 5
-      ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVER_ID: 1
-      # Enable 4-letter-word commands for healthcheck (disabled by default in ZK 3.5+)
-      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok,srvr,stat"
-    volumes:
-      - zookeeper_it_data:/var/lib/zookeeper/data
-      - zookeeper_it_logs:/var/lib/zookeeper/log
-    networks:
-      - it-network
-    healthcheck:
-      test: ["CMD-SHELL", "echo ruok | timeout 5 bash -c 'exec 3<>/dev/tcp/localhost/2181 && cat >&3 && cat <&3' | grep -q imok"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
 
   kafka-it:
     image: confluentinc/cp-kafka:7.5.3
     container_name: oovmtel-kafka-it-1
     hostname: kafka-it
-    depends_on:
-      zookeeper-it:
-        condition: service_healthy
     ports:
       - "9092:9092"
       - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-it:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      # KRaft mode configuration
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-it:9094,2@kafka-it-2:9094,3@kafka-it-3:9094
+      CLUSTER_ID: oovmtel-it-cluster-001
+      # Listener configuration
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://kafka-it:9094,INTERNAL://kafka-it:9092,EXTERNAL://0.0.0.0:9093
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-it:9092,EXTERNAL://localhost:9093
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      # Internal topic settings - must be 1 initially as other brokers depend on this one
-      # The cluster will still provide HA for user topics with replication factor 3
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Internal topic settings for 3-broker cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
       # HA settings for user topics in 3-broker cluster
       KAFKA_NUM_PARTITIONS: 12
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
@@ -77,7 +54,7 @@ services:
       interval: 20s
       timeout: 20s
       retries: 20
-      start_period: 180s
+      start_period: 120s
     restart: unless-stopped
 
   kafka-it-2:
@@ -85,20 +62,24 @@ services:
     container_name: oovmtel-kafka-it-2
     hostname: kafka-it-2
     depends_on:
-      zookeeper-it:
-        condition: service_healthy
       kafka-it:
-        condition: service_healthy
+        condition: service_started
     environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-it:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      # KRaft mode configuration
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-it:9094,2@kafka-it-2:9094,3@kafka-it-3:9094
+      CLUSTER_ID: oovmtel-it-cluster-001
+      # Listener configuration
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://kafka-it-2:9094,INTERNAL://kafka-it-2:9092
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-it-2:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       # Internal topic settings - consistent with kafka-it
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
       # HA settings for user topics
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
@@ -109,6 +90,12 @@ services:
       - kafka_it_2_data:/var/lib/kafka/data
     networks:
       - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 20s
+      retries: 20
+      start_period: 120s
     restart: unless-stopped
 
   kafka-it-3:
@@ -116,20 +103,24 @@ services:
     container_name: oovmtel-kafka-it-3
     hostname: kafka-it-3
     depends_on:
-      zookeeper-it:
-        condition: service_healthy
       kafka-it:
-        condition: service_healthy
+        condition: service_started
     environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-it:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      # KRaft mode configuration
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-it:9094,2@kafka-it-2:9094,3@kafka-it-3:9094
+      CLUSTER_ID: oovmtel-it-cluster-001
+      # Listener configuration
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://kafka-it-3:9094,INTERNAL://kafka-it-3:9092
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-it-3:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       # Internal topic settings - consistent with kafka-it
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
       # HA settings for user topics
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
@@ -140,6 +131,12 @@ services:
       - kafka_it_3_data:/var/lib/kafka/data
     networks:
       - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 20s
+      retries: 20
+      start_period: 120s
     restart: unless-stopped
 
   kafka-it-init:
@@ -192,7 +189,6 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: oovmtel-it
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-it:9092,kafka-it-2:9092,kafka-it-3:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper-it:2181
     networks:
       - it-network
     restart: unless-stopped
@@ -588,10 +584,6 @@ networks:
 # =============================================================================
 
 volumes:
-  zookeeper_it_data:
-    driver: local
-  zookeeper_it_logs:
-    driver: local
   kafka_it_1_data:
     driver: local
   kafka_it_2_data:

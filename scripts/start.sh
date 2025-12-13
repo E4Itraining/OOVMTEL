@@ -43,12 +43,10 @@ mkdir -p data
 echo -e "${BLUE}Setting permissions...${NC}"
 chmod -R 755 config/
 
-# Start infrastructure services first
-echo -e "${YELLOW}Starting infrastructure services (Zookeeper, Kafka)...${NC}"
-docker compose up -d zookeeper
-sleep 5
+# Start Kafka (KRaft mode - no Zookeeper required)
+echo -e "${YELLOW}Starting Kafka (KRaft mode)...${NC}"
 docker compose up -d kafka
-sleep 10
+sleep 15
 
 # Wait for Kafka to be ready
 echo -e "${YELLOW}Waiting for Kafka to be ready...${NC}"

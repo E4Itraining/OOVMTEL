@@ -79,8 +79,7 @@ Cette architecture implémente une séparation stricte des zones IT et OT confor
 
 | Composant | Rôle | Port | Sécurité |
 |-----------|------|------|----------|
-| zookeeper-ot | Coordination Kafka OT | 2181 (interne) | Réseau isolé |
-| kafka-ot | Buffer messages OT | 9094 | Export seul vers DMZ |
+| kafka-ot | Buffer messages OT (KRaft) | 9094 | Export seul vers DMZ |
 | otel-collector-ot | Collecte minimale | 4319-4320, 8889 | Pas de receiver IT |
 | scada-simulator | Simulateur SCADA | 8080 | Zone OT uniquement |
 | mes-simulator | Simulateur MES | 8081 | Zone OT uniquement |
@@ -99,7 +98,7 @@ Cette architecture implémente une séparation stricte des zones IT et OT confor
 
 | Composant | Rôle | Port | HA |
 |-----------|------|------|-----|
-| kafka-it (x3) | Cluster Kafka | 9092-9093 | RF=3 |
+| kafka-it (x3) | Cluster Kafka KRaft | 9092-9093 | RF=3 |
 | vminsert | Ingestion métriques | 8480 | - |
 | vmselect | Requêtes métriques | 8481 | - |
 | vmstorage (x2) | Stockage métriques | - | RF=2 |
@@ -208,10 +207,11 @@ attributes/cardinality_governance:
 
 ## Haute Disponibilité
 
-### Kafka IT Cluster
+### Kafka IT Cluster (KRaft Mode)
 
 ```yaml
-Brokers: 3
+Brokers: 3 (combined controller+broker)
+Mode: KRaft (no Zookeeper)
 Replication Factor: 3
 Min In-Sync Replicas: 2
 Partitions par topic: 4-12
