@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -6,27 +6,279 @@ import {
   Activity,
   Search,
   MessageSquare,
-  Settings,
-  User,
   Briefcase,
   Wrench,
   ChevronLeft,
+  ChevronDown,
+  ChevronRight,
   Wifi,
   WifiOff,
   RefreshCw,
   Bell,
-  Moon,
-  Sun
+  Globe,
+  Home,
+  BarChart3,
+  TrendingUp,
+  Settings2,
+  AlertTriangle,
+  FileText,
+  Target,
+  LineChart,
+  PieChart,
+  Server,
+  Database,
+  Gauge,
+  Zap,
+  Eye,
+  Clock,
+  Star,
+  Layers
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
+import { useI18n, LANGUAGES } from '../i18n'
 
-const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Vue Globale', labelEn: 'Global View' },
-  { path: '/grafana', icon: Activity, label: 'Grafana', labelEn: 'Grafana' },
-  { path: '/opensearch', icon: Search, label: 'OpenSearch', labelEn: 'OpenSearch' },
-  { path: '/kafka', icon: MessageSquare, label: 'Kafka', labelEn: 'Kafka' },
-]
+// Dynamic navigation configuration based on profile
+const getNavConfig = (t, userMode) => {
+  // Main navigation items (always visible)
+  const mainNav = [
+    {
+      id: 'home',
+      path: '/',
+      icon: Home,
+      getLabel: () => t('nav.main.globalView'),
+      submenu: [
+        { id: 'overview', icon: Eye, getLabel: () => t('nav.home.overview'), hash: '#overview' },
+        { id: 'quickStats', icon: Zap, getLabel: () => t('nav.home.quickStats'), hash: '#stats' },
+        { id: 'recentActivity', icon: Clock, getLabel: () => t('nav.home.recentActivity'), hash: '#activity' },
+        { id: 'favorites', icon: Star, getLabel: () => t('nav.home.favorites'), hash: '#favorites' }
+      ]
+    }
+  ]
+
+  // Profile-specific menu items
+  const profileMenus = {
+    [USER_MODES.BUSINESS]: [
+      {
+        id: 'production',
+        icon: BarChart3,
+        getLabel: () => t('nav.business.production'),
+        submenu: [
+          { id: 'prod-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/', hash: '#production' },
+          { id: 'prod-kpis', icon: Target, getLabel: () => t('nav.business.kpis'), path: '/', hash: '#kpis' },
+          { id: 'prod-trends', icon: TrendingUp, getLabel: () => t('nav.business.trends'), path: '/', hash: '#trends' }
+        ]
+      },
+      {
+        id: 'quality',
+        icon: Gauge,
+        getLabel: () => t('nav.business.quality'),
+        submenu: [
+          { id: 'quality-rate', icon: PieChart, getLabel: () => t('metrics.business.qualityRate'), path: '/', hash: '#quality' },
+          { id: 'defects', icon: AlertTriangle, getLabel: () => t('metrics.business.defectsToday'), path: '/', hash: '#defects' }
+        ]
+      },
+      {
+        id: 'equipment',
+        icon: Settings2,
+        getLabel: () => t('nav.business.equipment'),
+        submenu: [
+          { id: 'equipment-status', icon: Activity, getLabel: () => t('metrics.business.equipmentStatus'), path: '/', hash: '#equipment' },
+          { id: 'maintenance', icon: Wrench, getLabel: () => t('metrics.business.maintenance'), path: '/', hash: '#maintenance' }
+        ]
+      },
+      {
+        id: 'reports',
+        icon: FileText,
+        getLabel: () => t('nav.business.reports'),
+        submenu: [
+          { id: 'analytics', icon: LineChart, getLabel: () => t('nav.business.analytics'), path: '/', hash: '#analytics' },
+          { id: 'oee-trend', icon: TrendingUp, getLabel: () => t('metrics.business.oeeTrend'), path: '/', hash: '#oee-trend' }
+        ]
+      }
+    ],
+    [USER_MODES.TECH]: [
+      {
+        id: 'metrics',
+        icon: Activity,
+        getLabel: () => t('nav.tech.metrics'),
+        submenu: [
+          { id: 'metrics-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/', hash: '#metrics' },
+          { id: 'performance', icon: Gauge, getLabel: () => t('nav.tech.performance'), path: '/', hash: '#performance' }
+        ]
+      },
+      {
+        id: 'infrastructure',
+        icon: Server,
+        getLabel: () => t('nav.tech.infrastructure'),
+        submenu: [
+          { id: 'services', icon: Layers, getLabel: () => t('nav.tech.services'), path: '/', hash: '#services' },
+          { id: 'databases', icon: Database, getLabel: () => t('nav.tech.databases'), path: '/', hash: '#databases' }
+        ]
+      },
+      {
+        id: 'monitoring',
+        icon: Eye,
+        getLabel: () => t('nav.tech.monitoring'),
+        submenu: [
+          { id: 'logs', icon: FileText, getLabel: () => t('nav.tech.logs'), path: '/opensearch' },
+          { id: 'alerts', icon: AlertTriangle, getLabel: () => t('nav.tech.alerts'), path: '/', hash: '#alerts' }
+        ]
+      }
+    ]
+  }
+
+  // Service pages (always visible)
+  const serviceNav = [
+    { id: 'grafana', path: '/grafana', icon: Activity, getLabel: () => t('nav.main.grafana') },
+    { id: 'opensearch', path: '/opensearch', icon: Search, getLabel: () => t('nav.main.opensearch') },
+    { id: 'kafka', path: '/kafka', icon: MessageSquare, getLabel: () => t('nav.main.kafka') }
+  ]
+
+  return {
+    mainNav,
+    profileMenus: profileMenus[userMode] || [],
+    serviceNav
+  }
+}
+
+// Language Switcher Component
+function LanguageSwitcher({ compact = false }) {
+  const { language, setLanguage, languageLabels, languages } = useI18n()
+  const [isOpen, setIsOpen] = useState(false)
+
+  const flagEmojis = {
+    [LANGUAGES.FR]: 'FR',
+    [LANGUAGES.EN]: 'EN',
+    [LANGUAGES.NL]: 'NL'
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-industrial-card/50 border border-industrial-border hover:border-industrial-accent/50 transition-all"
+        title="Change language"
+      >
+        <Globe className="w-4 h-4 text-industrial-accent" />
+        {!compact && (
+          <>
+            <span className="text-sm font-medium">{flagEmojis[language]}</span>
+            <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 top-full mt-1 w-40 bg-industrial-card border border-industrial-border rounded-lg shadow-xl z-50 overflow-hidden"
+            >
+              {Object.values(languages).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => {
+                    setLanguage(lang)
+                    setIsOpen(false)
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 transition-colors
+                    ${language === lang ? 'bg-industrial-accent/10 text-industrial-accent' : 'text-gray-300'}`}
+                >
+                  <span className="font-mono text-sm">{flagEmojis[lang]}</span>
+                  <span className="text-sm">{languageLabels[lang]}</span>
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// Submenu Item Component
+function SubmenuItem({ item, isActive, onClick, sidebarOpen }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all
+        ${isActive
+          ? 'bg-industrial-accent/10 text-industrial-accent'
+          : 'text-gray-400 hover:text-white hover:bg-white/5'
+        }`}
+    >
+      <item.icon className="w-4 h-4 flex-shrink-0" />
+      {sidebarOpen && <span>{item.getLabel()}</span>}
+    </button>
+  )
+}
+
+// Expandable Menu Section Component
+function MenuSection({ item, isExpanded, onToggle, sidebarOpen, navigate, location }) {
+  const hasSubmenu = item.submenu && item.submenu.length > 0
+  const isActive = item.path && location.pathname === item.path
+
+  const handleClick = () => {
+    if (hasSubmenu) {
+      onToggle()
+    } else if (item.path) {
+      navigate(item.path + (item.hash || ''))
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={handleClick}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+          ${isActive
+            ? 'bg-industrial-accent/20 text-industrial-accent'
+            : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+      >
+        <item.icon className="w-5 h-5 flex-shrink-0" />
+        {sidebarOpen && (
+          <>
+            <span className="font-medium text-sm flex-1 text-left">{item.getLabel()}</span>
+            {hasSubmenu && (
+              <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+            )}
+          </>
+        )}
+      </button>
+
+      {/* Submenu */}
+      <AnimatePresence>
+        {hasSubmenu && isExpanded && sidebarOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden ml-4 pl-2 border-l border-industrial-border/50 space-y-0.5"
+          >
+            {item.submenu.map((subItem) => (
+              <SubmenuItem
+                key={subItem.id}
+                item={subItem}
+                isActive={false}
+                onClick={() => navigate((subItem.path || item.path || '/') + (subItem.hash || ''))}
+                sidebarOpen={sidebarOpen}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 function Layout() {
   const location = useLocation()
@@ -35,48 +287,100 @@ function Layout() {
     userMode,
     setUserMode,
     isConnected,
-    metrics,
-    viewLevel,
-    switchToGlobal
+    metrics
   } = useDashboard()
   const { refetch } = useRealTimeData()
-  const [sidebarOpen, setSidebarOpen] = React.useState(true)
+  const { t, formatTime } = useI18n()
+
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [expandedMenus, setExpandedMenus] = useState({})
 
   const isDetailView = location.pathname.startsWith('/details')
+  const navConfig = getNavConfig(t, userMode)
+
+  const toggleMenu = (menuId) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuId]: !prev[menuId]
+    }))
+  }
 
   return (
     <div className="min-h-screen flex bg-industrial-darker">
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: sidebarOpen ? 240 : 72 }}
+        animate={{ width: sidebarOpen ? 260 : 72 }}
         className="fixed left-0 top-0 h-full bg-industrial-dark/95 backdrop-blur-lg border-r border-industrial-border z-40 flex flex-col"
       >
-        {/* Logo */}
+        {/* Logo - Synapsix Branding */}
         <div className="h-16 flex items-center px-4 border-b border-industrial-border">
           <motion.div
             className="flex items-center gap-3"
-            animate={{ opacity: sidebarOpen ? 1 : 0 }}
+            animate={{ opacity: 1 }}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
               <Activity className="w-6 h-6 text-white" />
             </div>
             {sidebarOpen && (
               <div>
-                <h1 className="font-bold text-lg text-white">OOVMTEL</h1>
-                <p className="text-xs text-gray-500">Industrial Observability</p>
+                <h1 className="font-bold text-lg text-white tracking-tight">{t('app.name')}</h1>
+                <p className="text-xs text-gray-500">{t('app.tagline')}</p>
               </div>
             )}
           </motion.div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-4 px-2 space-y-1">
-          {navItems.map((item) => {
+        {/* Main Navigation */}
+        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto scrollbar-thin">
+          {/* Home/Dashboard Section */}
+          {navConfig.mainNav.map((item) => (
+            <MenuSection
+              key={item.id}
+              item={item}
+              isExpanded={expandedMenus[item.id]}
+              onToggle={() => toggleMenu(item.id)}
+              sidebarOpen={sidebarOpen}
+              navigate={navigate}
+              location={location}
+            />
+          ))}
+
+          {/* Profile-specific Menu */}
+          {sidebarOpen && navConfig.profileMenus.length > 0 && (
+            <div className="pt-4 mt-4 border-t border-industrial-border/50">
+              <p className="px-3 text-xs text-gray-500 uppercase tracking-wider mb-2">
+                {userMode === USER_MODES.BUSINESS ? t('nav.business.title') : t('nav.tech.title')}
+              </p>
+            </div>
+          )}
+
+          {navConfig.profileMenus.map((item) => (
+            <MenuSection
+              key={item.id}
+              item={item}
+              isExpanded={expandedMenus[item.id]}
+              onToggle={() => toggleMenu(item.id)}
+              sidebarOpen={sidebarOpen}
+              navigate={navigate}
+              location={location}
+            />
+          ))}
+
+          {/* Services Section */}
+          {sidebarOpen && (
+            <div className="pt-4 mt-4 border-t border-industrial-border/50">
+              <p className="px-3 text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Services
+              </p>
+            </div>
+          )}
+
+          {navConfig.serviceNav.map((item) => {
             const isActive = location.pathname === item.path
             return (
               <button
-                key={item.path}
+                key={item.id}
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
                   ${isActive
@@ -86,7 +390,7 @@ function Layout() {
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && (
-                  <span className="font-medium text-sm">{item.label}</span>
+                  <span className="font-medium text-sm">{item.getLabel()}</span>
                 )}
               </button>
             )
@@ -97,7 +401,7 @@ function Layout() {
         <div className="p-4 border-t border-industrial-border">
           {sidebarOpen && (
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">
-              Parcours Utilisateur
+              {t('profiles.title')}
             </p>
           )}
           <div className={`flex ${sidebarOpen ? 'gap-2' : 'flex-col gap-2'}`}>
@@ -108,10 +412,10 @@ function Layout() {
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                   : 'text-gray-500 hover:text-white hover:bg-white/5'
                 }`}
-              title="Parcours Business"
+              title={t('profiles.business.label')}
             >
               <Briefcase className="w-4 h-4" />
-              {sidebarOpen && <span className="text-sm">Business</span>}
+              {sidebarOpen && <span className="text-sm">{t('profiles.business.name')}</span>}
             </button>
             <button
               onClick={() => setUserMode(USER_MODES.TECH)}
@@ -120,10 +424,10 @@ function Layout() {
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                   : 'text-gray-500 hover:text-white hover:bg-white/5'
                 }`}
-              title="Parcours Technique"
+              title={t('profiles.tech.label')}
             >
               <Wrench className="w-4 h-4" />
-              {sidebarOpen && <span className="text-sm">Tech</span>}
+              {sidebarOpen && <span className="text-sm">{t('profiles.tech.name')}</span>}
             </button>
           </div>
         </div>
@@ -138,7 +442,7 @@ function Layout() {
       </motion.aside>
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-60' : 'ml-[72px]'}`}>
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-[260px]' : 'ml-[72px]'}`}>
         {/* Top Header */}
         <header className="h-16 bg-industrial-dark/80 backdrop-blur-lg border-b border-industrial-border sticky top-0 z-30 flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
@@ -148,7 +452,7 @@ function Layout() {
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
-                <span>Retour</span>
+                <span>{t('common.back')}</span>
               </button>
             )}
             <div className="flex items-center gap-2">
@@ -158,25 +462,28 @@ function Layout() {
                 <WifiOff className="w-4 h-4 text-red-500" />
               )}
               <span className="text-sm text-gray-400">
-                {isConnected ? 'Temps réel' : 'Hors ligne'}
+                {isConnected ? t('connection.realtime') : t('connection.offline')}
               </span>
               {metrics.lastUpdate && (
                 <span className="text-xs text-gray-500">
-                  {new Date(metrics.lastUpdate).toLocaleTimeString('fr-FR')}
+                  {formatTime(metrics.lastUpdate)}
                 </span>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             <button
               onClick={refetch}
               className="btn btn-ghost p-2"
-              title="Rafraîchir"
+              title={t('common.refresh')}
             >
               <RefreshCw className="w-5 h-5" />
             </button>
-            <button className="btn btn-ghost p-2 relative">
+            <button className="btn btn-ghost p-2 relative" title={t('common.notifications')}>
               <Bell className="w-5 h-5" />
               {metrics.business?.criticalAlarms > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center">
@@ -192,7 +499,7 @@ function Layout() {
                 <Briefcase className="w-4 h-4 text-purple-400" />
               )}
               <span className="text-sm font-medium">
-                {userMode === USER_MODES.TECH ? 'Mode Tech' : 'Mode Business'}
+                {userMode === USER_MODES.TECH ? t('profiles.modeLabel.tech') : t('profiles.modeLabel.business')}
               </span>
             </div>
           </div>

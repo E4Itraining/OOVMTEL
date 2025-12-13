@@ -21,9 +21,10 @@ import {
   Award
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
+import { useI18n } from '../i18n'
 import { Card, CardHeader, CardBody, MetricCard, ServiceCard, LinkCard } from '../components/ui/Card'
 import { RadialGauge, SemiCircleGauge, LinearGauge } from '../components/ui/Gauge'
-import { TimeSeriesChart, BarChartComponent, DonutChart, SparklineChart } from '../components/ui/Charts'
+import { TimeSeriesChart, DonutChart } from '../components/ui/Charts'
 import { StatusBadge, HealthIndicator, LoadingSpinner } from '../components/ui/Status'
 
 // Generate mock time series data
@@ -34,7 +35,7 @@ const generateTimeSeriesData = (points = 20, baseValue = 50, variance = 20) => {
   }))
 }
 
-function BusinessView({ metrics, navigate }) {
+function BusinessView({ metrics, navigate, t }) {
   const equipmentData = useMemo(() => [
     { name: 'Robot-01', status: 'running', efficiency: 94 },
     { name: 'CNC-02', status: 'running', efficiency: 87 },
@@ -53,6 +54,19 @@ function BusinessView({ metrics, navigate }) {
 
   const oeeHistory = useMemo(() => generateTimeSeriesData(24, 85, 10), [])
 
+  // Status translation mapping
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      running: t('metrics.business.running'),
+      stopped: t('metrics.business.stopped'),
+      maintenance: t('metrics.business.maintenance'),
+      idle: t('metrics.business.stopped'),
+      warning: t('common.warning'),
+      error: t('metrics.business.error')
+    }
+    return statusMap[status] || status
+  }
+
   return (
     <div className="space-y-6">
       {/* Hero KPI Section */}
@@ -60,24 +74,24 @@ function BusinessView({ metrics, navigate }) {
         {/* OEE Gauge */}
         <Card className="lg:col-span-1 p-6">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-white mb-4">OEE Global</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('metrics.business.oee')}</h3>
             <SemiCircleGauge
               value={metrics.business?.oee || 87.5}
-              label="Overall Equipment Effectiveness"
+              label={t('metrics.business.oeeDescription')}
               size={220}
             />
             <div className="grid grid-cols-3 gap-4 mt-6">
               <div>
                 <RadialGauge value={metrics.business?.availability || 92} size={80} color="green" />
-                <p className="text-xs text-gray-400 mt-2">Disponibilité</p>
+                <p className="text-xs text-gray-400 mt-2">{t('metrics.business.availability')}</p>
               </div>
               <div>
                 <RadialGauge value={metrics.business?.performance || 95} size={80} color="cyan" />
-                <p className="text-xs text-gray-400 mt-2">Performance</p>
+                <p className="text-xs text-gray-400 mt-2">{t('metrics.business.performance')}</p>
               </div>
               <div>
                 <RadialGauge value={metrics.business?.quality || 99} size={80} color="purple" />
-                <p className="text-xs text-gray-400 mt-2">Qualité</p>
+                <p className="text-xs text-gray-400 mt-2">{t('metrics.business.quality')}</p>
               </div>
             </div>
           </div>
@@ -86,16 +100,16 @@ function BusinessView({ metrics, navigate }) {
         {/* Key Metrics */}
         <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard
-            label="Production Jour"
+            label={t('metrics.business.productionToday')}
             value={metrics.business?.productionToday?.toLocaleString() || "3,247"}
-            unit="unités"
+            unit={t('metrics.business.productionToday').includes('Production') ? 'units' : 'unités'}
             icon={Package}
             color="cyan"
             trend="up"
-            trendValue="+12% vs hier"
+            trendValue="+12%"
           />
           <MetricCard
-            label="Taux Qualité"
+            label={t('metrics.business.qualityRate')}
             value={metrics.business?.quality || "99.2"}
             unit="%"
             icon={Award}
@@ -104,7 +118,7 @@ function BusinessView({ metrics, navigate }) {
             trendValue="+0.3%"
           />
           <MetricCard
-            label="Temps Cycle"
+            label={t('metrics.business.cycleTime')}
             value={metrics.business?.cycleTime || "45"}
             unit="sec"
             icon={Clock}
@@ -113,7 +127,7 @@ function BusinessView({ metrics, navigate }) {
             trendValue="-2.1 sec"
           />
           <MetricCard
-            label="Alertes Critiques"
+            label={t('metrics.business.criticalAlarms')}
             value={metrics.business?.criticalAlarms || "2"}
             icon={AlertTriangle}
             color={metrics.business?.criticalAlarms > 0 ? "red" : "green"}
@@ -125,7 +139,7 @@ function BusinessView({ metrics, navigate }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Production by Product */}
         <Card>
-          <CardHeader title="Production par Produit" icon={BarChart3} />
+          <CardHeader title={t('metrics.business.productionByProduct')} icon={BarChart3} />
           <CardBody>
             <div className="flex items-center gap-6">
               <div className="w-48 h-48">
@@ -146,9 +160,9 @@ function BusinessView({ metrics, navigate }) {
           </CardBody>
         </Card>
 
-        {/* OEE Trend - ENHANCED with thresholds and labels */}
+        {/* OEE Trend */}
         <Card>
-          <CardHeader title="Tendance OEE (24h)" icon={TrendingUp} />
+          <CardHeader title={t('metrics.business.oeeTrend')} icon={TrendingUp} />
           <CardBody>
             <TimeSeriesChart
               data={oeeHistory}
@@ -156,7 +170,7 @@ function BusinessView({ metrics, navigate }) {
               height={220}
               yAxisLabel="OEE"
               yAxisUnit="%"
-              xAxisLabel="Heure"
+              xAxisLabel={t('time.now')}
               yMin={60}
               yMax={100}
               warningThreshold={75}
@@ -171,7 +185,7 @@ function BusinessView({ metrics, navigate }) {
 
       {/* Equipment Grid */}
       <Card>
-        <CardHeader title="Statut Équipements" icon={Factory} />
+        <CardHeader title={t('metrics.business.equipmentStatus')} icon={Factory} />
         <CardBody>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {equipmentData.map((eq) => (
@@ -206,20 +220,20 @@ function BusinessView({ metrics, navigate }) {
       {/* Quick Access Links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <LinkCard
-          title="Grafana"
-          description="Tableaux de bord détaillés"
+          title={t('services.grafana.title')}
+          description={t('services.grafana.description')}
           href="http://localhost:3000"
           icon={Activity}
         />
         <LinkCard
-          title="OpenSearch"
-          description="Analyse des logs"
+          title={t('services.opensearch.title')}
+          description={t('services.opensearch.description')}
           href="http://localhost:5601"
           icon={Search}
         />
         <LinkCard
-          title="Kafka UI"
-          description="Flux de données temps réel"
+          title={t('services.kafka.title')}
+          description={t('services.kafka.description')}
           href="http://localhost:8090"
           icon={MessageSquare}
         />
@@ -228,54 +242,54 @@ function BusinessView({ metrics, navigate }) {
   )
 }
 
-function TechView({ metrics, navigate }) {
+function TechView({ metrics, navigate, t }) {
   const services = useMemo(() => [
-    { name: 'VictoriaMetrics', status: 'healthy', icon: Database, metrics: [
-      { label: 'Series', value: metrics.tech?.vmActiveSeries?.toLocaleString() || '125K' },
-      { label: 'Storage', value: metrics.tech?.vmStorage || '2.4GB' },
-      { label: 'Latency', value: `${metrics.tech?.vmQueryLatency || 12}ms` }
+    { name: t('services.victoriametrics.title'), status: 'healthy', icon: Database, metrics: [
+      { label: t('metrics.tech.activeSeries'), value: metrics.tech?.vmActiveSeries?.toLocaleString() || '125K' },
+      { label: t('metrics.tech.storage'), value: metrics.tech?.vmStorage || '2.4GB' },
+      { label: t('metrics.tech.queryLatency'), value: `${metrics.tech?.vmQueryLatency || 12}ms` }
     ]},
-    { name: 'OpenSearch', status: 'healthy', icon: Search, metrics: [
-      { label: 'Docs', value: metrics.tech?.osDocuments?.toLocaleString() || '1.2M' },
-      { label: 'Health', value: metrics.tech?.osHealth || 'Green' },
-      { label: 'Nodes', value: metrics.tech?.osNodes || '3' }
+    { name: t('services.opensearch.title'), status: 'healthy', icon: Search, metrics: [
+      { label: t('metrics.tech.documents'), value: metrics.tech?.osDocuments?.toLocaleString() || '1.2M' },
+      { label: t('metrics.tech.health'), value: metrics.tech?.osHealth || 'Green' },
+      { label: t('metrics.tech.nodes'), value: metrics.tech?.osNodes || '3' }
     ]},
-    { name: 'Kafka', status: 'healthy', icon: MessageSquare, metrics: [
-      { label: 'Topics', value: metrics.tech?.kafkaTopics || '12' },
-      { label: 'Partitions', value: metrics.tech?.kafkaPartitions || '96' },
-      { label: 'Lag', value: metrics.tech?.kafkaConsumerLag || '0' }
+    { name: t('services.kafka.title'), status: 'healthy', icon: MessageSquare, metrics: [
+      { label: t('metrics.tech.topics'), value: metrics.tech?.kafkaTopics || '12' },
+      { label: t('metrics.tech.partitions'), value: metrics.tech?.kafkaPartitions || '96' },
+      { label: t('metrics.tech.consumerLag'), value: metrics.tech?.kafkaConsumerLag || '0' }
     ]},
     { name: 'OTEL Collector', status: 'healthy', icon: Zap, metrics: [
       { label: 'Recv/s', value: `${metrics.tech?.metricsRate || 1250}` },
       { label: 'Export/s', value: `${Math.round((metrics.tech?.metricsRate || 1250) * 0.98)}` },
-      { label: 'Errors', value: '0' }
+      { label: t('common.error'), value: '0' }
     ]},
-    { name: 'Grafana', status: 'healthy', icon: Activity, metrics: [
-      { label: 'Dashboards', value: '6' },
-      { label: 'Alerts', value: '12' },
+    { name: t('services.grafana.title'), status: 'healthy', icon: Activity, metrics: [
+      { label: t('services.grafana.dashboards'), value: '6' },
+      { label: t('nav.tech.alerts'), value: '12' },
       { label: 'Users', value: '3' }
     ]},
     { name: 'OpenObserve', status: 'healthy', icon: Target, metrics: [
-      { label: 'Logs/s', value: `${metrics.tech?.logsRate || 520}` },
-      { label: 'Traces/s', value: `${metrics.tech?.tracesRate || 180}` },
+      { label: t('metrics.tech.logsRate'), value: `${metrics.tech?.logsRate || 520}` },
+      { label: t('metrics.tech.tracesRate'), value: `${metrics.tech?.tracesRate || 180}` },
       { label: 'Retention', value: '7d' }
     ]},
-  ], [metrics.tech])
+  ], [metrics.tech, t])
 
   const pipelineData = useMemo(() => generateTimeSeriesData(30, 1000, 300), [])
   const resourceData = useMemo(() => [
-    { name: 'CPU', value: metrics.tech?.cpu || 45 },
-    { name: 'Memory', value: metrics.tech?.memory || 62 },
-    { name: 'Disk', value: metrics.tech?.disk || 38 },
+    { name: t('metrics.tech.cpu'), value: metrics.tech?.cpu || 45 },
+    { name: t('metrics.tech.memory'), value: metrics.tech?.memory || 62 },
+    { name: t('metrics.tech.disk'), value: metrics.tech?.disk || 38 },
     { name: 'Network', value: 28 },
-  ], [metrics.tech])
+  ], [metrics.tech, t])
 
   return (
     <div className="space-y-6">
       {/* Pipeline Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
-          label="Metrics Rate"
+          label={t('metrics.tech.metricsRate')}
           value={metrics.tech?.metricsRate?.toLocaleString() || "1,250"}
           unit="pts/s"
           icon={Gauge}
@@ -284,14 +298,14 @@ function TechView({ metrics, navigate }) {
           trendValue="+5%"
         />
         <MetricCard
-          label="Logs Rate"
+          label={t('metrics.tech.logsRate')}
           value={metrics.tech?.logsRate?.toLocaleString() || "520"}
           unit="rec/s"
           icon={Database}
           color="purple"
         />
         <MetricCard
-          label="Latency P95"
+          label={t('metrics.tech.latencyP95')}
           value={metrics.tech?.latencyP95 || "23"}
           unit="ms"
           icon={Zap}
@@ -300,7 +314,7 @@ function TechView({ metrics, navigate }) {
           trendValue="-3ms"
         />
         <MetricCard
-          label="Error Rate"
+          label={t('metrics.tech.errorRate')}
           value={metrics.tech?.errorRate || "0.02"}
           unit="%"
           icon={AlertTriangle}
@@ -324,7 +338,7 @@ function TechView({ metrics, navigate }) {
 
       {/* Pipeline & Resources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Data Pipeline - ENHANCED with axis labels and brush */}
+        {/* Data Pipeline */}
         <Card>
           <CardHeader title="Data Pipeline Throughput" icon={Activity} />
           <CardBody>
@@ -334,9 +348,9 @@ function TechView({ metrics, navigate }) {
                 { dataKey: 'value', color: 'cyan', name: 'Throughput' }
               ]}
               height={260}
-              yAxisLabel="Débit"
+              yAxisLabel="Throughput"
               yAxisUnit="pts/s"
-              xAxisLabel="Temps"
+              xAxisLabel={t('time.now')}
               warningThreshold={1400}
               criticalThreshold={1600}
               referenceLines={[{ y: 1000, color: '#22c55e', label: 'Baseline', dashed: true }]}
@@ -377,20 +391,20 @@ function TechView({ metrics, navigate }) {
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <LinkCard
-          title="Grafana Dashboards"
-          description="Visualisations avancées"
+          title={t('services.grafana.title')}
+          description={t('services.grafana.description')}
           href="http://localhost:3000"
           icon={Activity}
         />
         <LinkCard
-          title="OpenSearch Dashboards"
-          description="Log analytics & search"
+          title={t('services.opensearch.title')}
+          description={t('services.opensearch.description')}
           href="http://localhost:5601"
           icon={Search}
         />
         <LinkCard
-          title="Kafka UI"
-          description="Topic management & monitoring"
+          title={t('services.kafka.title')}
+          description={t('services.kafka.description')}
           href="http://localhost:8090"
           icon={MessageSquare}
         />
@@ -402,35 +416,38 @@ function TechView({ metrics, navigate }) {
 function GlobalView() {
   const navigate = useNavigate()
   const { userMode, metrics, isLoading } = useDashboard()
+  const { t } = useI18n()
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <LoadingSpinner size="lg" label="Chargement des données..." />
+        <LoadingSpinner size="lg" label={t('common.loading')} />
       </div>
     )
   }
+
+  // Page titles based on user mode
+  const pageTitle = userMode === USER_MODES.TECH
+    ? t('profiles.tech.label')
+    : t('profiles.business.label')
+
+  const pageDescription = userMode === USER_MODES.TECH
+    ? t('profiles.tech.description')
+    : t('profiles.business.description')
 
   return (
     <div>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">
-          {userMode === USER_MODES.TECH ? 'Vue Technique' : 'Vue Business'}
-        </h1>
-        <p className="text-gray-400 mt-1">
-          {userMode === USER_MODES.TECH
-            ? 'Infrastructure & Pipeline de données'
-            : 'KPIs Production & Performance Industrielle'
-          }
-        </p>
+        <h1 className="text-2xl font-bold text-white">{pageTitle}</h1>
+        <p className="text-gray-400 mt-1">{pageDescription}</p>
       </div>
 
       {/* Content based on user mode */}
       {userMode === USER_MODES.TECH ? (
-        <TechView metrics={metrics} navigate={navigate} />
+        <TechView metrics={metrics} navigate={navigate} t={t} />
       ) : (
-        <BusinessView metrics={metrics} navigate={navigate} />
+        <BusinessView metrics={metrics} navigate={navigate} t={t} />
       )}
     </div>
   )
