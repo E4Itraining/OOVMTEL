@@ -25,8 +25,8 @@ transport.port: 9300
 # DISCOVERY (Single node for now, expand for production)
 # =============================================================================
 discovery.type: single-node
-cluster.initial_master_nodes:
-  - opensearch-compliance-node1
+# Note: cluster.initial_master_nodes should NOT be set with discovery.type: single-node
+# It's only needed for multi-node cluster bootstrapping
 
 # =============================================================================
 # MEMORY
