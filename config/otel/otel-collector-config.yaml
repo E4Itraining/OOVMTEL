@@ -26,7 +26,7 @@ receivers:
     brokers:
       - kafka:9092
     topic: scada-metrics
-    encoding: json
+    encoding: otlp_json
     group_id: otel-scada
     initial_offset: latest
 
@@ -35,7 +35,7 @@ receivers:
     brokers:
       - kafka:9092
     topic: mes-events
-    encoding: json
+    encoding: otlp_json
     group_id: otel-mes
     initial_offset: latest
 
@@ -44,7 +44,7 @@ receivers:
     brokers:
       - kafka:9092
     topic: plm-data
-    encoding: json
+    encoding: otlp_json
     group_id: otel-plm
     initial_offset: latest
 
@@ -185,15 +185,11 @@ exporters:
       max_message_bytes: 10000000
       compression: lz4
 
-  # Debug exporter for development
+  # Debug exporter for development (replaces deprecated 'logging' exporter)
   debug:
-    verbosity: basic
+    verbosity: normal
     sampling_initial: 5
     sampling_thereafter: 200
-
-  # Logging exporter
-  logging:
-    loglevel: info
 
 extensions:
   # Health check
@@ -221,7 +217,7 @@ service:
     metrics:
       receivers: [otlp, hostmetrics, prometheus]
       processors: [memory_limiter, resourcedetection, attributes/industrial, batch]
-      exporters: [prometheusremotewrite/victoria, logging]
+      exporters: [prometheusremotewrite/victoria, debug]
 
     # Metrics from Kafka (industrial sources)
     metrics/kafka:
@@ -233,13 +229,13 @@ service:
     logs:
       receivers: [otlp, filelog]
       processors: [memory_limiter, resourcedetection, attributes/industrial, batch]
-      exporters: [otlphttp/openobserve, elasticsearch/opensearch, logging]
+      exporters: [otlphttp/openobserve, elasticsearch/opensearch, debug]
 
     # Traces pipeline
     traces:
       receivers: [otlp]
       processors: [memory_limiter, resourcedetection, attributes/industrial, batch]
-      exporters: [otlphttp/openobserve, elasticsearch/opensearch, logging]
+      exporters: [otlphttp/openobserve, elasticsearch/opensearch, debug]
 
   telemetry:
     logs:
