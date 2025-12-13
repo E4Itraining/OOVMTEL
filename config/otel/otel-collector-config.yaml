@@ -169,6 +169,15 @@ exporters:
     external_labels:
       collector: otel
       platform: industrial
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
 
   # OpenObserve for logs and traces
   otlphttp/openobserve:
@@ -176,6 +185,19 @@ exporters:
     headers:
       Authorization: "Basic cm9vdEBleGFtcGxlLmNvbTpDb21wbGV4cGFzcyMxMjM="
       stream-name: industrial
+    # Retry configuration for handling OpenObserve startup delays
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 60s
+      max_elapsed_time: 300s
+    # Queue to buffer data while OpenObserve is starting
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+    # Timeout settings
+    timeout: 30s
 
   # OpenSearch for analytics (using elasticsearch exporter - OpenSearch is API-compatible)
   elasticsearch/opensearch:
@@ -186,7 +208,14 @@ exporters:
     flush:
       bytes: 5000000
     retry:
-      max_requests: 3
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_requests: 5
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
 
   # Kafka exporter for downstream processing
   kafka:
@@ -197,6 +226,15 @@ exporters:
     producer:
       max_message_bytes: 10000000
       compression: lz4
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
 
   # Debug exporter for development (replaces deprecated 'logging' exporter)
   # Reduced verbosity to avoid log spam - increase for troubleshooting
