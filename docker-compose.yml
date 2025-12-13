@@ -201,6 +201,14 @@ services:
     depends_on:
       victoria-metrics:
         condition: service_healthy
+      scada-simulator:
+        condition: service_healthy
+      mes-simulator:
+        condition: service_healthy
+      plm-simulator:
+        condition: service_healthy
+      opcua-simulator:
+        condition: service_healthy
     ports:
       - "8429:8429"
     command:
@@ -321,6 +329,14 @@ services:
       victoria-metrics:
         condition: service_healthy
       opensearch:
+        condition: service_healthy
+      scada-simulator:
+        condition: service_healthy
+      mes-simulator:
+        condition: service_healthy
+      plm-simulator:
+        condition: service_healthy
+      opcua-simulator:
         condition: service_healthy
     ports:
       - "4317:4317"   # OTLP gRPC
