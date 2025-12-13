@@ -2,14 +2,18 @@
  * OOVMTEL Unified Business-Tech View
  * Industrial Observability Platform
  *
- * Main application JavaScript
+ * Enhanced application JavaScript with real-time updates,
+ * problems & impacts tracking, and smooth animations
  */
 
 // Configuration
 const CONFIG = {
     apiBaseUrl: '/api',
-    refreshInterval: 10000, // 10 seconds
-    victoriaMetricsUrl: 'http://localhost:8428',
+    wsUrl: `ws://${window.location.host}/ws`,
+    refreshInterval: 10000, // 10 seconds fallback
+    toastDuration: 5000,
+    maxToasts: 5,
+    sparklinePoints: 20,
     animations: true
 };
 
@@ -17,11 +21,23 @@ const CONFIG = {
 const state = {
     currentView: 'unified',
     lastUpdate: null,
+    connectionType: 'polling', // 'websocket' | 'polling' | 'disconnected'
+    websocket: null,
+    previousData: null,
     data: {
         business: {},
         tech: {},
         services: []
-    }
+    },
+    history: {
+        oee: [],
+        metricsRate: [],
+        logsRate: [],
+        latency: [],
+        production: [],
+        quality: []
+    },
+    problems: []
 };
 
 // =========================================
@@ -44,7 +60,7 @@ function formatBytes(bytes) {
 }
 
 function formatTime(date) {
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString('fr-FR', {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -52,8 +68,71 @@ function formatTime(date) {
     });
 }
 
+function formatTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 5) return 'à l\'instant';
+    if (seconds < 60) return `il y a ${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `il y a ${minutes}min`;
+    const hours = Math.floor(minutes / 60);
+    return `il y a ${hours}h`;
+}
+
 function randomInRange(min, max) {
     return Math.random() * (max - min) + min;
+}
+
+function getTrendDirection(current, previous) {
+    if (!previous || current === previous) return 'neutral';
+    return current > previous ? 'up' : 'down';
+}
+
+function getTrendPercentage(current, previous) {
+    if (!previous || previous === 0) return 0;
+    return ((current - previous) / previous * 100).toFixed(1);
+}
+
+// =========================================
+// Toast Notifications
+// =========================================
+
+function showToast(type, title, message) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    // Limit number of toasts
+    const existingToasts = container.querySelectorAll('.toast');
+    if (existingToasts.length >= CONFIG.maxToasts) {
+        existingToasts[0].remove();
+    }
+
+    const icons = {
+        critical: '!',
+        warning: '!',
+        success: '✓',
+        info: 'i'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || 'i'}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto-remove after duration
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, CONFIG.toastDuration);
 }
 
 // =========================================
@@ -94,6 +173,78 @@ function switchView(view) {
 }
 
 // =========================================
+// WebSocket Connection
+// =========================================
+
+function initWebSocket() {
+    try {
+        state.websocket = new WebSocket(CONFIG.wsUrl);
+
+        state.websocket.onopen = () => {
+            console.log('WebSocket connected');
+            state.connectionType = 'websocket';
+            updateConnectionStatus();
+            showToast('success', 'Connexion temps réel', 'WebSocket connecté');
+        };
+
+        state.websocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                updateUI(data);
+            } catch (error) {
+                console.warn('Failed to parse WebSocket message:', error);
+            }
+        };
+
+        state.websocket.onclose = () => {
+            console.log('WebSocket disconnected, falling back to polling');
+            state.connectionType = 'polling';
+            updateConnectionStatus();
+            // Retry connection after 5 seconds
+            setTimeout(initWebSocket, 5000);
+        };
+
+        state.websocket.onerror = (error) => {
+            console.warn('WebSocket error:', error);
+            state.connectionType = 'polling';
+            updateConnectionStatus();
+        };
+    } catch (error) {
+        console.warn('WebSocket not available, using polling');
+        state.connectionType = 'polling';
+        updateConnectionStatus();
+    }
+}
+
+function updateConnectionStatus() {
+    const indicator = document.getElementById('refreshIndicator');
+    const statusDot = document.getElementById('connectionStatus');
+    const refreshText = indicator?.querySelector('.refresh-text');
+
+    if (!indicator || !statusDot) return;
+
+    indicator.classList.remove('disconnected');
+    statusDot.classList.remove('websocket', 'polling', 'disconnected');
+
+    switch (state.connectionType) {
+        case 'websocket':
+            statusDot.classList.add('websocket');
+            statusDot.title = 'WebSocket actif';
+            break;
+        case 'polling':
+            statusDot.classList.add('polling');
+            statusDot.title = 'Mode polling';
+            break;
+        case 'disconnected':
+            indicator.classList.add('disconnected');
+            statusDot.classList.add('disconnected');
+            if (refreshText) refreshText.textContent = 'HORS LIGNE';
+            statusDot.title = 'Déconnecté';
+            break;
+    }
+}
+
+// =========================================
 // Data Fetching
 // =========================================
 
@@ -101,10 +252,14 @@ async function fetchMetrics() {
     try {
         const response = await fetch(`${CONFIG.apiBaseUrl}/metrics`);
         if (response.ok) {
+            state.connectionType = state.websocket?.readyState === 1 ? 'websocket' : 'polling';
+            updateConnectionStatus();
             return await response.json();
         }
     } catch (error) {
         console.warn('API not available, using simulated data');
+        state.connectionType = 'polling';
+        updateConnectionStatus();
     }
 
     // Return simulated data if API is not available
@@ -112,6 +267,7 @@ async function fetchMetrics() {
 }
 
 function generateSimulatedData() {
+    const now = new Date();
     return {
         business: {
             oee: randomInRange(72, 88),
@@ -123,12 +279,12 @@ function generateSimulatedData() {
             availability: randomInRange(85, 98),
             performance: randomInRange(80, 95),
             equipment: [
-                { name: 'Reactor-001', status: 'running', temp: randomInRange(60, 80), pressure: randomInRange(4, 6), power: randomInRange(100, 150) },
-                { name: 'Mixer-002', status: 'running', temp: randomInRange(40, 60), pressure: randomInRange(2, 4), power: randomInRange(50, 80) },
-                { name: 'Pump-003', status: 'warning', temp: randomInRange(30, 50), pressure: randomInRange(3, 5), power: randomInRange(20, 40) },
-                { name: 'Furnace-004', status: 'running', temp: randomInRange(200, 300), pressure: randomInRange(1, 2), power: randomInRange(200, 300) },
-                { name: 'Conveyor-005', status: 'running', temp: randomInRange(25, 35), pressure: randomInRange(1, 2), power: randomInRange(30, 50) },
-                { name: 'Tank-006', status: 'stopped', temp: randomInRange(20, 30), pressure: randomInRange(1, 2), power: 0 }
+                { name: 'Reactor-001', status: 'running', temp: randomInRange(60, 80), pressure: randomInRange(4, 6), power: randomInRange(100, 150), vibration: randomInRange(0.5, 2) },
+                { name: 'Mixer-002', status: 'running', temp: randomInRange(40, 60), pressure: randomInRange(2, 4), power: randomInRange(50, 80), vibration: randomInRange(0.3, 1.5) },
+                { name: 'Pump-003', status: 'warning', temp: randomInRange(30, 50), pressure: randomInRange(3, 5), power: randomInRange(20, 40), vibration: randomInRange(2, 4) },
+                { name: 'Furnace-004', status: 'running', temp: randomInRange(200, 300), pressure: randomInRange(1, 2), power: randomInRange(200, 300), vibration: randomInRange(0.2, 1) },
+                { name: 'Conveyor-005', status: 'running', temp: randomInRange(25, 35), pressure: randomInRange(1, 2), power: randomInRange(30, 50), vibration: randomInRange(0.5, 1.5) },
+                { name: 'Tank-006', status: 'stopped', temp: randomInRange(20, 30), pressure: randomInRange(1, 2), power: 0, vibration: 0 }
             ],
             productionByProduct: {
                 'Product A': Math.floor(randomInRange(250, 350)),
@@ -137,9 +293,9 @@ function generateSimulatedData() {
                 'Product D': Math.floor(randomInRange(280, 380))
             },
             alarms: [
-                { severity: 'critical', message: 'High temperature on Reactor-001' },
-                { severity: 'warning', message: 'Vibration alert on Pump-003' },
-                { severity: 'warning', message: 'Maintenance due on Mixer-002' }
+                { severity: 'critical', message: 'Température élevée sur Reactor-001', time: new Date(now - 60000), source: 'SCADA' },
+                { severity: 'warning', message: 'Alerte vibration sur Pump-003', time: new Date(now - 180000), source: 'MES' },
+                { severity: 'warning', message: 'Maintenance prévue sur Mixer-002', time: new Date(now - 300000), source: 'PLM' }
             ]
         },
         tech: {
@@ -163,21 +319,277 @@ function generateSimulatedData() {
             kafkaLag: Math.floor(randomInRange(0, 100))
         },
         services: [
-            { name: 'VictoriaMetrics', status: 'up', port: 8428 },
-            { name: 'OTEL Collector', status: 'up', port: 4317 },
-            { name: 'Kafka', status: 'up', port: 9092 },
-            { name: 'OpenSearch', status: 'up', port: 9200 },
-            { name: 'OpenObserve', status: 'up', port: 5080 },
-            { name: 'Grafana', status: 'up', port: 3000 }
+            { name: 'VictoriaMetrics', status: 'up', port: 8428, latency: randomInRange(5, 15) },
+            { name: 'OTEL Collector', status: 'up', port: 4317, latency: randomInRange(2, 8) },
+            { name: 'Kafka', status: 'up', port: 9092, latency: randomInRange(3, 10) },
+            { name: 'OpenSearch', status: 'up', port: 9200, latency: randomInRange(10, 25) },
+            { name: 'OpenObserve', status: 'up', port: 5080, latency: randomInRange(5, 15) },
+            { name: 'Grafana', status: 'up', port: 3000, latency: randomInRange(8, 20) }
         ],
         events: [
-            { time: new Date(Date.now() - 120000), type: 'business', title: 'Production batch completed', desc: 'Batch #4521 - 150 units' },
-            { time: new Date(Date.now() - 300000), type: 'tech', title: 'OTEL pipeline spike', desc: '120K metrics/sec processed' },
-            { time: new Date(Date.now() - 480000), type: 'business', title: 'Quality check passed', desc: 'Product A - 99.2% quality' },
-            { time: new Date(Date.now() - 600000), type: 'tech', title: 'Memory optimization', desc: 'VM GC completed - 2GB freed' },
-            { time: new Date(Date.now() - 900000), type: 'business', title: 'Equipment maintenance', desc: 'Pump-003 scheduled check' }
+            { time: new Date(now - 120000), type: 'business', title: 'Batch de production terminé', desc: 'Batch #4521 - 150 unités' },
+            { time: new Date(now - 300000), type: 'tech', title: 'Pic pipeline OTEL', desc: '120K métriques/sec traitées' },
+            { time: new Date(now - 480000), type: 'business', title: 'Contrôle qualité réussi', desc: 'Product A - 99.2% qualité' },
+            { time: new Date(now - 600000), type: 'tech', title: 'Optimisation mémoire', desc: 'VM GC terminé - 2GB libérés' },
+            { time: new Date(now - 900000), type: 'business', title: 'Maintenance équipement', desc: 'Contrôle planifié Pump-003' }
         ]
     };
+}
+
+// =========================================
+// Problems & Impacts Analysis
+// =========================================
+
+function analyzeProblemsAndImpacts(data) {
+    const problems = [];
+
+    // Check equipment with issues
+    data.business.equipment?.forEach(eq => {
+        if (eq.status === 'warning' || eq.status === 'stopped') {
+            const impacts = [];
+
+            if (eq.status === 'warning') {
+                impacts.push({
+                    type: 'business',
+                    description: 'Risque de dégradation de la production',
+                    value: '-5% à -10% OEE potentiel',
+                    severity: 'negative'
+                });
+                impacts.push({
+                    type: 'tech',
+                    description: 'Augmentation des logs d\'alerte',
+                    value: '+15% volume logs',
+                    severity: 'negative'
+                });
+            }
+
+            if (eq.status === 'stopped') {
+                impacts.push({
+                    type: 'business',
+                    description: 'Arrêt de production sur la ligne',
+                    value: `0 unités/heure`,
+                    severity: 'negative'
+                });
+                impacts.push({
+                    type: 'business',
+                    description: 'Impact sur la disponibilité OEE',
+                    value: '-3% à -8% disponibilité',
+                    severity: 'negative'
+                });
+            }
+
+            if (eq.vibration > 2.5) {
+                impacts.push({
+                    type: 'tech',
+                    description: 'Vibrations anormales détectées',
+                    value: `${eq.vibration.toFixed(1)} mm/s`,
+                    severity: 'negative'
+                });
+            }
+
+            if (eq.temp > 100) {
+                impacts.push({
+                    type: 'business',
+                    description: 'Surchauffe nécessitant ralentissement',
+                    value: `${eq.temp.toFixed(0)}°C`,
+                    severity: 'negative'
+                });
+            }
+
+            problems.push({
+                id: `eq-${eq.name}`,
+                severity: eq.status === 'stopped' ? 'critical' : 'warning',
+                title: `${eq.name} - ${eq.status === 'stopped' ? 'Arrêté' : 'En alerte'}`,
+                time: new Date(),
+                source: 'SCADA',
+                impacts
+            });
+        }
+    });
+
+    // Check alarms
+    data.business.alarms?.forEach((alarm, idx) => {
+        const impacts = [];
+
+        if (alarm.severity === 'critical') {
+            impacts.push({
+                type: 'business',
+                description: 'Intervention immédiate requise',
+                value: 'Priorité haute',
+                severity: 'negative'
+            });
+            impacts.push({
+                type: 'tech',
+                description: 'Génération d\'alertes système',
+                value: 'Escalade automatique',
+                severity: 'negative'
+            });
+        }
+
+        problems.push({
+            id: `alarm-${idx}`,
+            severity: alarm.severity,
+            title: alarm.message,
+            time: alarm.time || new Date(),
+            source: alarm.source || 'Système',
+            impacts
+        });
+    });
+
+    // Check tech issues
+    if (data.tech.errorRate > 0.05) {
+        problems.push({
+            id: 'error-rate',
+            severity: data.tech.errorRate > 0.1 ? 'critical' : 'warning',
+            title: `Taux d'erreur élevé: ${(data.tech.errorRate * 100).toFixed(2)}%`,
+            time: new Date(),
+            source: 'OTEL',
+            impacts: [
+                {
+                    type: 'tech',
+                    description: 'Perte potentielle de données télémétriques',
+                    value: `~${Math.floor(data.tech.metricsRate * data.tech.errorRate)} métriques/sec`,
+                    severity: 'negative'
+                },
+                {
+                    type: 'business',
+                    description: 'Risque de données manquantes pour analyse',
+                    value: 'Dégradation visibilité',
+                    severity: 'negative'
+                }
+            ]
+        });
+    }
+
+    if (data.tech.latencyP95 > 50) {
+        problems.push({
+            id: 'latency',
+            severity: 'warning',
+            title: `Latence élevée: ${data.tech.latencyP95.toFixed(0)}ms P95`,
+            time: new Date(),
+            source: 'Infrastructure',
+            impacts: [
+                {
+                    type: 'tech',
+                    description: 'Délai dans la collecte des métriques',
+                    value: `+${(data.tech.latencyP95 - 30).toFixed(0)}ms vs normal`,
+                    severity: 'negative'
+                },
+                {
+                    type: 'business',
+                    description: 'Décalage temps réel des dashboards',
+                    value: 'Rafraîchissement retardé',
+                    severity: 'negative'
+                }
+            ]
+        });
+    }
+
+    // Sort by severity
+    problems.sort((a, b) => {
+        const order = { critical: 0, warning: 1, info: 2 };
+        return order[a.severity] - order[b.severity];
+    });
+
+    return problems;
+}
+
+function renderProblemsAndImpacts(problems) {
+    const container = document.getElementById('problemsImpactsContainer');
+    const countBadge = document.getElementById('problemsCount');
+
+    if (!container) return;
+
+    // Update count badge
+    const criticalCount = problems.filter(p => p.severity === 'critical').length;
+    if (countBadge) {
+        countBadge.textContent = problems.length;
+        countBadge.className = `section-badge ${criticalCount > 0 ? 'critical' : 'warning'}`;
+    }
+
+    if (problems.length === 0) {
+        container.innerHTML = `
+            <div class="no-problems">
+                <div class="no-problems-icon">✓</div>
+                <div class="no-problems-text">Aucun problème détecté</div>
+                <div class="no-problems-subtext">Tous les systèmes fonctionnent normalement</div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = problems.map(problem => `
+        <div class="problem-impact-card ${problem.severity}">
+            <div class="problem-header">
+                <div class="problem-icon ${problem.severity}">
+                    ${problem.severity === 'critical' ? '!' : '⚠'}
+                </div>
+                <div class="problem-info">
+                    <div class="problem-title">${problem.title}</div>
+                    <div class="problem-meta">
+                        <span class="problem-time">⏱ ${formatTimeAgo(problem.time)}</span>
+                        <span class="problem-source">${problem.source}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="impacts-container">
+                <div class="impacts-grid">
+                    ${problem.impacts.map(impact => `
+                        <div class="impact-item">
+                            <span class="impact-arrow">→</span>
+                            <div class="impact-content">
+                                <span class="impact-type ${impact.type}">${impact.type === 'business' ? 'BUSINESS' : 'TECH'}</span>
+                                <div class="impact-description">${impact.description}</div>
+                                <div class="impact-value ${impact.severity}">${impact.value}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// =========================================
+// Sparkline Charts
+// =========================================
+
+function updateHistory(key, value) {
+    if (!state.history[key]) state.history[key] = [];
+    state.history[key].push(value);
+    if (state.history[key].length > CONFIG.sparklinePoints) {
+        state.history[key].shift();
+    }
+}
+
+function renderSparkline(containerId, data, color) {
+    const container = document.getElementById(containerId);
+    if (!container || data.length < 2) return;
+
+    const width = 100;
+    const height = 30;
+    const maxValue = Math.max(...data);
+    const minValue = Math.min(...data);
+    const range = maxValue - minValue || 1;
+
+    const points = data.map((value, index) => {
+        const x = (index / (data.length - 1)) * width;
+        const y = height - ((value - minValue) / range) * (height * 0.8) - height * 0.1;
+        return `${x},${y}`;
+    }).join(' ');
+
+    container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="grad-${containerId}" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:${color};stop-opacity:0.3"/>
+                    <stop offset="100%" style="stop-color:${color};stop-opacity:0"/>
+                </linearGradient>
+            </defs>
+            <polygon points="0,${height} ${points} ${width},${height}" fill="url(#grad-${containerId})"/>
+            <polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5"/>
+        </svg>
+    `;
 }
 
 // =========================================
@@ -185,30 +597,66 @@ function generateSimulatedData() {
 // =========================================
 
 function updateUI(data) {
+    const previousData = state.previousData;
+    state.previousData = JSON.parse(JSON.stringify(data));
     state.data = data;
     state.lastUpdate = new Date();
 
     // Update timestamp
     document.getElementById('lastUpdateTime').textContent = formatTime(state.lastUpdate);
 
+    // Update history for sparklines
+    updateHistory('oee', data.business.oee);
+    updateHistory('metricsRate', data.tech.metricsRate);
+    updateHistory('logsRate', data.tech.logsRate);
+    updateHistory('latency', data.tech.latencyP95);
+    updateHistory('production', data.business.productionToday);
+    updateHistory('quality', data.business.qualityRate);
+
+    // Analyze problems and impacts
+    const problems = analyzeProblemsAndImpacts(data);
+    state.problems = problems;
+
+    // Check for new critical problems
+    if (previousData) {
+        const prevProblems = analyzeProblemsAndImpacts(previousData);
+        const newCritical = problems.filter(p =>
+            p.severity === 'critical' &&
+            !prevProblems.some(pp => pp.id === p.id)
+        );
+        newCritical.forEach(p => {
+            showToast('critical', 'Nouveau problème critique', p.title);
+        });
+    }
+
     // Update all views
-    updateUnifiedView(data);
-    updateBusinessView(data);
-    updateTechView(data);
+    updateUnifiedView(data, previousData);
+    updateBusinessView(data, previousData);
+    updateTechView(data, previousData);
+
+    // Render problems and impacts
+    renderProblemsAndImpacts(problems);
 }
 
-function updateUnifiedView(data) {
-    // Business KPIs
-    updateElement('oeeValue', data.business.oee.toFixed(1));
-    updateElement('qualityValue', data.business.qualityRate.toFixed(1));
-    updateElement('productionValue', formatNumber(data.business.productionToday));
+function updateUnifiedView(data, previousData) {
+    // Business KPIs with trends
+    updateElementWithTrend('oeeValue', data.business.oee.toFixed(1),
+        previousData?.business?.oee, true);
+    updateElementWithTrend('qualityValue', data.business.qualityRate.toFixed(1),
+        previousData?.business?.qualityRate, true);
+    updateElementWithTrend('productionValue', formatNumber(data.business.productionToday),
+        previousData?.business?.productionToday, true);
     updateElement('alarmsValue', data.business.criticalAlarms);
 
-    // Tech KPIs
-    updateElement('metricsRateValue', formatNumber(data.tech.metricsRate));
-    updateElement('logsRateValue', formatNumber(data.tech.logsRate));
-    updateElement('latencyValue', data.tech.latencyP95.toFixed(0));
-    updateElement('errorRateValue', data.tech.errorRate.toFixed(3));
+    // Tech KPIs with trends
+    updateElementWithTrend('metricsRateValue', formatNumber(data.tech.metricsRate),
+        previousData?.tech?.metricsRate, true);
+    updateElementWithTrend('logsRateValue', formatNumber(data.tech.logsRate),
+        previousData?.tech?.logsRate, true);
+    updateElementWithTrend('latencyValue', data.tech.latencyP95.toFixed(0),
+        previousData?.tech?.latencyP95, false); // Lower is better for latency
+    updateElementWithTrend('errorRateValue', data.tech.errorRate.toFixed(3),
+        previousData?.tech?.errorRate, false);
 
     // Services Status
     renderServicesStatus(data.services);
@@ -218,23 +666,29 @@ function updateUnifiedView(data) {
 
     // Event Timeline
     renderEventTimeline(data.events);
+
+    // Sparklines in trend areas
+    renderSparkline('oeeChart', state.history.oee, '#3b82f6');
+    renderSparkline('qualityTrend', state.history.quality, '#10b981');
+    renderSparkline('productionTrend', state.history.production, '#8b5cf6');
 }
 
-function updateBusinessView(data) {
+function updateBusinessView(data, previousData) {
     // OEE Components
     updateElement('availabilityValue', data.business.availability.toFixed(1) + '%');
     updateElement('performanceValue', data.business.performance.toFixed(1) + '%');
     updateElement('qualityBarValue', data.business.qualityRate.toFixed(1) + '%');
 
-    document.getElementById('availabilityBar').style.width = data.business.availability + '%';
-    document.getElementById('performanceBar').style.width = data.business.performance + '%';
-    document.getElementById('qualityBar').style.width = data.business.qualityRate + '%';
+    // Animate progress bars
+    animateProgressBar('availabilityBar', data.business.availability);
+    animateProgressBar('performanceBar', data.business.performance);
+    animateProgressBar('qualityBar', data.business.qualityRate);
 
     // Equipment Grid
     renderEquipmentGrid(data.business.equipment);
 }
 
-function updateTechView(data) {
+function updateTechView(data, previousData) {
     // Services Detail Grid
     renderServicesDetailGrid(data.services);
 
@@ -255,7 +709,39 @@ function updateTechView(data) {
 function updateElement(id, value) {
     const element = document.getElementById(id);
     if (element) {
+        if (element.textContent !== String(value)) {
+            element.textContent = value;
+            element.classList.add('value-changed');
+            setTimeout(() => element.classList.remove('value-changed'), 500);
+        }
+    }
+}
+
+function updateElementWithTrend(id, value, previousValue, higherIsBetter = true) {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    const numValue = parseFloat(String(value).replace(/[^\d.-]/g, ''));
+    const numPrevious = previousValue ? parseFloat(String(previousValue)) : null;
+
+    if (element.textContent !== String(value)) {
         element.textContent = value;
+
+        if (numPrevious !== null && numValue !== numPrevious) {
+            const increased = numValue > numPrevious;
+            const isGood = higherIsBetter ? increased : !increased;
+            element.classList.add(isGood ? 'value-increased' : 'value-decreased');
+            setTimeout(() => {
+                element.classList.remove('value-increased', 'value-decreased');
+            }, 500);
+        }
+    }
+}
+
+function animateProgressBar(id, value) {
+    const bar = document.getElementById(id);
+    if (bar) {
+        bar.style.width = value + '%';
     }
 }
 
@@ -288,8 +774,9 @@ function renderServicesDetailGrid(services) {
         <div class="service-card ${service.status}">
             <div class="service-icon">${serviceIcons[service.name] || service.name[0]}</div>
             <div class="service-name">${service.name}</div>
-            <div class="service-status">${service.status === 'up' ? 'Running' : 'Down'}</div>
+            <div class="service-status">${service.status === 'up' ? 'En ligne' : 'Hors ligne'}</div>
             <div class="service-port">Port: ${service.port}</div>
+            ${service.latency ? `<div class="service-latency">${service.latency.toFixed(0)}ms</div>` : ''}
         </div>
     `).join('');
 }
@@ -298,28 +785,34 @@ function renderEquipmentGrid(equipment) {
     const container = document.getElementById('equipmentGrid');
     if (!container) return;
 
+    const statusLabels = {
+        running: 'EN MARCHE',
+        warning: 'ALERTE',
+        stopped: 'ARRÊTÉ'
+    };
+
     container.innerHTML = equipment.map(eq => `
         <div class="equipment-card">
             <div class="equipment-header">
                 <span class="equipment-name">${eq.name}</span>
-                <span class="equipment-status ${eq.status}">${eq.status.toUpperCase()}</span>
+                <span class="equipment-status ${eq.status}">${statusLabels[eq.status] || eq.status.toUpperCase()}</span>
             </div>
             <div class="equipment-metrics">
                 <div class="equipment-metric">
-                    <span class="label">Temperature</span>
-                    <span class="value">${eq.temp.toFixed(1)}°C</span>
+                    <span class="label">Température</span>
+                    <span class="value ${eq.temp > 100 ? 'text-danger' : ''}">${eq.temp.toFixed(1)}°C</span>
                 </div>
                 <div class="equipment-metric">
-                    <span class="label">Pressure</span>
+                    <span class="label">Pression</span>
                     <span class="value">${eq.pressure.toFixed(2)} bar</span>
                 </div>
                 <div class="equipment-metric">
-                    <span class="label">Power</span>
+                    <span class="label">Puissance</span>
                     <span class="value">${eq.power.toFixed(0)} kW</span>
                 </div>
                 <div class="equipment-metric">
                     <span class="label">Vibration</span>
-                    <span class="value">${randomInRange(0.5, 3).toFixed(1)} mm/s</span>
+                    <span class="value ${eq.vibration > 2.5 ? 'text-warning' : ''}">${eq.vibration.toFixed(1)} mm/s</span>
                 </div>
             </div>
         </div>
@@ -361,7 +854,7 @@ function renderPipelineStats(data) {
     container.innerHTML = `
         <div class="pipeline-stat">
             <div class="stat-value">${formatNumber(data.tech.metricsRate)}</div>
-            <div class="stat-label">Metrics/sec</div>
+            <div class="stat-label">Métriques/sec</div>
         </div>
         <div class="pipeline-stat">
             <div class="stat-value">${formatNumber(data.tech.logsRate)}</div>
@@ -373,52 +866,30 @@ function renderPipelineStats(data) {
         </div>
         <div class="pipeline-stat">
             <div class="stat-value">${data.tech.latencyP95.toFixed(0)}ms</div>
-            <div class="stat-label">P95 Latency</div>
+            <div class="stat-label">Latence P95</div>
         </div>
         <div class="pipeline-stat">
             <div class="stat-value">${formatBytes(data.tech.kafkaThroughput)}/s</div>
-            <div class="stat-label">Kafka Throughput</div>
+            <div class="stat-label">Débit Kafka</div>
         </div>
         <div class="pipeline-stat">
             <div class="stat-value">${data.tech.errorRate.toFixed(3)}%</div>
-            <div class="stat-label">Error Rate</div>
+            <div class="stat-label">Taux d'erreur</div>
         </div>
     `;
 }
 
 // =========================================
-// Simple Chart Rendering
+// Time Ago Updater
 // =========================================
 
-function renderSimpleChart(containerId, data, color) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    const width = container.offsetWidth;
-    const height = container.offsetHeight;
-    const points = data.length;
-    const maxValue = Math.max(...data);
-    const minValue = Math.min(...data);
-    const range = maxValue - minValue || 1;
-
-    const pathData = data.map((value, index) => {
-        const x = (index / (points - 1)) * width;
-        const y = height - ((value - minValue) / range) * (height * 0.8) - height * 0.1;
-        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-    }).join(' ');
-
-    container.innerHTML = `
-        <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}">
-            <defs>
-                <linearGradient id="gradient-${containerId}" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:${color};stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:${color};stop-opacity:0" />
-                </linearGradient>
-            </defs>
-            <path d="${pathData} L ${width} ${height} L 0 ${height} Z" fill="url(#gradient-${containerId})" />
-            <path d="${pathData}" fill="none" stroke="${color}" stroke-width="2" />
-        </svg>
-    `;
+function startTimeAgoUpdater() {
+    setInterval(() => {
+        const updateAgoEl = document.getElementById('updateAgo');
+        if (updateAgoEl && state.lastUpdate) {
+            updateAgoEl.textContent = formatTimeAgo(state.lastUpdate);
+        }
+    }, 1000);
 }
 
 // =========================================
@@ -431,17 +902,27 @@ async function init() {
     // Initialize view toggle
     initViewToggle();
 
+    // Initialize WebSocket for real-time updates
+    initWebSocket();
+
+    // Start time ago updater
+    startTimeAgoUpdater();
+
     // Initial data fetch
     const data = await fetchMetrics();
     updateUI(data);
 
-    // Set up auto-refresh
+    // Set up auto-refresh as fallback
     setInterval(async () => {
-        const data = await fetchMetrics();
-        updateUI(data);
+        // Only poll if WebSocket is not connected
+        if (state.connectionType !== 'websocket') {
+            const data = await fetchMetrics();
+            updateUI(data);
+        }
     }, CONFIG.refreshInterval);
 
     console.log('OOVMTEL Unified View initialized');
+    showToast('info', 'Système initialisé', 'Dashboard OOVMTEL prêt');
 }
 
 // Start the application
