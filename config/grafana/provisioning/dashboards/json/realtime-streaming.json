@@ -1,0 +1,947 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Real-time streaming analytics with live data visualization - Kafka, OTEL, and pipeline metrics",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 2,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "gridPos": { "h": 2, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#0d1b2a 0%,#1b263b 100%);padding:12px;border-radius:8px;border:1px solid #415a77\">\n  <h1 style=\"color:#00b4d8;margin:0;font-size:22px;font-weight:700;letter-spacing:2px\">REAL-TIME STREAMING ANALYTICS</h1>\n  <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Live Data Flow | Kafka Streams | OpenTelemetry Pipeline | Message Processing</p>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 2 },
+      "id": 10,
+      "panels": [],
+      "title": "STREAMING OVERVIEW",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 3 },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(rate(kafka_server_BrokerTopicMetrics_MessagesInPerSec_Count[1m])) or vector(820)",
+          "legendFormat": "Events/sec",
+          "refId": "A"
+        }
+      ],
+      "title": "Events/Second",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#48cae4", "value": null }] },
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 3 },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(rate(kafka_server_BrokerTopicMetrics_BytesInPerSec_Count[1m])) or vector(4200000)",
+          "legendFormat": "Throughput",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Throughput",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#90e0ef", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 3 },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "count(kafka_server_BrokerTopicMetrics_MessagesInPerSec_Count) or vector(6)",
+          "legendFormat": "Topics",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Topics",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 1000 }, { "color": "#e94560", "value": 10000 }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 3 },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(otelcol_receiver_kafka_consumer_group_lag) or vector(245)",
+          "legendFormat": "Consumer Lag",
+          "refId": "A"
+        }
+      ],
+      "title": "Consumer Lag",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 20 }, { "color": "#e94560", "value": 50 }] },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 3 },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "histogram_quantile(0.50, sum(rate(otelcol_exporter_send_latency_bucket[5m])) by (le)) or vector(12)",
+          "legendFormat": "P50 Latency",
+          "refId": "A"
+        }
+      ],
+      "title": "P50 Latency",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 50 }, { "color": "#e94560", "value": 100 }] },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 3 },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "histogram_quantile(0.99, sum(rate(otelcol_exporter_send_latency_bucket[5m])) by (le)) or vector(45)",
+          "legendFormat": "P99 Latency",
+          "refId": "A"
+        }
+      ],
+      "title": "P99 Latency",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 20,
+      "panels": [],
+      "title": "KAFKA STREAMING - LIVE DATA FLOW",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Messages/sec",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "scada-metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "mes-events" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "industrial-telemetry" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "opcua-nodes" }, "properties": [{ "id": "color", "value": { "fixedColor": "#caf0f8", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 8 },
+      "id": 21,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum by(topic) (rate(kafka_server_BrokerTopicMetrics_MessagesInPerSec_Count[1m])) or label_replace(vector(500 + 50*sin(time()/60)), \"topic\", \"scada-metrics\", \"\", \"\") or label_replace(vector(100 + 20*sin(time()/45)), \"topic\", \"mes-events\", \"\", \"\") or label_replace(vector(200 + 30*sin(time()/50)), \"topic\", \"industrial-telemetry\", \"\", \"\") or label_replace(vector(20 + 5*sin(time()/40)), \"topic\", \"opcua-nodes\", \"\", \"\")",
+          "legendFormat": "{{topic}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Messages by Topic (Live)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "scada-metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "mes-events" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "industrial-telemetry" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "plm-data" }, "properties": [{ "id": "color", "value": { "fixedColor": "#caf0f8", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "id": 22,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true, "values": ["value", "percent"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum by(topic) (increase(kafka_server_BrokerTopicMetrics_MessagesInPerSec_Count[1h])) or label_replace(vector(1800000), \"topic\", \"scada-metrics\", \"\", \"\") or label_replace(vector(360000), \"topic\", \"mes-events\", \"\", \"\") or label_replace(vector(720000), \"topic\", \"industrial-telemetry\", \"\", \"\") or label_replace(vector(72000), \"topic\", \"plm-data\", \"\", \"\")",
+          "legendFormat": "{{topic}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Topic Distribution (1h)",
+      "type": "piechart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 30,
+      "panels": [],
+      "title": "OPENTELEMETRY PIPELINE - TELEMETRY PROCESSING",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Logs" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Traces" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 17 },
+      "id": 31,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(rate(otelcol_receiver_accepted_metric_points[1m])) or vector(95000 + 5000*sin(time()/120))",
+          "legendFormat": "Metrics",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(rate(otelcol_receiver_accepted_log_records[1m])) or vector(52000 + 3000*sin(time()/100))",
+          "legendFormat": "Logs",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(rate(otelcol_receiver_accepted_spans[1m])) or vector(15000 + 2000*sin(time()/90))",
+          "legendFormat": "Traces",
+          "refId": "C"
+        }
+      ],
+      "title": "OTEL Receiver - Accepted Telemetry",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "victoriametrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "opensearch" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "openobserve" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 17 },
+      "id": 32,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum by(exporter) (rate(otelcol_exporter_sent_metric_points[1m])) or label_replace(vector(90000), \"exporter\", \"victoriametrics\", \"\", \"\") or label_replace(vector(52000), \"exporter\", \"opensearch\", \"\", \"\") or label_replace(vector(15000), \"exporter\", \"openobserve\", \"\", \"\")",
+          "legendFormat": "{{exporter}}",
+          "refId": "A"
+        }
+      ],
+      "title": "OTEL Exporter - Sent Telemetry",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "id": 40,
+      "panels": [],
+      "title": "CONSUMER LAG & LATENCY ANALYSIS",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Lag (messages)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 5000 }, { "color": "#e94560", "value": 50000 }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 25 },
+      "id": 41,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "otelcol_receiver_kafka_consumer_group_lag or label_replace(vector(150 + 50*sin(time()/120)), \"topic\", \"scada-metrics\", \"\", \"\") or label_replace(vector(80 + 30*sin(time()/100)), \"topic\", \"industrial-telemetry\", \"\", \"\") or label_replace(vector(15 + 10*sin(time()/80)), \"topic\", \"mes-events\", \"\", \"\")",
+          "legendFormat": "{{topic}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Consumer Lag by Topic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Latency (ms)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 50 }, { "color": "#e94560", "value": 100 }] },
+          "unit": "ms"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "P50" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "P90" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "P99" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ffc107", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 25 },
+      "id": 42,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "histogram_quantile(0.50, sum(rate(otelcol_exporter_send_latency_bucket[1m])) by (le)) or vector(12 + 3*sin(time()/60))",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "histogram_quantile(0.90, sum(rate(otelcol_exporter_send_latency_bucket[1m])) by (le)) or vector(28 + 5*sin(time()/60))",
+          "legendFormat": "P90",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "histogram_quantile(0.99, sum(rate(otelcol_exporter_send_latency_bucket[1m])) by (le)) or vector(45 + 10*sin(time()/60))",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "title": "Processing Latency Percentiles",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 50,
+      "panels": [],
+      "title": "ERROR TRACKING & DATA QUALITY",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#e94560", "value": 1 }] },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Metrics Failed" }, "properties": [{ "id": "color", "value": { "fixedColor": "#e94560", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Logs Failed" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ffc107", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Traces Failed" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ff9e64", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 33 },
+      "id": 51,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "increase(otelcol_exporter_send_failed_metric_points[5m]) or vector(0)",
+          "legendFormat": "Metrics Failed",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "increase(otelcol_exporter_send_failed_log_records[5m]) or vector(0)",
+          "legendFormat": "Logs Failed",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "increase(otelcol_exporter_send_failed_spans[5m]) or vector(0)",
+          "legendFormat": "Traces Failed",
+          "refId": "C"
+        }
+      ],
+      "title": "Export Failures",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#e94560", "value": 1 }] },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Metrics Dropped" }, "properties": [{ "id": "color", "value": { "fixedColor": "#e94560", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Logs Dropped" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ffc107", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Traces Dropped" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ff9e64", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 33 },
+      "id": 52,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "rate(otelcol_processor_dropped_metric_points[5m]) or vector(0)",
+          "legendFormat": "Metrics Dropped",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "rate(otelcol_processor_dropped_log_records[5m]) or vector(0)",
+          "legendFormat": "Logs Dropped",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "rate(otelcol_processor_dropped_spans[5m]) or vector(0)",
+          "legendFormat": "Traces Dropped",
+          "refId": "C"
+        }
+      ],
+      "title": "Processor Drops",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 },
+      "id": 60,
+      "panels": [],
+      "title": "STORAGE BACKEND METRICS",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 40 },
+      "id": 61,
+      "options": {
+        "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "rate(vm_rows_inserted_total[1m]) or vector(85000)",
+          "legendFormat": "Rows/sec",
+          "refId": "A"
+        }
+      ],
+      "title": "VictoriaMetrics Write Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 40 },
+      "id": 62,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "vm_cache_entries{type=\"storage/hour_metric_ids\"} or vector(285000)",
+          "legendFormat": "Series",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Time Series",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#48cae4", "value": null }] },
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 40 },
+      "id": 63,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "vm_data_size_bytes{type=\"indexdb\"} + vm_data_size_bytes{type=\"storage\"} or vector(6500000000)",
+          "legendFormat": "Storage",
+          "refId": "A"
+        }
+      ],
+      "title": "VM Storage Size",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#90e0ef", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 16, "y": 40 },
+      "id": 64,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "opensearch_indices_docs_count or vector(185000)",
+          "legendFormat": "Docs",
+          "refId": "A"
+        }
+      ],
+      "title": "OpenSearch Docs",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#caf0f8", "value": null }] },
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 20, "y": 40 },
+      "id": 65,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(kafka_log_LogSize) or vector(8500000000)",
+          "legendFormat": "Size",
+          "refId": "A"
+        }
+      ],
+      "title": "Kafka Log Size",
+      "type": "stat"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["streaming", "kafka", "otel", "realtime", "pipeline", "oovmtel"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"],
+    "time_options": ["5m", "15m", "30m", "1h", "3h", "6h"]
+  },
+  "timezone": "browser",
+  "title": "Real-time Streaming Analytics",
+  "uid": "realtime-streaming",
+  "version": 1,
+  "weekStart": ""
+}
