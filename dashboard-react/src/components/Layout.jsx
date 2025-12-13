@@ -33,7 +33,8 @@ import {
   Clock,
   Star,
   Layers,
-  Shield
+  Shield,
+  Lock
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
@@ -134,7 +135,8 @@ const getNavConfig = (t, userMode) => {
     { id: 'grafana', path: '/grafana', icon: Activity, getLabel: () => t('nav.main.grafana') },
     { id: 'opensearch', path: '/opensearch', icon: Search, getLabel: () => t('nav.main.opensearch') },
     { id: 'kafka', path: '/kafka', icon: MessageSquare, getLabel: () => t('nav.main.kafka') },
-    { id: 'observability', path: '/observability', icon: Shield, getLabel: () => t('nav.main.observability') }
+    { id: 'observability', path: '/observability', icon: Shield, getLabel: () => t('nav.main.observability') },
+    { id: 'security', path: '/security', icon: Lock, getLabel: () => t('nav.main.security') }
   ]
 
   return {
