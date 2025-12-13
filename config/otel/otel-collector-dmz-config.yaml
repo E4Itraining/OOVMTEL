@@ -1,0 +1,140 @@
+# =============================================================================
+# OpenTelemetry Collector Configuration - ZONE DMZ
+# =============================================================================
+# IEC 62443 Level 3 - Protocol break / Sanitization layer
+# SECURITY: Validation et sanitization des données OT avant transit vers IT
+# =============================================================================
+
+receivers:
+  # Reçoit depuis Kafka OT (topics mirrorés)
+  kafka/from_ot:
+    brokers:
+      - kafka-ot:9092
+    topic: ot-telemetry-export
+    encoding: otlp_proto
+    group_id: dmz-protocol-break
+    client_id: dmz-sanitizer
+    initial_offset: latest
+
+processors:
+  # Memory limiter
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 200
+    spike_limit_mib: 50
+
+  # Batch
+  batch:
+    send_batch_size: 5000
+    timeout: 5s
+
+  # ==========================================================================
+  # SANITIZATION - Validation des données avant transit IT
+  # ==========================================================================
+
+  # Marquage zone DMZ
+  attributes/dmz_stamp:
+    actions:
+      - key: security.validated_by
+        value: dmz-protocol-break
+        action: upsert
+      - key: security.transit_zone
+        value: dmz
+        action: upsert
+      - key: security.validation_timestamp
+        from_attribute: ""
+        action: upsert
+
+  # Filtre de sécurité - supprime données sensibles
+  attributes/security_filter:
+    actions:
+      # Supprime les credentials potentiels
+      - key: password
+        action: delete
+      - key: credential
+        action: delete
+      - key: secret
+        action: delete
+      - key: token
+        action: delete
+      - key: api_key
+        action: delete
+      # Supprime les IPs internes OT
+      - key: internal_ip
+        action: delete
+      - key: ot_network_address
+        action: delete
+
+  # Validation du schéma
+  transform/validate:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["dmz_validated"], true)
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["dmz_validated"], true)
+    trace_statements:
+      - context: span
+        statements:
+          - set(attributes["dmz_validated"], true)
+
+exporters:
+  # Export vers Kafka IT (via MirrorMaker qui écoute ce topic)
+  kafka/to_it:
+    brokers:
+      - kafka-ot:9092  # Écrit sur OT, MirrorMaker réplique vers IT
+    topic: dmz-validated-telemetry
+    encoding: otlp_proto
+    producer:
+      compression: lz4
+
+  debug:
+    verbosity: basic
+    sampling_initial: 1
+    sampling_thereafter: 500
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+
+  pipelines:
+    metrics:
+      receivers: [kafka/from_ot]
+      processors:
+        - memory_limiter
+        - attributes/dmz_stamp
+        - attributes/security_filter
+        - transform/validate
+        - batch
+      exporters: [kafka/to_it, debug]
+
+    logs:
+      receivers: [kafka/from_ot]
+      processors:
+        - memory_limiter
+        - attributes/dmz_stamp
+        - attributes/security_filter
+        - transform/validate
+        - batch
+      exporters: [kafka/to_it, debug]
+
+    traces:
+      receivers: [kafka/from_ot]
+      processors:
+        - memory_limiter
+        - attributes/dmz_stamp
+        - attributes/security_filter
+        - transform/validate
+        - batch
+      exporters: [kafka/to_it, debug]
+
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      address: 0.0.0.0:8888

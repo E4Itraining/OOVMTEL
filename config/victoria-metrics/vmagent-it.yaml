@@ -1,0 +1,137 @@
+# =============================================================================
+# VMAgent Configuration - IT Zone
+# =============================================================================
+# Prometheus scraper for IT services and infrastructure
+# Writes to VictoriaMetrics cluster via vminsert
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    zone: it
+    platform: oovmtel
+    collector: vmagent
+
+scrape_configs:
+  # ==========================================================================
+  # VictoriaMetrics Cluster Components
+  # ==========================================================================
+  - job_name: 'vmcluster'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'vminsert:8480'
+        labels:
+          component: vminsert
+      - targets:
+          - 'vmselect:8481'
+        labels:
+          component: vmselect
+      - targets:
+          - 'vmstorage-1:8482'
+          - 'vmstorage-2:8482'
+        labels:
+          component: vmstorage
+
+  # ==========================================================================
+  # OTel Collectors IT
+  # ==========================================================================
+  - job_name: 'otel-collectors-it'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'otel-collector-it-1:8888'
+          - 'otel-collector-it-2:8888'
+        labels:
+          service: otel-collector
+          zone: it
+
+  # ==========================================================================
+  # Kafka Cluster IT
+  # ==========================================================================
+  - job_name: 'kafka-it'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'kafka-it:9092'
+          - 'kafka-it-2:9092'
+          - 'kafka-it-3:9092'
+        labels:
+          service: kafka
+          zone: it
+    # Note: Requires JMX exporter sidecar for full metrics
+
+  # ==========================================================================
+  # OpenSearch
+  # ==========================================================================
+  - job_name: 'opensearch'
+    scrape_interval: 30s
+    metrics_path: '/_prometheus/metrics'
+    static_configs:
+      - targets:
+          - 'opensearch:9200'
+        labels:
+          service: opensearch
+          purpose: compliance
+
+  # ==========================================================================
+  # OpenObserve
+  # ==========================================================================
+  - job_name: 'openobserve'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'openobserve:5080'
+        labels:
+          service: openobserve
+          purpose: realtime
+
+  # ==========================================================================
+  # Grafana
+  # ==========================================================================
+  - job_name: 'grafana'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'grafana:3000'
+        labels:
+          service: grafana
+
+  # ==========================================================================
+  # Unified View Application
+  # ==========================================================================
+  - job_name: 'unified-view'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'unified-view:8080'
+        labels:
+          service: unified-view
+          application: true
+
+  # ==========================================================================
+  # Load Balancers (Nginx)
+  # ==========================================================================
+  - job_name: 'nginx-lb'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'otel-collector:80'
+          - 'victoria-metrics:80'
+        labels:
+          service: nginx
+          role: load-balancer
+    # Note: Requires nginx-prometheus-exporter or stub_status module
+
+  # ==========================================================================
+  # Self-monitoring
+  # ==========================================================================
+  - job_name: 'vmagent'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'localhost:8429'
+        labels:
+          service: vmagent
+          zone: it

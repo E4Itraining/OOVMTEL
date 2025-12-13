@@ -1,0 +1,216 @@
+# =============================================================================
+# OpenTelemetry Collector Configuration - ZONE OT (Operational Technology)
+# =============================================================================
+# IEC 62443 Level 2/3 - Collecteur léger, export unidirectionnel
+# SECURITY: Ce collecteur N'ACCEPTE PAS de connexions depuis l'IT
+# =============================================================================
+
+receivers:
+  # OTLP receiver pour les équipements OT
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 8  # Limité côté OT
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Prometheus scraping des équipements industriels
+  prometheus:
+    config:
+      global:
+        scrape_timeout: 10s
+        evaluation_interval: 15s
+      scrape_configs:
+        - job_name: 'ot-scada'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['scada-simulator:8080']
+              labels:
+                zone: ot
+                equipment_type: scada
+                security_level: l2
+
+        - job_name: 'ot-mes'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['mes-simulator:8081']
+              labels:
+                zone: ot
+                equipment_type: mes
+                security_level: l2
+
+        - job_name: 'ot-plm'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['plm-simulator:8082']
+              labels:
+                zone: ot
+                equipment_type: plm
+                security_level: l3
+
+        - job_name: 'ot-opcua'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['opcua-simulator:8083']
+              labels:
+                zone: ot
+                equipment_type: opcua
+                security_level: l2
+
+  # Host metrics minimal pour l'équipement OT
+  hostmetrics:
+    collection_interval: 30s  # Intervalle plus long côté OT
+    scrapers:
+      cpu:
+      memory:
+      network:
+
+processors:
+  # Batch processor - plus petit côté OT
+  batch:
+    send_batch_size: 5000
+    send_batch_max_size: 10000
+    timeout: 10s
+
+  # Memory limiter strict
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+    spike_limit_mib: 100
+
+  # Attributs de sécurité OT
+  attributes/ot_security:
+    actions:
+      - key: security.zone
+        value: ot
+        action: upsert
+      - key: security.level
+        value: iec62443-l2
+        action: upsert
+      - key: data.classification
+        value: operational
+        action: upsert
+      - key: data.direction
+        value: ot-to-dmz
+        action: upsert
+
+  # ==========================================================================
+  # GOUVERNANCE DE CARDINALITE - Filtrage des labels haute cardinalité
+  # ==========================================================================
+
+  # Filtre les attributs à haute cardinalité
+  attributes/cardinality_control:
+    actions:
+      # Supprime les timestamps bruts des labels (haute cardinalité)
+      - key: timestamp_raw
+        action: delete
+      - key: request_id
+        action: delete
+      - key: trace_id
+        action: delete
+      - key: span_id
+        action: delete
+      # Supprime les UUIDs et numéros de série bruts
+      - key: serial_number_raw
+        action: delete
+      - key: uuid
+        action: delete
+      # Hash les identifiants pour réduire la cardinalité
+      - key: device_id
+        action: hash
+
+  # Transformations pour normaliser les métriques
+  transform/normalize:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["zone"], "ot")
+          - set(attributes["processed_by"], "otel-collector-ot")
+
+  # Filtre le bruit
+  filter/ot_noise:
+    metrics:
+      exclude:
+        match_type: regexp
+        metric_names:
+          - ".*_debug$"
+          - ".*_test$"
+          - "go_.*"  # Métriques Go internes
+          - "process_.*"  # Métriques process internes
+
+exporters:
+  # ==========================================================================
+  # EXPORT UNIDIRECTIONNEL vers Kafka OT (DMZ)
+  # ==========================================================================
+  kafka/ot_export:
+    brokers:
+      - kafka-ot:9092
+    topic: ot-telemetry-export
+    encoding: otlp_proto
+    producer:
+      max_message_bytes: 5000000
+      compression: lz4
+      flush_max_messages: 1000
+    # Métadonnées de sécurité
+    metadata:
+      full: true
+
+  # Debug minimal
+  debug:
+    verbosity: basic
+    sampling_initial: 2
+    sampling_thereafter: 1000
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: /health
+
+  # zPages pour debug (désactivable en prod)
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, zpages]
+
+  pipelines:
+    # Pipeline métriques OT → Kafka
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics]
+      processors:
+        - memory_limiter
+        - attributes/ot_security
+        - attributes/cardinality_control
+        - filter/ot_noise
+        - transform/normalize
+        - batch
+      exporters: [kafka/ot_export, debug]
+
+    # Pipeline logs OT → Kafka
+    logs:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - attributes/ot_security
+        - attributes/cardinality_control
+        - batch
+      exporters: [kafka/ot_export, debug]
+
+    # Pipeline traces OT → Kafka
+    traces:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - attributes/ot_security
+        - attributes/cardinality_control
+        - batch
+      exporters: [kafka/ot_export, debug]
+
+  telemetry:
+    logs:
+      level: warn  # Moins verbeux côté OT
+      encoding: console
+    metrics:
+      address: 0.0.0.0:8888
+      level: basic

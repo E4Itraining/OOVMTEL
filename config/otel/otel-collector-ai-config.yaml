@@ -1,0 +1,201 @@
+# =============================================================================
+# OpenTelemetry Collector Configuration - AI Observability
+# =============================================================================
+# Extension for AI/ML workload monitoring
+# Captures inference metrics, model performance, drift detection
+# =============================================================================
+
+receivers:
+  # OTLP receiver for AI/ML applications
+  otlp/ai:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4319
+        max_recv_msg_size_mib: 32  # Larger for embeddings/model outputs
+      http:
+        endpoint: 0.0.0.0:4320
+
+  # Kafka receiver for AI inference events
+  kafka/ai:
+    brokers:
+      - kafka-it:9092
+    topic: ai-inference-metrics
+    encoding: otlp_proto
+    group_id: otel-ai-collector
+    client_id: otel-ai
+    initial_offset: latest
+
+  # Prometheus receiver for ML frameworks
+  prometheus/ai:
+    config:
+      scrape_configs:
+        - job_name: 'ai-inference-servers'
+          scrape_interval: 15s
+          static_configs:
+            - targets:
+                # Add your inference servers here
+                - 'triton-server:8002'
+                - 'tensorflow-serving:8501'
+                - 'torchserve:8082'
+              labels:
+                workload_type: ai-inference
+
+        - job_name: 'ml-pipelines'
+          scrape_interval: 30s
+          static_configs:
+            - targets:
+                # Add your ML pipeline endpoints
+                - 'mlflow:5000'
+                - 'kubeflow-pipelines:8080'
+              labels:
+                workload_type: ml-pipeline
+
+processors:
+  # Batch processor
+  batch/ai:
+    send_batch_size: 5000
+    timeout: 5s
+
+  # Memory limiter
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # AI-specific attributes
+  attributes/ai_context:
+    actions:
+      - key: workload.type
+        value: ai-ml
+        action: upsert
+      - key: platform
+        value: oovmtel
+        action: upsert
+      - key: observability.domain
+        value: ai-observability
+        action: upsert
+
+  # Transform for AI metrics normalization
+  transform/ai_metrics:
+    metric_statements:
+      - context: datapoint
+        statements:
+          # Normalize inference latency to milliseconds
+          - set(attributes["unit"], "ms") where metric.name == "inference_latency"
+          # Add model version tracking
+          - set(attributes["tracked"], true) where IsMatch(metric.name, "model_.*")
+
+    log_statements:
+      - context: log
+        statements:
+          # Extract model information from logs
+          - set(attributes["ai.model.name"], attributes["model_name"]) where attributes["model_name"] != nil
+          - set(attributes["ai.model.version"], attributes["model_version"]) where attributes["model_version"] != nil
+
+  # Filter for AI-specific metrics
+  filter/ai_relevant:
+    metrics:
+      include:
+        match_type: regexp
+        metric_names:
+          - "inference_.*"
+          - "model_.*"
+          - "prediction_.*"
+          - "drift_.*"
+          - "token_.*"
+          - "embedding_.*"
+          - "batch_.*"
+          - "gpu_.*"
+          - "cuda_.*"
+
+  # ==========================================================================
+  # AI-SPECIFIC PROCESSORS
+  # ==========================================================================
+
+  # Compute derived metrics for AI workloads
+  transform/ai_derived:
+    metric_statements:
+      - context: metric
+        statements:
+          # Tag metrics with AI observability metadata
+          - set(description, Concat([description, " [AI-OBS]"], ""))
+
+exporters:
+  # VictoriaMetrics for AI metrics
+  prometheusremotewrite/victoria_ai:
+    endpoint: http://vminsert:8480/insert/0/prometheus/api/v1/write
+    tls:
+      insecure: true
+    resource_to_telemetry_conversion:
+      enabled: true
+    external_labels:
+      collector: otel-ai
+      domain: ai-observability
+
+  # OpenObserve for AI logs/traces
+  otlphttp/openobserve_ai:
+    endpoint: http://openobserve:5080/api/default
+    headers:
+      Authorization: "Basic cm9vdEBleGFtcGxlLmNvbTpDb21wbGV4cGFzcyMxMjM="
+      stream-name: ai-observability
+
+  # Kafka for AI model performance (for downstream analytics)
+  kafka/ai_performance:
+    brokers:
+      - kafka-it:9092
+    topic: ai-model-performance
+    encoding: otlp_proto
+    producer:
+      compression: lz4
+
+  # Debug
+  debug:
+    verbosity: basic
+    sampling_initial: 2
+    sampling_thereafter: 200
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13136
+    path: /health
+
+service:
+  extensions: [health_check]
+
+  pipelines:
+    # AI Metrics Pipeline
+    metrics/ai:
+      receivers: [otlp/ai, kafka/ai, prometheus/ai]
+      processors:
+        - memory_limiter
+        - attributes/ai_context
+        - filter/ai_relevant
+        - transform/ai_metrics
+        - transform/ai_derived
+        - batch/ai
+      exporters: [prometheusremotewrite/victoria_ai, kafka/ai_performance, debug]
+
+    # AI Logs Pipeline
+    logs/ai:
+      receivers: [otlp/ai]
+      processors:
+        - memory_limiter
+        - attributes/ai_context
+        - transform/ai_metrics
+        - batch/ai
+      exporters: [otlphttp/openobserve_ai, debug]
+
+    # AI Traces Pipeline (for inference tracing)
+    traces/ai:
+      receivers: [otlp/ai]
+      processors:
+        - memory_limiter
+        - attributes/ai_context
+        - batch/ai
+      exporters: [otlphttp/openobserve_ai, debug]
+
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      address: 0.0.0.0:8890

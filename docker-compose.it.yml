@@ -1,0 +1,596 @@
+# =============================================================================
+# OOVMTEL - ZONE IT (Information Technology) - IEC 62443 Level 4/5
+# =============================================================================
+# Zone IT sécurisée avec stockage, analytics et visualisation
+# Reçoit les données uniquement depuis la DMZ (flux unidirectionnel)
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # KAFKA CLUSTER IT - 3 brokers pour HA
+  # ===========================================================================
+
+  zookeeper-it:
+    image: confluentinc/cp-zookeeper:7.5.3
+    container_name: oovmtel-zookeeper-it
+    hostname: zookeeper-it
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVER_ID: 1
+    volumes:
+      - zookeeper_it_data:/var/lib/zookeeper/data
+      - zookeeper_it_logs:/var/lib/zookeeper/log
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  kafka-it:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka-it-1
+    hostname: kafka-it
+    depends_on:
+      zookeeper-it:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-it:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-it:9092,EXTERNAL://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # HA settings for 3-broker cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 12
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      # Retention longue pour compliance
+      KAFKA_LOG_RETENTION_HOURS: 168  # 7 jours
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_BYTES: 53687091200  # 50GB
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_MESSAGE_MAX_BYTES: 10485760
+      KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+    volumes:
+      - kafka_it_1_data:/var/lib/kafka/data
+    networks:
+      - it-network
+      - dmz-network  # Connexion depuis DMZ
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  kafka-it-2:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka-it-2
+    hostname: kafka-it-2
+    depends_on:
+      zookeeper-it:
+        condition: service_healthy
+      kafka-it:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-it:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-it-2:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+    volumes:
+      - kafka_it_2_data:/var/lib/kafka/data
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  kafka-it-3:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka-it-3
+    hostname: kafka-it-3
+    depends_on:
+      zookeeper-it:
+        condition: service_healthy
+      kafka-it:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-it:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-it-3:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+    volumes:
+      - kafka_it_3_data:/var/lib/kafka/data
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  kafka-it-init:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka-it-init
+    depends_on:
+      kafka-it:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo '🏢 Creating IT Kafka topics with HA configuration...'
+
+        # Topics IT - données reçues depuis DMZ
+        kafka-topics --create --if-not-exists --topic it-industrial-telemetry --bootstrap-server kafka-it:9092 --partitions 12 --replication-factor 3 --config retention.ms=604800000 --config compression.type=lz4 --config min.insync.replicas=2
+
+        kafka-topics --create --if-not-exists --topic it-scada-metrics --bootstrap-server kafka-it:9092 --partitions 12 --replication-factor 3 --config retention.ms=604800000 --config compression.type=lz4
+
+        kafka-topics --create --if-not-exists --topic it-mes-events --bootstrap-server kafka-it:9092 --partitions 8 --replication-factor 3 --config retention.ms=604800000
+
+        kafka-topics --create --if-not-exists --topic it-plm-data --bootstrap-server kafka-it:9092 --partitions 4 --replication-factor 3 --config retention.ms=1209600000
+
+        kafka-topics --create --if-not-exists --topic it-opcua-nodes --bootstrap-server kafka-it:9092 --partitions 8 --replication-factor 3 --config retention.ms=604800000
+
+        # Topics pour traitement avancé
+        kafka-topics --create --if-not-exists --topic it-processed-telemetry --bootstrap-server kafka-it:9092 --partitions 6 --replication-factor 3 --config retention.ms=1209600000
+
+        kafka-topics --create --if-not-exists --topic it-alerts --bootstrap-server kafka-it:9092 --partitions 4 --replication-factor 3 --config retention.ms=2592000000
+
+        kafka-topics --create --if-not-exists --topic it-compliance-audit --bootstrap-server kafka-it:9092 --partitions 4 --replication-factor 3 --config retention.ms=31536000000 --config cleanup.policy=compact,delete
+
+        # Topics AI Observability
+        kafka-topics --create --if-not-exists --topic ai-inference-metrics --bootstrap-server kafka-it:9092 --partitions 6 --replication-factor 3 --config retention.ms=604800000 --config compression.type=lz4
+
+        kafka-topics --create --if-not-exists --topic ai-model-performance --bootstrap-server kafka-it:9092 --partitions 4 --replication-factor 3 --config retention.ms=2592000000
+
+        echo '✅ IT Kafka topics created with replication factor 3!'
+        kafka-topics --list --bootstrap-server kafka-it:9092
+    networks:
+      - it-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: oovmtel-kafka-ui
+    depends_on:
+      kafka-it:
+        condition: service_healthy
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: oovmtel-it
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-it:9092,kafka-it-2:9092,kafka-it-3:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper-it:2181
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # VICTORIA METRICS CLUSTER - HA Configuration
+  # ===========================================================================
+
+  vmstorage-1:
+    image: victoriametrics/vmstorage:v1.96.0-cluster
+    container_name: oovmtel-vmstorage-1
+    hostname: vmstorage-1
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=90d"
+      - "-dedup.minScrapeInterval=10s"
+    volumes:
+      - vmstorage_1_data:/storage
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  vmstorage-2:
+    image: victoriametrics/vmstorage:v1.96.0-cluster
+    container_name: oovmtel-vmstorage-2
+    hostname: vmstorage-2
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=90d"
+      - "-dedup.minScrapeInterval=10s"
+    volumes:
+      - vmstorage_2_data:/storage
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  vminsert:
+    image: victoriametrics/vminsert:v1.96.0-cluster
+    container_name: oovmtel-vminsert
+    hostname: vminsert
+    depends_on:
+      - vmstorage-1
+      - vmstorage-2
+    command:
+      - "-storageNode=vmstorage-1:8400"
+      - "-storageNode=vmstorage-2:8400"
+      - "-replicationFactor=2"
+    ports:
+      - "8480:8480"
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  vmselect:
+    image: victoriametrics/vmselect:v1.96.0-cluster
+    container_name: oovmtel-vmselect
+    hostname: vmselect
+    depends_on:
+      - vmstorage-1
+      - vmstorage-2
+    command:
+      - "-storageNode=vmstorage-1:8401"
+      - "-storageNode=vmstorage-2:8401"
+      - "-dedup.minScrapeInterval=10s"
+    ports:
+      - "8481:8481"
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8481/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Compatibility layer - proxies to cluster for backward compatibility
+  victoria-metrics:
+    image: nginx:alpine
+    container_name: oovmtel-victoria-metrics
+    hostname: victoria-metrics
+    depends_on:
+      - vminsert
+      - vmselect
+    volumes:
+      - ./config/nginx/victoria-metrics-proxy.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8428:8428"
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8428/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  vmagent:
+    image: victoriametrics/vmagent:v1.96.0
+    container_name: oovmtel-vmagent
+    depends_on:
+      vminsert:
+        condition: service_started
+    ports:
+      - "8429:8429"
+    command:
+      - "-promscrape.config=/etc/vmagent/vmagent.yaml"
+      - "-remoteWrite.url=http://vminsert:8480/insert/0/prometheus/api/v1/write"
+      - "-remoteWrite.tmpDataPath=/tmp/vmagent"
+      - "-remoteWrite.maxDiskUsagePerURL=1GB"
+      - "-remoteWrite.queues=16"
+    volumes:
+      - ./config/victoria-metrics/vmagent-it.yaml:/etc/vmagent/vmagent.yaml:ro
+      - vmagent_data:/tmp/vmagent
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OPENOBSERVE - Logs & Traces temps réel
+  # ===========================================================================
+
+  openobserve:
+    image: openobserve/openobserve:v0.10.1
+    container_name: oovmtel-openobserve
+    ports:
+      - "5080:5080"
+      - "5081:5081"
+    environment:
+      ZO_ROOT_USER_EMAIL: "root@example.com"
+      ZO_ROOT_USER_PASSWORD: "Complexpass#123"
+      ZO_DATA_DIR: "/data"
+      ZO_MAX_FILE_SIZE_ON_DISK: 128
+      ZO_COMPACT_ENABLED: "true"
+      ZO_COMPACT_INTERVAL: 60
+      ZO_MEMORY_CACHE_ENABLED: "true"
+      ZO_MEMORY_CACHE_MAX_SIZE: 1024
+      ZO_OTEL_ENABLED: "true"
+      ZO_PROMETHEUS_ENABLED: "true"
+      ZO_TELEMETRY: "false"
+      ZO_HTTP_PORT: "5080"
+      ZO_LOCAL_MODE: "true"
+    volumes:
+      - openobserve_data:/data
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5080/healthz 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 15s
+      retries: 20
+      start_period: 180s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OPENSEARCH - Compliance & Audit (rétention longue)
+  # ===========================================================================
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.1
+    container_name: oovmtel-opensearch
+    environment:
+      - cluster.name=oovmtel-compliance
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+      # Index lifecycle for compliance
+      - "plugins.index_state_management.enabled=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+      - ./config/opensearch/opensearch-compliance.yml:/usr/share/opensearch/config/opensearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.1
+    container_name: oovmtel-opensearch-dashboards
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    ports:
+      - "5601:5601"
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+    networks:
+      - it-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OTEL COLLECTORS IT - HA avec 2 instances
+  # ===========================================================================
+
+  otel-collector-it-1:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-otel-collector-it-1
+    hostname: otel-collector-it-1
+    depends_on:
+      kafka-it:
+        condition: service_healthy
+      vminsert:
+        condition: service_started
+      opensearch:
+        condition: service_healthy
+    environment:
+      GOMEMLIMIT: 1750MiB
+      ZONE: it
+      INSTANCE_ID: "1"
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-collector-it-config.yaml:/etc/otel/config.yaml:ro
+      - industrial_logs:/var/log/industrial
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+    restart: unless-stopped
+
+  otel-collector-it-2:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-otel-collector-it-2
+    hostname: otel-collector-it-2
+    depends_on:
+      kafka-it:
+        condition: service_healthy
+      vminsert:
+        condition: service_started
+      opensearch:
+        condition: service_healthy
+    environment:
+      GOMEMLIMIT: 1750MiB
+      ZONE: it
+      INSTANCE_ID: "2"
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-collector-it-config.yaml:/etc/otel/config.yaml:ro
+      - industrial_logs:/var/log/industrial
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+    restart: unless-stopped
+
+  # Load balancer for OTel collectors
+  otel-collector:
+    image: nginx:alpine
+    container_name: oovmtel-otel-collector
+    hostname: otel-collector
+    depends_on:
+      - otel-collector-it-1
+      - otel-collector-it-2
+    volumes:
+      - ./config/nginx/otel-lb.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics
+      - "13133:13133" # Health check
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:13133/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  # ===========================================================================
+  # GRAFANA - Visualisation
+  # ===========================================================================
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: oovmtel-grafana
+    depends_on:
+      - vmselect
+      - opensearch
+      - openobserve
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-opensearch-datasource,victoriametrics-metrics-datasource
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=victoriametrics-metrics-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # UNIFIED VIEW WEB APPLICATION
+  # ===========================================================================
+
+  unified-view:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    container_name: oovmtel-unified-view
+    depends_on:
+      - vmselect
+      - opensearch
+      - grafana
+    ports:
+      - "8085:8080"
+    environment:
+      VICTORIA_METRICS_URL: http://vmselect:8481
+      OPENSEARCH_URL: http://opensearch:9200
+      KAFKA_URL: kafka-it:9092
+      OPENOBSERVE_URL: http://openobserve:5080
+      OTEL_COLLECTOR_URL: http://otel-collector:8888
+      GRAFANA_URL: http://grafana:3000
+      REFRESH_INTERVAL: "10"
+      USE_SIMULATED_DATA: "true"
+      MODULES_ENABLED: "true"
+      NLP_DEFAULT_LANGUAGE: "fr"
+      REMEDIATION_DRY_RUN: "true"
+      REMEDIATION_REQUIRE_APPROVAL: "true"
+      EDGE_SYNC_INTERVAL: "60"
+      PREDICTIVE_ANOMALY_SENSITIVITY: "2.0"
+    networks:
+      - it-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+
+networks:
+  it-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16
+    labels:
+      zone: it
+      security: iec62443-l4
+
+  dmz-network:
+    external: true
+    name: oovmtel_dmz-network
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  zookeeper_it_data:
+    driver: local
+  zookeeper_it_logs:
+    driver: local
+  kafka_it_1_data:
+    driver: local
+  kafka_it_2_data:
+    driver: local
+  kafka_it_3_data:
+    driver: local
+  vmstorage_1_data:
+    driver: local
+  vmstorage_2_data:
+    driver: local
+  vmagent_data:
+    driver: local
+  openobserve_data:
+    driver: local
+  opensearch_data:
+    driver: local
+  grafana_data:
+    driver: local
+  industrial_logs:
+    driver: local
