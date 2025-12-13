@@ -64,7 +64,7 @@ docker-compose -f docker-compose.ot.yml up -d --remove-orphans
 
 echo -e "${YELLOW}⏳ Waiting for Kafka OT...${NC}"
 sleep 10
-wait_for_service "Kafka OT" 9094 60
+wait_for_service "Kafka OT" 29092 60
 
 echo -e "${GREEN}✅ Zone OT started successfully${NC}"
 
@@ -152,7 +152,7 @@ echo "║                    OOVMTEL Secure Architecture Started                
 echo "╠═══════════════════════════════════════════════════════════════════════╣"
 echo "║                                                                       ║"
 echo "║  Zone OT (172.29.0.0/24):                                            ║"
-echo "║    - Kafka OT:        localhost:9094                                  ║"
+echo "║    - Kafka OT:        localhost:29092 (internal), 29093 (external)    ║"
 echo "║    - OTel Collector:  localhost:4319 (gRPC), 4320 (HTTP)             ║"
 echo "║    - SCADA Simulator: localhost:8080                                  ║"
 echo "║    - MES Simulator:   localhost:8081                                  ║"
