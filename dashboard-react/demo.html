@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OOVMTEL Dashboard - Demo Interactive</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            industrial: {
+              dark: '#0f172a',
+              darker: '#020617',
+              card: '#1e293b',
+              border: '#334155',
+              accent: '#06b6d4',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    @keyframes pulse-glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useMemo, createContext, useContext } = React;
+
+    // Icons as SVG components
+    const Icons = {
+      Activity: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
+      BarChart: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
+      Database: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" strokeWidth={2}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>,
+      Server: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1" strokeWidth={2}/><rect x="2" y="13" width="20" height="6" rx="1" strokeWidth={2}/><circle cx="6" cy="6" r="1" fill="currentColor"/><circle cx="6" cy="16" r="1" fill="currentColor"/></svg>,
+      MessageSquare: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
+      Search: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" strokeWidth={2}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35" /></svg>,
+      Factory: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
+      Briefcase: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" strokeWidth={2}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" /></svg>,
+      Wrench: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg>,
+      AlertTriangle: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
+      TrendingUp: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
+      Clock: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth={2}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" /></svg>,
+      Award: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6" strokeWidth={2}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" /></svg>,
+      Package: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
+      Wifi: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" /></svg>,
+      ExternalLink: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>,
+      ChevronRight: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>,
+    };
+
+    // Context
+    const DashboardContext = createContext();
+    const useDashboard = () => useContext(DashboardContext);
+
+    // Gauge Component
+    function RadialGauge({ value, size = 100, color = 'cyan' }) {
+      const radius = (size - 10) / 2;
+      const circumference = 2 * Math.PI * radius;
+      const progress = Math.min(value / 100, 1);
+      const offset = circumference - progress * circumference;
+
+      const colors = {
+        cyan: '#06b6d4',
+        green: '#22c55e',
+        purple: '#a855f7',
+        yellow: '#f59e0b',
+        red: '#ef4444',
+      };
+
+      const getColor = () => {
+        if (value >= 85) return colors.green;
+        if (value >= 70) return colors.cyan;
+        if (value >= 50) return colors.yellow;
+        return colors.red;
+      };
+
+      return (
+        <div className="relative inline-flex items-center justify-center">
+          <svg width={size} height={size} className="-rotate-90">
+            <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(51,65,85,0.5)" strokeWidth="8"/>
+            <circle
+              cx={size/2} cy={size/2} r={radius} fill="none"
+              stroke={color === 'auto' ? getColor() : colors[color]}
+              strokeWidth="8" strokeLinecap="round"
+              strokeDasharray={circumference} strokeDashoffset={offset}
+              style={{transition: 'stroke-dashoffset 1s ease-out'}}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-bold text-white">{Math.round(value)}</span>
+            <span className="text-xs text-gray-400">%</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Metric Card
+    function MetricCard({ label, value, unit, icon: IconName, color = 'cyan', trend, trendValue }) {
+      const Icon = Icons[IconName];
+      const colors = {
+        cyan: 'from-cyan-500 to-cyan-600',
+        green: 'from-green-500 to-green-600',
+        purple: 'from-purple-500 to-purple-600',
+        yellow: 'from-yellow-500 to-yellow-600',
+        red: 'from-red-500 to-red-600',
+      };
+
+      return (
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4 hover:border-cyan-500/30 transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-gray-400 uppercase tracking-wider">{label}</p>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-2xl font-bold text-white">{value}</span>
+                {unit && <span className="text-gray-400 text-sm">{unit}</span>}
+              </div>
+              {trend && (
+                <div className={`flex items-center gap-1 mt-2 text-xs ${
+                  trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-gray-400'
+                }`}>
+                  <span>{trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}</span>
+                  <span>{trendValue}</span>
+                </div>
+              )}
+            </div>
+            {Icon && (
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-lg`}>
+                <div className="w-5 h-5 text-white"><Icon /></div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Service Card
+    function ServiceCard({ name, status, icon: IconName, onClick }) {
+      const Icon = Icons[IconName];
+      const statusColors = {
+        healthy: 'bg-green-500',
+        warning: 'bg-yellow-500',
+        error: 'bg-red-500',
+      };
+
+      return (
+        <button
+          onClick={onClick}
+          className="w-full bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4 hover:border-cyan-500/30 hover:scale-[1.02] transition-all text-left group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-700/50 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                <div className="w-5 h-5 text-gray-400 group-hover:text-cyan-400 transition-colors"><Icon /></div>
+              </div>
+              <div>
+                <h4 className="font-medium text-white">{name}</h4>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={`w-2 h-2 rounded-full ${statusColors[status]}`} />
+                  <span className="text-xs text-gray-400 capitalize">{status}</span>
+                </div>
+              </div>
+            </div>
+            <div className="w-5 h-5 text-gray-600 group-hover:text-cyan-400 transition-colors">
+              <Icons.ChevronRight />
+            </div>
+          </div>
+        </button>
+      );
+    }
+
+    // Mini Chart (simplified sparkline)
+    function MiniChart({ data, color = '#06b6d4' }) {
+      const max = Math.max(...data);
+      const min = Math.min(...data);
+      const range = max - min || 1;
+
+      const points = data.map((v, i) => {
+        const x = (i / (data.length - 1)) * 100;
+        const y = 100 - ((v - min) / range) * 100;
+        return `${x},${y}`;
+      }).join(' ');
+
+      return (
+        <svg viewBox="0 0 100 50" className="w-full h-12">
+          <defs>
+            <linearGradient id={`grad-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={color} stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon
+            points={`0,50 ${points} 100,50`}
+            fill={`url(#grad-${color})`}
+          />
+          <polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    }
+
+    // Equipment Card
+    function EquipmentCard({ name, status, efficiency }) {
+      const statusColors = {
+        running: 'bg-green-500/10 border-green-500/30',
+        warning: 'bg-yellow-500/10 border-yellow-500/30',
+        idle: 'bg-gray-500/10 border-gray-500/30',
+        error: 'bg-red-500/10 border-red-500/30',
+      };
+
+      return (
+        <div className={`p-4 rounded-xl border transition-all cursor-pointer hover:scale-105 ${statusColors[status]}`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-5 h-5 text-gray-400"><Icons.Server /></div>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              status === 'running' ? 'bg-green-500/20 text-green-400' :
+              status === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
+              status === 'idle' ? 'bg-gray-500/20 text-gray-400' :
+              'bg-red-500/20 text-red-400'
+            }`}>
+              {status}
+            </span>
+          </div>
+          <h4 className="font-medium text-white text-sm">{name}</h4>
+          {efficiency > 0 && (
+            <div className="mt-2">
+              <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    efficiency >= 80 ? 'bg-green-500' :
+                    efficiency >= 60 ? 'bg-cyan-500' :
+                    efficiency >= 40 ? 'bg-yellow-500' :
+                    'bg-red-500'
+                  }`}
+                  style={{width: `${efficiency}%`}}
+                />
+              </div>
+              <span className="text-xs text-gray-400">{efficiency}% eff.</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Business View
+    function BusinessView() {
+      const chartData = useMemo(() => Array.from({length: 20}, () => 70 + Math.random() * 20), []);
+
+      const equipment = [
+        { name: 'Robot-01', status: 'running', efficiency: 94 },
+        { name: 'CNC-02', status: 'running', efficiency: 87 },
+        { name: 'Conveyor-03', status: 'warning', efficiency: 72 },
+        { name: 'Press-04', status: 'running', efficiency: 91 },
+        { name: 'Welder-05', status: 'idle', efficiency: 0 },
+        { name: 'Assembly-06', status: 'running', efficiency: 88 },
+      ];
+
+      return (
+        <div className="space-y-6">
+          {/* OEE Hero */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 text-center">OEE Global</h3>
+              <div className="flex justify-center mb-6">
+                <RadialGauge value={87.5} size={150} color="auto" />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <RadialGauge value={92} size={70} color="green" />
+                  <p className="text-xs text-gray-400 mt-1">Disponibilité</p>
+                </div>
+                <div className="text-center">
+                  <RadialGauge value={95} size={70} color="cyan" />
+                  <p className="text-xs text-gray-400 mt-1">Performance</p>
+                </div>
+                <div className="text-center">
+                  <RadialGauge value={99} size={70} color="purple" />
+                  <p className="text-xs text-gray-400 mt-1">Qualité</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MetricCard label="Production Jour" value="3,247" unit="unités" icon="Package" color="cyan" trend="up" trendValue="+12%" />
+              <MetricCard label="Taux Qualité" value="99.2" unit="%" icon="Award" color="green" trend="up" trendValue="+0.3%" />
+              <MetricCard label="Temps Cycle" value="45" unit="sec" icon="Clock" color="purple" trend="down" trendValue="-2.1s" />
+              <MetricCard label="Alertes Critiques" value="2" icon="AlertTriangle" color="red" />
+            </div>
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 text-cyan-400"><Icons.BarChart /></div>
+                <h3 className="font-semibold text-white">Production par Produit</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { name: 'Produit A', value: 1250, max: 1500, color: 'bg-cyan-500' },
+                  { name: 'Produit B', value: 890, max: 1500, color: 'bg-purple-500' },
+                  { name: 'Produit C', value: 650, max: 1500, color: 'bg-green-500' },
+                  { name: 'Produit D', value: 420, max: 1500, color: 'bg-yellow-500' },
+                ].map(p => (
+                  <div key={p.name}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">{p.name}</span>
+                      <span className="text-white font-medium">{p.value}</span>
+                    </div>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className={`h-full ${p.color} rounded-full`} style={{width: `${(p.value/p.max)*100}%`}} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 text-cyan-400"><Icons.TrendingUp /></div>
+                <h3 className="font-semibold text-white">Tendance OEE (24h)</h3>
+              </div>
+              <MiniChart data={chartData} />
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <span>00:00</span>
+                <span>12:00</span>
+                <span>24:00</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Equipment Grid */}
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 text-cyan-400"><Icons.Factory /></div>
+              <h3 className="font-semibold text-white">Statut Équipements</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {equipment.map(eq => (
+                <EquipmentCard key={eq.name} {...eq} />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Tech View
+    function TechView() {
+      const chartData = useMemo(() => Array.from({length: 20}, () => 800 + Math.random() * 400), []);
+
+      const services = [
+        { name: 'VictoriaMetrics', status: 'healthy', icon: 'Database' },
+        { name: 'OpenSearch', status: 'healthy', icon: 'Search' },
+        { name: 'Kafka', status: 'healthy', icon: 'MessageSquare' },
+        { name: 'OTEL Collector', status: 'healthy', icon: 'Activity' },
+        { name: 'Grafana', status: 'healthy', icon: 'BarChart' },
+        { name: 'OpenObserve', status: 'healthy', icon: 'Server' },
+      ];
+
+      return (
+        <div className="space-y-6">
+          {/* Pipeline Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard label="Metrics Rate" value="1,250" unit="pts/s" icon="BarChart" color="cyan" trend="up" trendValue="+5%" />
+            <MetricCard label="Logs Rate" value="520" unit="rec/s" icon="Database" color="purple" />
+            <MetricCard label="Latency P95" value="23" unit="ms" icon="Activity" color="green" trend="down" trendValue="-3ms" />
+            <MetricCard label="Error Rate" value="0.02" unit="%" icon="AlertTriangle" color="green" />
+          </div>
+
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {services.map(s => (
+              <ServiceCard key={s.name} {...s} onClick={() => {}} />
+            ))}
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 text-cyan-400"><Icons.Activity /></div>
+                <h3 className="font-semibold text-white">Data Pipeline Throughput</h3>
+              </div>
+              <MiniChart data={chartData} />
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 text-cyan-400"><Icons.Server /></div>
+                <h3 className="font-semibold text-white">Resource Utilization</h3>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { label: 'CPU', value: 45 },
+                  { label: 'Memory', value: 62 },
+                  { label: 'Disk', value: 38 },
+                  { label: 'Network', value: 28 },
+                ].map(r => (
+                  <div key={r.label}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">{r.label}</span>
+                      <span className="text-white font-medium">{r.value}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          r.value >= 80 ? 'bg-red-500' :
+                          r.value >= 60 ? 'bg-yellow-500' :
+                          'bg-cyan-500'
+                        }`}
+                        style={{width: `${r.value}%`}}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Main App
+    function App() {
+      const [userMode, setUserMode] = useState('business');
+      const [currentView, setCurrentView] = useState('global');
+      const [isConnected, setIsConnected] = useState(true);
+      const [lastUpdate, setLastUpdate] = useState(new Date());
+
+      // Simulate real-time updates
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setLastUpdate(new Date());
+        }, 5000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <DashboardContext.Provider value={{ userMode, setUserMode }}>
+          <div className="min-h-screen flex">
+            {/* Sidebar */}
+            <aside className="w-64 bg-slate-900/95 backdrop-blur-lg border-r border-slate-700/50 flex flex-col fixed h-full z-40">
+              {/* Logo */}
+              <div className="h-16 flex items-center px-4 border-b border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+                    <div className="w-6 h-6 text-white"><Icons.Activity /></div>
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-lg text-white">OOVMTEL</h1>
+                    <p className="text-xs text-gray-500">Industrial Observability</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <nav className="flex-1 py-4 px-2 space-y-1">
+                {[
+                  { id: 'global', icon: 'BarChart', label: 'Vue Globale' },
+                  { id: 'grafana', icon: 'Activity', label: 'Grafana' },
+                  { id: 'opensearch', icon: 'Search', label: 'OpenSearch' },
+                  { id: 'kafka', icon: 'MessageSquare', label: 'Kafka' },
+                ].map(item => {
+                  const Icon = Icons[item.icon];
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setCurrentView(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                        currentView === item.id
+                          ? 'bg-cyan-500/20 text-cyan-400'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="w-5 h-5"><Icon /></div>
+                      <span className="font-medium text-sm">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* User Mode Toggle */}
+              <div className="p-4 border-t border-slate-700/50">
+                <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">Parcours Utilisateur</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setUserMode('business')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                      userMode === 'business'
+                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                        : 'text-gray-500 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="w-4 h-4"><Icons.Briefcase /></div>
+                    <span className="text-sm">Business</span>
+                  </button>
+                  <button
+                    onClick={() => setUserMode('tech')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                      userMode === 'tech'
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                        : 'text-gray-500 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="w-4 h-4"><Icons.Wrench /></div>
+                    <span className="text-sm">Tech</span>
+                  </button>
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Content */}
+            <div className="flex-1 ml-64">
+              {/* Header */}
+              <header className="h-16 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-30 flex items-center justify-between px-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
+                      <Icons.Wifi />
+                    </div>
+                    <span className="text-sm text-gray-400">
+                      {isConnected ? 'Temps réel' : 'Hors ligne'}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {lastUpdate.toLocaleTimeString('fr-FR')}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700">
+                    <div className={`w-4 h-4 ${userMode === 'tech' ? 'text-cyan-400' : 'text-purple-400'}`}>
+                      {userMode === 'tech' ? <Icons.Wrench /> : <Icons.Briefcase />}
+                    </div>
+                    <span className="text-sm font-medium">
+                      {userMode === 'tech' ? 'Mode Tech' : 'Mode Business'}
+                    </span>
+                  </div>
+                </div>
+              </header>
+
+              {/* Page Content */}
+              <main className="p-6">
+                <div className="mb-6">
+                  <h1 className="text-2xl font-bold text-white">
+                    {userMode === 'tech' ? 'Vue Technique' : 'Vue Business'}
+                  </h1>
+                  <p className="text-gray-400 mt-1">
+                    {userMode === 'tech'
+                      ? 'Infrastructure & Pipeline de données'
+                      : 'KPIs Production & Performance Industrielle'
+                    }
+                  </p>
+                </div>
+
+                {userMode === 'tech' ? <TechView /> : <BusinessView />}
+
+                {/* Quick Links */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  {[
+                    { title: 'Grafana', desc: 'Tableaux de bord', url: 'http://localhost:3000', icon: 'Activity' },
+                    { title: 'OpenSearch', desc: 'Analyse des logs', url: 'http://localhost:5601', icon: 'Search' },
+                    { title: 'Kafka UI', desc: 'Flux temps réel', url: 'http://localhost:8090', icon: 'MessageSquare' },
+                  ].map(link => {
+                    const Icon = Icons[link.icon];
+                    return (
+                      <a
+                        key={link.title}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-4 flex items-center gap-4 hover:border-cyan-500/30 group transition-all"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-slate-700/50 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                          <div className="w-6 h-6 text-gray-400 group-hover:text-cyan-400 transition-colors"><Icon /></div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-white">{link.title}</h4>
+                          <p className="text-sm text-gray-400">{link.desc}</p>
+                        </div>
+                        <div className="w-5 h-5 text-gray-600 group-hover:text-cyan-400 transition-colors">
+                          <Icons.ExternalLink />
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              </main>
+            </div>
+          </div>
+        </DashboardContext.Provider>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
