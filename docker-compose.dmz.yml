@@ -122,9 +122,16 @@ services:
 # =============================================================================
 
 networks:
+  # DMZ network - shared across OT, DMZ, and IT zones
+  # Created here if not exists, shared when running with other compose files
   dmz-network:
-    external: true
-    name: oovmtel_dmz-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+    labels:
+      zone: dmz
+      security: iec62443-l3
 
 # Note: This compose file expects:
 # - kafka-ot from docker-compose.ot.yml
