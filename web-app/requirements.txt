@@ -25,3 +25,19 @@ gunicorn==21.2.0
 
 # Optional: For environment variable management
 python-dotenv==1.0.0
+
+# =============================================
+# Game-Changer Modules Dependencies
+# =============================================
+
+# For data compression in edge module
+# gzip - standard library
+
+# For statistical calculations in predictive module
+# math - standard library
+
+# For subprocess in remediation module
+# subprocess - standard library
+
+# Note: All game-changer modules use only standard library
+# and existing dependencies (pydantic, httpx, asyncio)
