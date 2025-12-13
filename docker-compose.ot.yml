@@ -7,48 +7,28 @@
 
 services:
   # ===========================================================================
-  # KAFKA EDGE OT - Buffer local côté OT
+  # KAFKA EDGE OT - Buffer local KRaft mode (no Zookeeper)
   # ===========================================================================
-
-  zookeeper-ot:
-    image: confluentinc/cp-zookeeper:7.5.3
-    container_name: oovmtel-zookeeper-ot
-    hostname: zookeeper-ot
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_INIT_LIMIT: 5
-      ZOOKEEPER_SYNC_LIMIT: 2
-      # Enable 4-letter-word commands for healthcheck (disabled by default in ZK 3.5+)
-      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok,srvr,stat"
-    volumes:
-      - zookeeper_ot_data:/var/lib/zookeeper/data
-      - zookeeper_ot_logs:/var/lib/zookeeper/log
-    networks:
-      - ot-network
-    healthcheck:
-      test: ["CMD-SHELL", "echo ruok | timeout 5 bash -c 'exec 3<>/dev/tcp/localhost/2181 && cat >&3 && cat <&3' | grep -q imok"]
-      interval: 10s
-      timeout: 10s
-      retries: 15
-      start_period: 45s
-    restart: unless-stopped
 
   kafka-ot:
     image: confluentinc/cp-kafka:7.5.3
     container_name: oovmtel-kafka-ot
     hostname: kafka-ot
-    depends_on:
-      zookeeper-ot:
-        condition: service_healthy
     ports:
       - "9094:9092"  # Port différent pour éviter conflit
     environment:
-      KAFKA_BROKER_ID: 100
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-ot:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      # KRaft mode configuration (single node)
+      KAFKA_NODE_ID: 100
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 100@kafka-ot:9093
+      CLUSTER_ID: oovmtel-ot-cluster-001
+      # Listener configuration
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://kafka-ot:9093,INTERNAL://kafka-ot:9092,EXTERNAL://0.0.0.0:9094
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-ot:9092,EXTERNAL://localhost:9094
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Single-node settings
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -67,11 +47,11 @@ services:
       - ot-network
       - dmz-network  # Connexion vers DMZ uniquement
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 9092 && kafka-broker-api-versions --bootstrap-server localhost:9092 --command-config /dev/null 2>/dev/null | grep -q ApiVersion || nc -z localhost 9092"]
-      interval: 30s
-      timeout: 30s
-      retries: 30
-      start_period: 300s
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 20s
+      retries: 15
+      start_period: 90s
     restart: unless-stopped
 
   kafka-ot-init:
@@ -277,9 +257,5 @@ networks:
 # =============================================================================
 
 volumes:
-  zookeeper_ot_data:
-    driver: local
-  zookeeper_ot_logs:
-    driver: local
   kafka_ot_data:
     driver: local

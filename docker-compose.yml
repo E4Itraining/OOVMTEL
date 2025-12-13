@@ -6,49 +6,29 @@
 
 services:
   # ===========================================================================
-  # KAFKA CLUSTER - Message Buffer for High-Volume Streaming
+  # KAFKA - Message Buffer KRaft mode (no Zookeeper)
   # ===========================================================================
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.3
-    container_name: oovmtel-zookeeper
-    hostname: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_INIT_LIMIT: 5
-      ZOOKEEPER_SYNC_LIMIT: 2
-      # Enable 4-letter-word commands for healthcheck (disabled by default in ZK 3.5+)
-      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok,srvr,stat"
-    volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
-      - zookeeper_logs:/var/lib/zookeeper/log
-    networks:
-      - oovmtel-network
-    healthcheck:
-      test: ["CMD-SHELL", "echo ruok | timeout 5 bash -c 'exec 3<>/dev/tcp/localhost/2181 && cat >&3 && cat <&3' | grep -q imok"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.5.3
     container_name: oovmtel-kafka
     hostname: kafka
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     ports:
       - "9092:9092"
       - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      # KRaft mode configuration (single node)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
+      CLUSTER_ID: oovmtel-main-cluster-001
+      # Listener configuration
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://kafka:9094,INTERNAL://kafka:9092,EXTERNAL://0.0.0.0:9093
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Single-node settings
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -70,10 +50,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 20s
+      retries: 15
+      start_period: 90s
     restart: unless-stopped
 
   kafka-ui:
@@ -87,7 +68,6 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: oovmtel
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     networks:
       - oovmtel-network
     restart: unless-stopped
@@ -581,10 +561,6 @@ networks:
 # =============================================================================
 
 volumes:
-  zookeeper_data:
-    driver: local
-  zookeeper_logs:
-    driver: local
   kafka_data:
     driver: local
   victoria_metrics_data:
