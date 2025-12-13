@@ -1,0 +1,281 @@
+# =============================================================================
+# OOVMTEL - ZONE OT (Operational Technology) - IEC 62443 Level 2/3
+# =============================================================================
+# Cette zone contient les équipements industriels et un collecteur léger
+# Export UNIDIRECTIONNEL vers la DMZ uniquement
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # KAFKA EDGE OT - Buffer local côté OT
+  # ===========================================================================
+
+  zookeeper-ot:
+    image: confluentinc/cp-zookeeper:7.5.3
+    container_name: oovmtel-zookeeper-ot
+    hostname: zookeeper-ot
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper_ot_data:/var/lib/zookeeper/data
+      - zookeeper_ot_logs:/var/lib/zookeeper/log
+    networks:
+      - ot-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  kafka-ot:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka-ot
+    hostname: kafka-ot
+    depends_on:
+      zookeeper-ot:
+        condition: service_healthy
+    ports:
+      - "9094:9092"  # Port différent pour éviter conflit
+    environment:
+      KAFKA_BROKER_ID: 100
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-ot:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-ot:9092,EXTERNAL://localhost:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      # OT optimisé : rétention courte, buffer local
+      KAFKA_NUM_PARTITIONS: 6
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 4  # Rétention courte côté OT
+      KAFKA_LOG_SEGMENT_BYTES: 536870912  # 512MB segments
+      KAFKA_LOG_RETENTION_BYTES: 2147483648  # 2GB max
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_MESSAGE_MAX_BYTES: 10485760
+      KAFKA_HEAP_OPTS: "-Xmx1g -Xms512m"  # Ressources limitées côté OT
+    volumes:
+      - kafka_ot_data:/var/lib/kafka/data
+    networks:
+      - ot-network
+      - dmz-network  # Connexion vers DMZ uniquement
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  kafka-ot-init:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-kafka-ot-init
+    depends_on:
+      kafka-ot:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo '🏭 Creating OT Kafka topics...'
+
+        # Topics OT - données brutes industrielles
+        kafka-topics --create --if-not-exists --topic ot-scada-raw --bootstrap-server kafka-ot:9092 --partitions 6 --replication-factor 1 --config retention.ms=14400000 --config compression.type=lz4
+        kafka-topics --create --if-not-exists --topic ot-mes-raw --bootstrap-server kafka-ot:9092 --partitions 4 --replication-factor 1 --config retention.ms=14400000
+        kafka-topics --create --if-not-exists --topic ot-plm-raw --bootstrap-server kafka-ot:9092 --partitions 2 --replication-factor 1 --config retention.ms=14400000
+        kafka-topics --create --if-not-exists --topic ot-opcua-raw --bootstrap-server kafka-ot:9092 --partitions 4 --replication-factor 1 --config retention.ms=14400000
+
+        # Topic agrégé pour export vers DMZ
+        kafka-topics --create --if-not-exists --topic ot-telemetry-export --bootstrap-server kafka-ot:9092 --partitions 6 --replication-factor 1 --config retention.ms=14400000 --config compression.type=lz4
+
+        echo '✅ OT Kafka topics created!'
+        kafka-topics --list --bootstrap-server kafka-ot:9092
+    networks:
+      - ot-network
+
+  # ===========================================================================
+  # OTEL COLLECTOR OT - Collecteur léger, export unidirectionnel
+  # ===========================================================================
+
+  otel-collector-ot:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-otel-collector-ot
+    hostname: otel-collector-ot
+    depends_on:
+      kafka-ot:
+        condition: service_healthy
+    ports:
+      - "4319:4317"   # OTLP gRPC (port différent)
+      - "4320:4318"   # OTLP HTTP
+      - "8889:8888"   # Prometheus metrics
+      - "13134:13133" # Health check
+    environment:
+      GOMEMLIMIT: 512MiB  # Ressources limitées côté OT
+      ZONE: ot
+      SECURITY_LEVEL: iec62443-l2
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-collector-ot-config.yaml:/etc/otel/config.yaml:ro
+    networks:
+      - ot-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # INDUSTRIAL SIMULATORS - Zone OT
+  # ===========================================================================
+
+  scada-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-scada-simulator
+    hostname: scada-simulator
+    depends_on:
+      kafka-ot:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-ot:9092
+      OTEL_ENDPOINT: http://otel-collector-ot:4318
+      SIMULATOR_TYPE: scada
+      METRICS_PORT: 8080
+      DATA_RATE_PER_SEC: 500
+      ZONE: ot
+    ports:
+      - "8080:8080"
+    networks:
+      - ot-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  mes-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-mes-simulator
+    hostname: mes-simulator
+    depends_on:
+      kafka-ot:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-ot:9092
+      OTEL_ENDPOINT: http://otel-collector-ot:4318
+      SIMULATOR_TYPE: mes
+      METRICS_PORT: 8081
+      DATA_RATE_PER_SEC: 100
+      ZONE: ot
+    ports:
+      - "8081:8081"
+    networks:
+      - ot-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  plm-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-plm-simulator
+    hostname: plm-simulator
+    depends_on:
+      kafka-ot:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-ot:9092
+      OTEL_ENDPOINT: http://otel-collector-ot:4318
+      SIMULATOR_TYPE: plm
+      METRICS_PORT: 8082
+      DATA_RATE_PER_SEC: 20
+      ZONE: ot
+    ports:
+      - "8082:8082"
+    networks:
+      - ot-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8082/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  opcua-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile
+    container_name: oovmtel-opcua-simulator
+    hostname: opcua-simulator
+    depends_on:
+      kafka-ot:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-ot:9092
+      OTEL_ENDPOINT: http://otel-collector-ot:4318
+      SIMULATOR_TYPE: opcua
+      METRICS_PORT: 8083
+      DATA_RATE_PER_SEC: 200
+      ZONE: ot
+    ports:
+      - "8083:8083"
+    networks:
+      - ot-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8083/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+# =============================================================================
+# NETWORKS - Isolation réseau OT
+# =============================================================================
+
+networks:
+  ot-network:
+    driver: bridge
+    internal: true  # Pas d'accès Internet direct
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
+    labels:
+      zone: ot
+      security: iec62443-l2
+
+  dmz-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+    labels:
+      zone: dmz
+      security: iec62443-l3
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  zookeeper_ot_data:
+    driver: local
+  zookeeper_ot_logs:
+    driver: local
+  kafka_ot_data:
+    driver: local

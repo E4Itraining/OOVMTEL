@@ -1,0 +1,114 @@
+# =============================================================================
+# OpenSearch Configuration - Compliance & Audit
+# =============================================================================
+# Optimized for long-term retention and compliance queries
+# NIS2 / IEC 62443 audit requirements
+# =============================================================================
+
+cluster.name: oovmtel-compliance
+node.name: opensearch-compliance-node1
+
+# =============================================================================
+# PATH CONFIGURATION
+# =============================================================================
+path.data: /usr/share/opensearch/data
+path.logs: /usr/share/opensearch/logs
+
+# =============================================================================
+# NETWORK
+# =============================================================================
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# =============================================================================
+# DISCOVERY (Single node for now, expand for production)
+# =============================================================================
+discovery.type: single-node
+cluster.initial_master_nodes:
+  - opensearch-compliance-node1
+
+# =============================================================================
+# MEMORY
+# =============================================================================
+bootstrap.memory_lock: true
+
+# =============================================================================
+# INDEX SETTINGS FOR COMPLIANCE
+# =============================================================================
+
+# Default settings for new indices
+action.auto_create_index: true
+
+# Index lifecycle management
+plugins.index_state_management.enabled: true
+
+# Default number of shards/replicas
+index.number_of_shards: 3
+index.number_of_replicas: 1
+
+# Refresh interval (balance between search freshness and write performance)
+index.refresh_interval: 30s
+
+# =============================================================================
+# COMPLIANCE-SPECIFIC SETTINGS
+# =============================================================================
+
+# Audit logging (when security plugin is enabled)
+# opendistro_security.audit.type: internal_opensearch
+# opendistro_security.audit.enable_rest: true
+# opendistro_security.audit.enable_transport: false
+# opendistro_security.audit.resolve_indices: true
+
+# =============================================================================
+# PERFORMANCE TUNING FOR COMPLIANCE WORKLOAD
+# =============================================================================
+
+# Thread pools
+thread_pool.write.queue_size: 1000
+thread_pool.search.queue_size: 1000
+
+# Circuit breakers
+indices.breaker.total.limit: 70%
+indices.breaker.request.limit: 40%
+indices.breaker.fielddata.limit: 30%
+
+# Caching
+indices.queries.cache.size: 10%
+indices.fielddata.cache.size: 20%
+indices.memory.index_buffer_size: 15%
+
+# =============================================================================
+# INDEX TEMPLATES FOR COMPLIANCE DATA
+# =============================================================================
+# Note: These are defined via API, documented here for reference
+#
+# Template: compliance-logs-*
+#   - Retention: 365 days
+#   - Replicas: 2
+#   - Rollover: 50GB or 1 day
+#   - Force merge after rollover
+#
+# Template: compliance-traces-*
+#   - Retention: 90 days
+#   - Replicas: 1
+#   - Rollover: 30GB or 1 day
+#
+# Template: audit-events-*
+#   - Retention: 730 days (2 years for NIS2)
+#   - Replicas: 2
+#   - Immutable after rollover
+# =============================================================================
+
+# =============================================================================
+# SECURITY (disabled for development - ENABLE IN PRODUCTION)
+# =============================================================================
+plugins.security.disabled: true
+# plugins.security.ssl.transport.enabled: true
+# plugins.security.ssl.http.enabled: true
+# plugins.security.allow_default_init_securityindex: true
+
+# =============================================================================
+# COMPATIBILITY
+# =============================================================================
+compatibility.override_main_response_version: true

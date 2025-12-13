@@ -1,0 +1,132 @@
+# =============================================================================
+# OOVMTEL - ZONE DMZ (Demilitarized Zone) - IEC 62443 Level 3/3.5
+# =============================================================================
+# Zone tampon entre OT et IT
+# Flux UNIDIRECTIONNEL : OT → DMZ → IT (jamais l'inverse)
+# Simule le comportement d'une data diode logicielle
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # KAFKA MIRRORMAKER 2 - Réplication unidirectionnelle OT → IT
+  # ===========================================================================
+
+  kafka-mirror-maker:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-mirror-maker
+    hostname: kafka-mirror-maker
+    depends_on:
+      - kafka-ot
+      - kafka-it
+    environment:
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
+    volumes:
+      - ./config/kafka/mm2-ot-to-it.properties:/etc/kafka/mm2.properties:ro
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo '🔄 Starting Kafka MirrorMaker 2 - Unidirectional OT → IT replication...'
+        echo '⚠️  SECURITY: This is a ONE-WAY data flow only!'
+
+        # Wait for both Kafka clusters to be ready
+        echo 'Waiting for Kafka OT cluster...'
+        cub kafka-ready -b kafka-ot:9092 1 120
+        echo 'Waiting for Kafka IT cluster...'
+        cub kafka-ready -b kafka-it:9092 1 120
+
+        echo '✅ Both clusters ready. Starting MirrorMaker 2...'
+
+        # Start MM2 with connect-mirror-maker
+        connect-mirror-maker /etc/kafka/mm2.properties
+    networks:
+      - dmz-network
+    restart: unless-stopped
+    labels:
+      zone: dmz
+      security: data-diode
+      direction: ot-to-it-only
+
+  # ===========================================================================
+  # DATA DIODE VALIDATOR - Vérifie l'unidirectionnalité
+  # ===========================================================================
+
+  data-diode-validator:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: oovmtel-data-diode-validator
+    hostname: data-diode-validator
+    depends_on:
+      - kafka-mirror-maker
+    environment:
+      OT_KAFKA: kafka-ot:9092
+      IT_KAFKA: kafka-it:9092
+    volumes:
+      - ./scripts/data-diode-validator.sh:/usr/local/bin/validator.sh:ro
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo '🛡️ Data Diode Validator starting...'
+        echo 'Monitoring for unauthorized IT→OT traffic...'
+
+        while true; do
+          # Check that no IT topics are being replicated to OT
+          # In a real deployment, this would trigger alerts
+
+          OT_TOPICS=$$(kafka-topics --list --bootstrap-server kafka-ot:9092 2>/dev/null | grep -c "^it-" || echo "0")
+
+          if [ "$$OT_TOPICS" -gt 0 ]; then
+            echo "🚨 SECURITY ALERT: IT topics detected in OT zone! Count: $$OT_TOPICS"
+            # In production: send alert to SIEM
+          else
+            echo "✅ $$(date '+%Y-%m-%d %H:%M:%S') - Data diode integrity verified"
+          fi
+
+          sleep 60
+        done
+    networks:
+      - dmz-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # PROTOCOL BREAK - Sanitization layer
+  # ===========================================================================
+
+  protocol-break:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-protocol-break
+    hostname: protocol-break
+    depends_on:
+      - kafka-mirror-maker
+    environment:
+      GOMEMLIMIT: 256MiB
+      ZONE: dmz
+      SECURITY_LEVEL: iec62443-l3
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-collector-dmz-config.yaml:/etc/otel/config.yaml:ro
+    networks:
+      - dmz-network
+    ports:
+      - "13135:13133"  # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+    labels:
+      zone: dmz
+      function: protocol-sanitization
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+
+networks:
+  dmz-network:
+    external: true
+    name: oovmtel_dmz-network
+
+# Note: This compose file expects:
+# - kafka-ot from docker-compose.ot.yml
+# - kafka-it from docker-compose.it.yml
+# Run with: docker-compose -f docker-compose.ot.yml -f docker-compose.dmz.yml -f docker-compose.it.yml up -d
