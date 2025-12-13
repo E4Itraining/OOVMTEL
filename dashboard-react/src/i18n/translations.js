@@ -81,7 +81,8 @@ export const translations = {
         globalView: 'Vue Globale',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
-        kafka: 'Kafka'
+        kafka: 'Kafka',
+        observability: 'Observabilité'
       },
       // Home page submenus
       home: {
@@ -208,6 +209,72 @@ export const translations = {
       loadingError: 'Erreur de chargement',
       connectionLost: 'Connexion perdue',
       tryAgain: 'Réessayer'
+    },
+
+    // Observability & Remediation
+    observability: {
+      title: 'Observabilité & Remédiation',
+      description: 'Surveillance des SLOs, gestion des incidents et automatisation de la remédiation',
+      tabs: {
+        overview: 'Vue d\'ensemble',
+        incidents: 'Incidents',
+        runbooks: 'Runbooks',
+        history: 'Historique'
+      },
+      // Metrics
+      sloCompliance: 'Conformité SLO',
+      activeIncidents: 'Incidents Actifs',
+      mttr: 'MTTR Moyen',
+      mttd: 'MTTD Moyen',
+      automationRate: 'Taux d\'Automatisation',
+      // SLO
+      sloStatus: 'Statut des SLOs',
+      current: 'Actuel',
+      target: 'Objectif',
+      errorBudget: 'Budget d\'Erreur',
+      remaining: 'restant',
+      // Incidents
+      allActiveIncidents: 'Tous les Incidents Actifs',
+      noActiveIncidents: 'Aucun Incident Actif',
+      allSystemsOperational: 'Tous les systèmes fonctionnent normalement',
+      allSeverities: 'Toutes les sévérités',
+      critical: 'Critique',
+      warning: 'Avertissement',
+      allServices: 'Tous les services',
+      viewRunbook: 'Voir Runbook',
+      remediationActions: 'Actions de Remédiation',
+      runNextStep: 'Exécuter Suivant',
+      pauseRemediation: 'Pause',
+      escalate: 'Escalader',
+      // Runbooks
+      remediationRunbooks: 'Runbooks de Remédiation',
+      createRunbook: 'Créer Runbook',
+      executions: 'exécutions',
+      avgMTTR: 'MTTR Moyen',
+      triggers: 'Déclencheurs',
+      steps: 'Étapes',
+      automated: 'Automatisé',
+      manual: 'Manuel',
+      executeRunbook: 'Exécuter le Runbook',
+      // History
+      remediationHistory: 'Historique des Remédiations',
+      last24h: 'Dernières 24h',
+      last7d: '7 derniers jours',
+      last30d: '30 derniers jours',
+      runbook: 'Runbook',
+      service: 'Service',
+      trigger: 'Déclencheur',
+      duration: 'Durée',
+      status: 'Statut',
+      progress: 'Progression',
+      // Charts
+      mttrTrend: 'Tendance MTTR/MTTD',
+      incidentTrend: 'Tendance des Incidents',
+      minutes: 'Minutes',
+      autoResolved: 'Auto-résolu',
+      manualResolved: 'Résolu manuellement',
+      // Actions
+      quickActions: 'Actions Rapides'
     }
   },
 
@@ -279,7 +346,8 @@ export const translations = {
         globalView: 'Global View',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
-        kafka: 'Kafka'
+        kafka: 'Kafka',
+        observability: 'Observability'
       },
       // Home page submenus
       home: {
@@ -406,6 +474,72 @@ export const translations = {
       loadingError: 'Loading error',
       connectionLost: 'Connection lost',
       tryAgain: 'Try again'
+    },
+
+    // Observability & Remediation
+    observability: {
+      title: 'Observability & Remediation',
+      description: 'SLO monitoring, incident management and remediation automation',
+      tabs: {
+        overview: 'Overview',
+        incidents: 'Incidents',
+        runbooks: 'Runbooks',
+        history: 'History'
+      },
+      // Metrics
+      sloCompliance: 'SLO Compliance',
+      activeIncidents: 'Active Incidents',
+      mttr: 'Avg MTTR',
+      mttd: 'Avg MTTD',
+      automationRate: 'Automation Rate',
+      // SLO
+      sloStatus: 'SLO Status',
+      current: 'Current',
+      target: 'Target',
+      errorBudget: 'Error Budget',
+      remaining: 'remaining',
+      // Incidents
+      allActiveIncidents: 'All Active Incidents',
+      noActiveIncidents: 'No Active Incidents',
+      allSystemsOperational: 'All systems are operating normally',
+      allSeverities: 'All severities',
+      critical: 'Critical',
+      warning: 'Warning',
+      allServices: 'All services',
+      viewRunbook: 'View Runbook',
+      remediationActions: 'Remediation Actions',
+      runNextStep: 'Run Next Step',
+      pauseRemediation: 'Pause',
+      escalate: 'Escalate',
+      // Runbooks
+      remediationRunbooks: 'Remediation Runbooks',
+      createRunbook: 'Create Runbook',
+      executions: 'executions',
+      avgMTTR: 'Avg MTTR',
+      triggers: 'Triggers',
+      steps: 'Steps',
+      automated: 'Automated',
+      manual: 'Manual',
+      executeRunbook: 'Execute Runbook',
+      // History
+      remediationHistory: 'Remediation History',
+      last24h: 'Last 24h',
+      last7d: 'Last 7 days',
+      last30d: 'Last 30 days',
+      runbook: 'Runbook',
+      service: 'Service',
+      trigger: 'Trigger',
+      duration: 'Duration',
+      status: 'Status',
+      progress: 'Progress',
+      // Charts
+      mttrTrend: 'MTTR/MTTD Trend',
+      incidentTrend: 'Incident Trend',
+      minutes: 'Minutes',
+      autoResolved: 'Auto-resolved',
+      manualResolved: 'Manually resolved',
+      // Actions
+      quickActions: 'Quick Actions'
     }
   },
 
@@ -477,7 +611,8 @@ export const translations = {
         globalView: 'Globaal Overzicht',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
-        kafka: 'Kafka'
+        kafka: 'Kafka',
+        observability: 'Observabiliteit'
       },
       // Home page submenus
       home: {
@@ -604,6 +739,72 @@ export const translations = {
       loadingError: 'Laadfout',
       connectionLost: 'Verbinding verloren',
       tryAgain: 'Opnieuw proberen'
+    },
+
+    // Observability & Remediation
+    observability: {
+      title: 'Observabiliteit & Remediatie',
+      description: 'SLO monitoring, incidentbeheer en remediatie automatisering',
+      tabs: {
+        overview: 'Overzicht',
+        incidents: 'Incidenten',
+        runbooks: 'Runbooks',
+        history: 'Geschiedenis'
+      },
+      // Metrics
+      sloCompliance: 'SLO Naleving',
+      activeIncidents: 'Actieve Incidenten',
+      mttr: 'Gem. MTTR',
+      mttd: 'Gem. MTTD',
+      automationRate: 'Automatiseringsgraad',
+      // SLO
+      sloStatus: 'SLO Status',
+      current: 'Huidig',
+      target: 'Doel',
+      errorBudget: 'Foutbudget',
+      remaining: 'resterend',
+      // Incidents
+      allActiveIncidents: 'Alle Actieve Incidenten',
+      noActiveIncidents: 'Geen Actieve Incidenten',
+      allSystemsOperational: 'Alle systemen werken normaal',
+      allSeverities: 'Alle ernst',
+      critical: 'Kritiek',
+      warning: 'Waarschuwing',
+      allServices: 'Alle services',
+      viewRunbook: 'Bekijk Runbook',
+      remediationActions: 'Remediatie Acties',
+      runNextStep: 'Volgende Stap',
+      pauseRemediation: 'Pauzeren',
+      escalate: 'Escaleren',
+      // Runbooks
+      remediationRunbooks: 'Remediatie Runbooks',
+      createRunbook: 'Runbook Maken',
+      executions: 'uitvoeringen',
+      avgMTTR: 'Gem. MTTR',
+      triggers: 'Triggers',
+      steps: 'Stappen',
+      automated: 'Geautomatiseerd',
+      manual: 'Handmatig',
+      executeRunbook: 'Runbook Uitvoeren',
+      // History
+      remediationHistory: 'Remediatie Geschiedenis',
+      last24h: 'Laatste 24u',
+      last7d: 'Laatste 7 dagen',
+      last30d: 'Laatste 30 dagen',
+      runbook: 'Runbook',
+      service: 'Service',
+      trigger: 'Trigger',
+      duration: 'Duur',
+      status: 'Status',
+      progress: 'Voortgang',
+      // Charts
+      mttrTrend: 'MTTR/MTTD Trend',
+      incidentTrend: 'Incident Trend',
+      minutes: 'Minuten',
+      autoResolved: 'Auto-opgelost',
+      manualResolved: 'Handmatig opgelost',
+      // Actions
+      quickActions: 'Snelle Acties'
     }
   }
 }

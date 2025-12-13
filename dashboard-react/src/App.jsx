@@ -8,6 +8,7 @@ import DetailedView from './pages/DetailedView'
 import GrafanaView from './pages/GrafanaView'
 import OpenSearchView from './pages/OpenSearchView'
 import KafkaView from './pages/KafkaView'
+import ObservabilityRemediationView from './pages/ObservabilityRemediationView'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="grafana" element={<GrafanaView />} />
               <Route path="opensearch" element={<OpenSearchView />} />
               <Route path="kafka" element={<KafkaView />} />
+              <Route path="observability" element={<ObservabilityRemediationView />} />
             </Route>
           </Routes>
         </BrowserRouter>
