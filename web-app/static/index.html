@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="app-container">
         <!-- Header -->
         <header class="main-header">
@@ -24,11 +27,15 @@
                 <button class="toggle-btn" data-view="tech">Tech View</button>
             </nav>
             <div class="header-actions">
-                <div class="refresh-indicator">
+                <div class="refresh-indicator" id="refreshIndicator">
                     <span class="pulse"></span>
-                    <span class="refresh-text">Live</span>
+                    <span class="refresh-text">LIVE</span>
+                    <span class="connection-status" id="connectionStatus" title="Connexion temps réel"></span>
                 </div>
-                <span class="last-update">Last update: <span id="lastUpdateTime">--:--:--</span></span>
+                <div class="update-info">
+                    <span class="last-update">Mise à jour: <span id="lastUpdateTime">--:--:--</span></span>
+                    <span class="update-ago" id="updateAgo"></span>
+                </div>
             </div>
         </header>
 
@@ -133,6 +140,18 @@
                                 <span class="unit">%</span>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Problems & Impacts Section -->
+                <section class="metrics-section problems-impacts-section">
+                    <h2 class="section-title">
+                        <span class="icon problems-icon"></span>
+                        Problèmes & Impacts
+                        <span class="section-badge critical" id="problemsCount">0</span>
+                    </h2>
+                    <div class="problems-impacts-container" id="problemsImpactsContainer">
+                        <!-- Problems and impacts will be populated by JS -->
                     </div>
                 </section>
 
