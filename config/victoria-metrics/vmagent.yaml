@@ -12,6 +12,8 @@ global:
 scrape_configs:
   # SCADA Metrics Simulation
   - job_name: 'scada-metrics'
+    scheme: http
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['scada-simulator:8080']
     relabel_configs:
@@ -22,6 +24,8 @@ scrape_configs:
 
   # MES Metrics Simulation
   - job_name: 'mes-metrics'
+    scheme: http
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['mes-simulator:8081']
     relabel_configs:
@@ -30,6 +34,8 @@ scrape_configs:
 
   # PLM Metrics Simulation
   - job_name: 'plm-metrics'
+    scheme: http
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['plm-simulator:8082']
     relabel_configs:
@@ -38,6 +44,8 @@ scrape_configs:
 
   # OPC-UA Gateway Metrics
   - job_name: 'opcua-gateway'
+    scheme: http
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['opcua-simulator:8083']
     relabel_configs:
