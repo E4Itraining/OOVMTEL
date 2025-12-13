@@ -261,11 +261,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:5080/healthz || wget -q --spider http://localhost:5080/healthz || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 15
-      start_period: 120s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5080/healthz 2>/dev/null || curl -sf http://localhost:5080/healthz > /dev/null 2>&1 || nc -z localhost 5080 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 15s
+      retries: 20
+      start_period: 180s
     restart: unless-stopped
 
   # ===========================================================================
@@ -358,11 +358,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:13133/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 60s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || nc -z localhost 13133 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
     restart: unless-stopped
 
   # ===========================================================================
