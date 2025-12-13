@@ -394,6 +394,17 @@ services:
       GRAFANA_URL: http://grafana:3000
       REFRESH_INTERVAL: "10"
       USE_SIMULATED_DATA: "true"
+      # Game-Changer Modules Configuration
+      MODULES_ENABLED: "true"
+      # NLP Module
+      NLP_DEFAULT_LANGUAGE: "fr"
+      # Remediation Module
+      REMEDIATION_DRY_RUN: "true"
+      REMEDIATION_REQUIRE_APPROVAL: "true"
+      # Edge Module
+      EDGE_SYNC_INTERVAL: "60"
+      # Predictive Module
+      PREDICTIVE_ANOMALY_SENSITIVITY: "2.0"
     networks:
       - oovmtel-network
     healthcheck:

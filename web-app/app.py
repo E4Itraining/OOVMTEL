@@ -5,22 +5,42 @@ Backend API Service
 This service provides a unified API for aggregating business and technical metrics
 from various data sources (VictoriaMetrics, OpenSearch, Kafka) and serves the
 web application for the unified dashboard.
+
+Game-Changer Modules:
+- NLP/Conversational Analytics: Natural language queries for industrial data
+- Auto-RCA: Automatic root cause analysis with causal graphs
+- Predictive Maintenance: Anomaly detection and RUL prediction
+- Auto-Remediation: Runbook-based automatic incident remediation
+- Edge Computing: Edge agent management and data aggregation
 """
 
 import os
 import asyncio
 import logging
+import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 import random
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 from pydantic import BaseModel
+
+# Import game-changer modules
+try:
+    from modules.nlp import NLPEngine, ConversationalQuery
+    from modules.rca import RCAEngine, Incident, IncidentSeverity, IncidentCategory
+    from modules.predictive import PredictiveEngine
+    from modules.remediation import RemediationEngine, RunbookLibrary
+    from modules.edge import EdgeAgent, EdgeConfig, EdgeAgentManager
+    MODULES_AVAILABLE = True
+except ImportError as e:
+    MODULES_AVAILABLE = False
+    logging.warning(f"Advanced modules not available: {e}")
 
 # Configure logging
 logging.basicConfig(
@@ -121,10 +141,39 @@ cache_timestamp: Optional[datetime] = None
 # HTTP client
 http_client: Optional[httpx.AsyncClient] = None
 
+# Initialize game-changer modules
+nlp_engine: Optional[Any] = None
+rca_engine: Optional[Any] = None
+predictive_engine: Optional[Any] = None
+remediation_engine: Optional[Any] = None
+edge_manager: Optional[Any] = None
+
 @app.on_event("startup")
 async def startup_event():
-    global http_client
+    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager
+
     http_client = httpx.AsyncClient(timeout=10.0)
+
+    # Initialize game-changer modules
+    if MODULES_AVAILABLE:
+        try:
+            nlp_engine = NLPEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL,
+                opensearch_url=config.OPENSEARCH_URL
+            )
+            rca_engine = RCAEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL,
+                opensearch_url=config.OPENSEARCH_URL
+            )
+            predictive_engine = PredictiveEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL
+            )
+            remediation_engine = RemediationEngine(dry_run=True)  # Dry run by default
+            edge_manager = EdgeAgentManager()
+            logger.info("Game-changer modules initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize modules: {e}")
+
     logger.info("OOVMTEL Unified View API started")
     # Start background task for metrics refresh
     asyncio.create_task(metrics_refresh_loop())
@@ -467,6 +516,475 @@ def generate_simulated_events() -> List[Dict[str, Any]]:
         event["time"] = (now - timedelta(minutes=i * 3 + random.randint(1, 5))).isoformat()
 
     return events
+
+# =========================================
+# NLP/Conversational Analytics Endpoints
+# =========================================
+
+class ChatRequest(BaseModel):
+    query: str
+    language: str = "auto"
+    session_id: Optional[str] = None
+
+class ChatResponse(BaseModel):
+    answer: str
+    intent: str
+    confidence: float
+    visualizations: List[Dict[str, Any]] = []
+    suggestions: List[str] = []
+    processing_time_ms: float = 0
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat_query(request: ChatRequest):
+    """Process a natural language query about industrial data."""
+    if not MODULES_AVAILABLE or not nlp_engine:
+        raise HTTPException(status_code=503, detail="NLP module not available")
+
+    try:
+        # Get current metrics for context
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+
+        conv_query = ConversationalQuery(
+            query=request.query,
+            language=request.language,
+            session_id=request.session_id
+        )
+
+        response = await nlp_engine.process_query(conv_query, metrics)
+
+        return ChatResponse(
+            answer=response.answer,
+            intent=response.intent.value,
+            confidence=response.confidence,
+            visualizations=[v.model_dump() for v in response.visualizations],
+            suggestions=response.suggestions,
+            processing_time_ms=response.processing_time_ms
+        )
+    except Exception as e:
+        logger.error(f"Chat query error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================
+# Root Cause Analysis Endpoints
+# =========================================
+
+class RCARequest(BaseModel):
+    incident_id: Optional[str] = None
+    title: str
+    description: str
+    severity: str = "medium"
+    category: str = "performance"
+
+@app.post("/api/rca/analyze")
+async def analyze_root_cause(request: RCARequest):
+    """Perform root cause analysis on an incident."""
+    if not MODULES_AVAILABLE or not rca_engine:
+        raise HTTPException(status_code=503, detail="RCA module not available")
+
+    try:
+        # Create incident
+        incident = Incident(
+            id=request.incident_id or f"INC-{uuid.uuid4().hex[:8].upper()}",
+            title=request.title,
+            description=request.description,
+            severity=IncidentSeverity(request.severity),
+            category=IncidentCategory(request.category),
+            detected_at=datetime.utcnow()
+        )
+
+        # Get current metrics
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+
+        # Perform analysis
+        analysis = await rca_engine.analyze_incident(incident, metrics)
+
+        return {
+            "incident_id": analysis.incident.id,
+            "root_causes": [
+                {
+                    "name": rc.node.name,
+                    "probability": rc.probability,
+                    "evidence": rc.evidence,
+                    "remediation": rc.remediation.model_dump() if rc.remediation else None
+                }
+                for rc in analysis.root_causes
+            ],
+            "causal_graph": analysis.causal_graph.to_d3_format(),
+            "timeline": analysis.timeline,
+            "summary": analysis.summary,
+            "analysis_duration_ms": analysis.analysis_duration_ms
+        }
+    except Exception as e:
+        logger.error(f"RCA error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/rca/detect")
+async def detect_incidents():
+    """Automatically detect incidents from current metrics."""
+    if not MODULES_AVAILABLE or not rca_engine:
+        raise HTTPException(status_code=503, detail="RCA module not available")
+
+    try:
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+        incidents = await rca_engine.detect_incidents(metrics)
+
+        return {
+            "incidents": [inc.model_dump() for inc in incidents],
+            "count": len(incidents)
+        }
+    except Exception as e:
+        logger.error(f"Incident detection error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================
+# Predictive Maintenance Endpoints
+# =========================================
+
+@app.get("/api/predictive/analyze")
+async def predictive_analysis(equipment: Optional[str] = Query(None)):
+    """Perform predictive maintenance analysis."""
+    if not MODULES_AVAILABLE or not predictive_engine:
+        raise HTTPException(status_code=503, detail="Predictive module not available")
+
+    try:
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+
+        equipment_filter = [equipment] if equipment else None
+        analysis = await predictive_engine.analyze(metrics, equipment_filter)
+
+        return {
+            "analysis_id": analysis.analysis_id,
+            "equipment_health": [eh.model_dump() for eh in analysis.equipment_health],
+            "anomalies": [a.model_dump() for a in analysis.anomalies],
+            "trends": [t.model_dump() for t in analysis.trends],
+            "rul_predictions": [r.model_dump() for r in analysis.rul_predictions],
+            "failure_predictions": [f.model_dump() for f in analysis.failure_predictions],
+            "maintenance_recommendations": [m.model_dump() for m in analysis.maintenance_recommendations],
+            "alerts": analysis.alerts,
+            "summary": analysis.summary,
+            "analysis_duration_ms": analysis.analysis_duration_ms
+        }
+    except Exception as e:
+        logger.error(f"Predictive analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/predictive/health")
+async def equipment_health():
+    """Get equipment health scores."""
+    if not MODULES_AVAILABLE or not predictive_engine:
+        raise HTTPException(status_code=503, detail="Predictive module not available")
+
+    try:
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+        analysis = await predictive_engine.analyze(metrics)
+
+        return {
+            "equipment": [
+                {
+                    "name": eh.equipment,
+                    "overall_score": eh.overall_score,
+                    "status": eh.status,
+                    "trend": eh.trend.value,
+                    "anomalies": eh.anomalies_count,
+                    "warnings": eh.active_warnings
+                }
+                for eh in analysis.equipment_health
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Equipment health error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/predictive/alerts")
+async def predictive_alerts():
+    """Get predictive maintenance alerts."""
+    if not MODULES_AVAILABLE or not predictive_engine:
+        raise HTTPException(status_code=503, detail="Predictive module not available")
+
+    try:
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+        analysis = await predictive_engine.analyze(metrics)
+
+        return {"alerts": analysis.alerts}
+    except Exception as e:
+        logger.error(f"Predictive alerts error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================
+# Auto-Remediation Endpoints
+# =========================================
+
+@app.get("/api/remediation/runbooks")
+async def list_runbooks(category: Optional[str] = Query(None)):
+    """List available runbooks."""
+    if not MODULES_AVAILABLE or not remediation_engine:
+        raise HTTPException(status_code=503, detail="Remediation module not available")
+
+    try:
+        runbooks = remediation_engine.runbook_library.list_runbooks(category=category)
+        return {
+            "runbooks": [
+                {
+                    "id": rb.id,
+                    "name": rb.name,
+                    "description": rb.description,
+                    "category": rb.category,
+                    "risk_level": rb.risk_level,
+                    "estimated_duration": rb.estimated_duration_minutes,
+                    "requires_downtime": rb.requires_downtime,
+                    "success_rate": rb.success_rate
+                }
+                for rb in runbooks
+            ]
+        }
+    except Exception as e:
+        logger.error(f"List runbooks error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class RemediationRequest(BaseModel):
+    runbook_id: str
+    target: str
+    incident_id: Optional[str] = None
+
+@app.post("/api/remediation/execute")
+async def execute_remediation(request: RemediationRequest):
+    """Execute a remediation runbook."""
+    if not MODULES_AVAILABLE or not remediation_engine:
+        raise HTTPException(status_code=503, detail="Remediation module not available")
+
+    try:
+        action = await remediation_engine.create_action(
+            runbook_id=request.runbook_id,
+            target=request.target,
+            incident_id=request.incident_id
+        )
+
+        # For auto-approved actions, execute immediately
+        if action.status.value == "approved":
+            action = await remediation_engine.execute_action(action)
+
+        return {
+            "action_id": action.id,
+            "status": action.status.value,
+            "runbook": action.runbook_name,
+            "target": action.target,
+            "requires_approval": action.approval_request is not None,
+            "approval_id": action.approval_request.id if action.approval_request else None
+        }
+    except Exception as e:
+        logger.error(f"Execute remediation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/remediation/pending")
+async def pending_approvals():
+    """Get pending approval requests."""
+    if not MODULES_AVAILABLE or not remediation_engine:
+        raise HTTPException(status_code=503, detail="Remediation module not available")
+
+    try:
+        pending = remediation_engine.get_pending_approvals()
+        return {
+            "pending": [
+                {
+                    "id": p.id,
+                    "action_id": p.action_id,
+                    "runbook": p.runbook_name,
+                    "reason": p.reason,
+                    "risk_summary": p.risk_summary,
+                    "requested_at": p.requested_at.isoformat(),
+                    "expires_at": p.expires_at.isoformat()
+                }
+                for p in pending
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Pending approvals error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ApprovalRequest(BaseModel):
+    approval_id: str
+    approver: str
+    approved: bool
+    notes: str = ""
+
+@app.post("/api/remediation/approve")
+async def approve_remediation(request: ApprovalRequest):
+    """Approve or reject a remediation action."""
+    if not MODULES_AVAILABLE or not remediation_engine:
+        raise HTTPException(status_code=503, detail="Remediation module not available")
+
+    try:
+        if request.approved:
+            approval = await remediation_engine.approve_action(
+                request.approval_id,
+                request.approver,
+                request.notes
+            )
+        else:
+            approval = await remediation_engine.reject_action(
+                request.approval_id,
+                request.approver,
+                request.notes
+            )
+
+        return {
+            "approval_id": approval.id,
+            "status": approval.status,
+            "approved_by": approval.approved_by
+        }
+    except Exception as e:
+        logger.error(f"Approval error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/remediation/history")
+async def remediation_history(limit: int = Query(20)):
+    """Get remediation action history."""
+    if not MODULES_AVAILABLE or not remediation_engine:
+        raise HTTPException(status_code=503, detail="Remediation module not available")
+
+    try:
+        history = remediation_engine.get_action_history(limit=limit)
+        return {
+            "actions": [
+                {
+                    "id": a.id,
+                    "runbook": a.runbook_name,
+                    "target": a.target,
+                    "status": a.status.value,
+                    "success": a.overall_success,
+                    "created_at": a.created_at.isoformat(),
+                    "completed_at": a.completed_at.isoformat() if a.completed_at else None
+                }
+                for a in history
+            ]
+        }
+    except Exception as e:
+        logger.error(f"History error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/remediation/stats")
+async def remediation_stats():
+    """Get remediation statistics."""
+    if not MODULES_AVAILABLE or not remediation_engine:
+        raise HTTPException(status_code=503, detail="Remediation module not available")
+
+    try:
+        return remediation_engine.get_statistics()
+    except Exception as e:
+        logger.error(f"Stats error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================
+# Edge Computing Endpoints
+# =========================================
+
+class EdgeRegistration(BaseModel):
+    site_name: str
+    location: str = ""
+    preset: str = "high_volume"
+
+@app.post("/api/edge/register")
+async def register_edge_agent(registration: EdgeRegistration):
+    """Register a new edge agent."""
+    if not MODULES_AVAILABLE or not edge_manager:
+        raise HTTPException(status_code=503, detail="Edge module not available")
+
+    try:
+        from modules.edge.models import EDGE_PRESETS
+
+        agent_id = f"EDGE-{uuid.uuid4().hex[:8].upper()}"
+        preset = EDGE_PRESETS.get(registration.preset, EDGE_PRESETS["high_volume"])
+
+        config = EdgeConfig(
+            agent_id=agent_id,
+            site_name=registration.site_name,
+            location=registration.location,
+            central_url="http://localhost:8080"
+        )
+
+        result = edge_manager.register_agent(agent_id, registration.site_name, config)
+        return result
+    except Exception as e:
+        logger.error(f"Edge registration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/edge/agents")
+async def list_edge_agents():
+    """List all registered edge agents."""
+    if not MODULES_AVAILABLE or not edge_manager:
+        raise HTTPException(status_code=503, detail="Edge module not available")
+
+    try:
+        return {
+            "agents": edge_manager.get_all_agents(),
+            "aggregated": edge_manager.get_aggregated_metrics()
+        }
+    except Exception as e:
+        logger.error(f"List agents error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/edge/agents/{agent_id}")
+async def get_edge_agent(agent_id: str):
+    """Get specific edge agent status."""
+    if not MODULES_AVAILABLE or not edge_manager:
+        raise HTTPException(status_code=503, detail="Edge module not available")
+
+    try:
+        status = edge_manager.get_agent_status(agent_id)
+        if not status:
+            raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
+        return status
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get agent error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/edge/data")
+async def receive_edge_data(data: Dict[str, Any] = Body(...)):
+    """Receive data from edge agents."""
+    # This endpoint would receive aggregated data from edge agents
+    logger.info(f"Received edge data: {len(data.get('data', []))} records")
+    return {"status": "received", "count": len(data.get("data", []))}
+
+@app.post("/api/edge/alerts")
+async def receive_edge_alerts(alerts: List[Dict[str, Any]] = Body(...)):
+    """Receive alerts from edge agents."""
+    logger.info(f"Received {len(alerts)} edge alerts")
+    return {"status": "received", "count": len(alerts)}
+
+# =========================================
+# Game-Changer Modules Status
+# =========================================
+
+@app.get("/api/modules/status")
+async def modules_status():
+    """Get status of all game-changer modules."""
+    return {
+        "modules_available": MODULES_AVAILABLE,
+        "nlp": {
+            "enabled": nlp_engine is not None,
+            "description": "Natural language queries for industrial data"
+        },
+        "rca": {
+            "enabled": rca_engine is not None,
+            "description": "Automatic root cause analysis with causal graphs"
+        },
+        "predictive": {
+            "enabled": predictive_engine is not None,
+            "description": "Anomaly detection and failure prediction"
+        },
+        "remediation": {
+            "enabled": remediation_engine is not None,
+            "description": "Automatic incident remediation with runbooks",
+            "runbooks_count": remediation_engine.runbook_library.count() if remediation_engine else 0
+        },
+        "edge": {
+            "enabled": edge_manager is not None,
+            "description": "Edge computing agent management",
+            "agents_count": len(edge_manager.agents) if edge_manager else 0
+        }
+    }
 
 # =========================================
 # Background Tasks
