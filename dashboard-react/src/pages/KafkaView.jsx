@@ -19,7 +19,7 @@ import {
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { Card, CardHeader, CardBody, MetricCard } from '../components/ui/Card'
 import { TimeSeriesChart, BarChartComponent, AreaChartComponent } from '../components/ui/Charts'
-import { StatusBadge, LinearGauge } from '../components/ui/Status'
+import { StatusBadge } from '../components/ui/Status'
 
 const KAFKA_UI_URL = 'http://localhost:8090'
 
