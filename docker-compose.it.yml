@@ -22,7 +22,7 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-it:9094,2@kafka-it-2:9094,3@kafka-it-3:9094
-      CLUSTER_ID: MkU3OEVBNTcyNTRTLTQ2Mzg
+      CLUSTER_ID: rKbP4xYvQU2nM8hJw3ZLTQ
       # Listener configuration
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_LISTENERS: CONTROLLER://kafka-it:9094,INTERNAL://kafka-it:9092,EXTERNAL://0.0.0.0:9093
@@ -44,8 +44,22 @@ services:
       KAFKA_COMPRESSION_TYPE: lz4
       KAFKA_MESSAGE_MAX_BYTES: 10485760
       KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - kafka_it_1_data:/var/lib/kafka/data
+    command: >
+      bash -c "
+        # Clean up any stale metadata that might cause cluster ID mismatch
+        if [ -f /var/lib/kafka/data/meta.properties ]; then
+          STORED_CLUSTER_ID=$$(grep cluster.id /var/lib/kafka/data/meta.properties | cut -d= -f2)
+          if [ \"$$STORED_CLUSTER_ID\" != \"$$CLUSTER_ID\" ] && [ -n \"$$STORED_CLUSTER_ID\" ]; then
+            echo 'Cluster ID mismatch detected. Cleaning up stale data...'
+            rm -rf /var/lib/kafka/data/*
+          fi
+        fi
+        # Start Kafka using the standard Confluent entrypoint (handles KRaft formatting automatically)
+        exec /etc/confluent/docker/run
+      "
     networks:
       - it-network
       - dmz-network  # Connexion depuis DMZ
@@ -69,7 +83,7 @@ services:
       KAFKA_NODE_ID: 2
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-it:9094,2@kafka-it-2:9094,3@kafka-it-3:9094
-      CLUSTER_ID: MkU3OEVBNTcyNTRTLTQ2Mzg
+      CLUSTER_ID: rKbP4xYvQU2nM8hJw3ZLTQ
       # Listener configuration
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
       KAFKA_LISTENERS: CONTROLLER://kafka-it-2:9094,INTERNAL://kafka-it-2:9092
@@ -86,8 +100,22 @@ services:
       KAFKA_LOG_RETENTION_HOURS: 168
       KAFKA_COMPRESSION_TYPE: lz4
       KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - kafka_it_2_data:/var/lib/kafka/data
+    command: >
+      bash -c "
+        # Clean up any stale metadata that might cause cluster ID mismatch
+        if [ -f /var/lib/kafka/data/meta.properties ]; then
+          STORED_CLUSTER_ID=$$(grep cluster.id /var/lib/kafka/data/meta.properties | cut -d= -f2)
+          if [ \"$$STORED_CLUSTER_ID\" != \"$$CLUSTER_ID\" ] && [ -n \"$$STORED_CLUSTER_ID\" ]; then
+            echo 'Cluster ID mismatch detected. Cleaning up stale data...'
+            rm -rf /var/lib/kafka/data/*
+          fi
+        fi
+        # Start Kafka using the standard Confluent entrypoint (handles KRaft formatting automatically)
+        exec /etc/confluent/docker/run
+      "
     networks:
       - it-network
     healthcheck:
@@ -110,7 +138,7 @@ services:
       KAFKA_NODE_ID: 3
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-it:9094,2@kafka-it-2:9094,3@kafka-it-3:9094
-      CLUSTER_ID: MkU3OEVBNTcyNTRTLTQ2Mzg
+      CLUSTER_ID: rKbP4xYvQU2nM8hJw3ZLTQ
       # Listener configuration
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
       KAFKA_LISTENERS: CONTROLLER://kafka-it-3:9094,INTERNAL://kafka-it-3:9092
@@ -127,8 +155,22 @@ services:
       KAFKA_LOG_RETENTION_HOURS: 168
       KAFKA_COMPRESSION_TYPE: lz4
       KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - kafka_it_3_data:/var/lib/kafka/data
+    command: >
+      bash -c "
+        # Clean up any stale metadata that might cause cluster ID mismatch
+        if [ -f /var/lib/kafka/data/meta.properties ]; then
+          STORED_CLUSTER_ID=$$(grep cluster.id /var/lib/kafka/data/meta.properties | cut -d= -f2)
+          if [ \"$$STORED_CLUSTER_ID\" != \"$$CLUSTER_ID\" ] && [ -n \"$$STORED_CLUSTER_ID\" ]; then
+            echo 'Cluster ID mismatch detected. Cleaning up stale data...'
+            rm -rf /var/lib/kafka/data/*
+          fi
+        fi
+        # Start Kafka using the standard Confluent entrypoint (handles KRaft formatting automatically)
+        exec /etc/confluent/docker/run
+      "
     networks:
       - it-network
     healthcheck:
