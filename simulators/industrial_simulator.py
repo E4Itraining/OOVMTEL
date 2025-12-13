@@ -504,13 +504,11 @@ async def run_simulator():
     simulator = simulators[SIMULATOR_TYPE]()
     kafka_topic = kafka_topics[SIMULATOR_TYPE]
 
-    # Create Kafka producer
-    kafka_producer = create_kafka_producer()
-
     # Calculate interval between data points
     interval = 1.0 / DATA_RATE_PER_SEC
 
-    # Setup HTTP server for metrics
+    # IMPORTANT: Start HTTP server FIRST before Kafka connection
+    # This ensures healthchecks pass while waiting for Kafka
     app = web.Application()
     app.router.add_get('/metrics', metrics_handler)
     app.router.add_get('/health', health_handler)
@@ -521,6 +519,12 @@ async def run_simulator():
     site = web.TCPSite(runner, '0.0.0.0', METRICS_PORT)
     await site.start()
     logger.info(f"Metrics server started on port {METRICS_PORT}")
+
+    # Now connect to Kafka (this can block for up to 25s)
+    # HTTP server is already running, so healthchecks will pass
+    kafka_producer = await asyncio.get_event_loop().run_in_executor(
+        None, create_kafka_producer
+    )
 
     # Main loop
     data_count = 0
