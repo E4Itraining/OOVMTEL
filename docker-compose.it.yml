@@ -70,11 +70,11 @@ services:
       - it-network
       - dmz-network  # Connexion depuis DMZ
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
-      interval: 15s
-      timeout: 15s
-      retries: 15
-      start_period: 120s
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 20s
+      retries: 20
+      start_period: 180s
     restart: unless-stopped
 
   kafka-it-2:
