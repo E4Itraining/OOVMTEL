@@ -21,32 +21,9 @@ receivers:
     client_id: otel-industrial
     initial_offset: latest
 
-  # Kafka receiver for SCADA data
-  kafka/scada:
-    brokers:
-      - kafka:9092
-    topic: scada-metrics
-    encoding: otlp_proto
-    group_id: otel-scada
-    initial_offset: latest
-
-  # Kafka receiver for MES data
-  kafka/mes:
-    brokers:
-      - kafka:9092
-    topic: mes-events
-    encoding: otlp_proto
-    group_id: otel-mes
-    initial_offset: latest
-
-  # Kafka receiver for PLM data
-  kafka/plm:
-    brokers:
-      - kafka:9092
-    topic: plm-data
-    encoding: otlp_proto
-    group_id: otel-plm
-    initial_offset: latest
+  # Note: SCADA/MES/PLM Kafka receivers removed because simulators send JSON format
+  # while otlp_proto encoding expects OTLP protobuf. Metrics are collected via
+  # Prometheus scraping instead. The industrial-telemetry topic uses OTLP format.
 
   # Host metrics for IT infrastructure
   hostmetrics:
@@ -242,12 +219,11 @@ extensions:
   zpages:
     endpoint: 0.0.0.0:55679
 
-  # Memory ballast for GC optimization
-  memory_ballast:
-    size_mib: 512
+  # Note: memory_ballast is deprecated in OTel Collector 0.91.0+
+  # Use GOMEMLIMIT environment variable instead (set in docker-compose.yml)
 
 service:
-  extensions: [health_check, pprof, zpages, memory_ballast]
+  extensions: [health_check, pprof, zpages]
 
   pipelines:
     # Metrics pipeline
@@ -256,11 +232,9 @@ service:
       processors: [memory_limiter, resourcedetection, attributes/industrial, batch]
       exporters: [prometheusremotewrite/victoria, debug]
 
-    # Metrics from Kafka (industrial sources)
-    metrics/kafka:
-      receivers: [kafka/scada]
-      processors: [memory_limiter, attributes/industrial, batch]
-      exporters: [prometheusremotewrite/victoria]
+    # Note: metrics/kafka pipeline removed - simulators send JSON to Kafka
+    # but OTLP Kafka receiver expects protobuf format. Metrics are collected
+    # via Prometheus scraping in the main metrics pipeline above.
 
     # Logs pipeline
     logs:
