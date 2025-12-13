@@ -33,6 +33,7 @@ OTEL_ENDPOINT = os.getenv('OTEL_ENDPOINT', 'http://otel-collector:4318')
 SIMULATOR_TYPE = os.getenv('SIMULATOR_TYPE', 'scada')
 METRICS_PORT = int(os.getenv('METRICS_PORT', '8080'))
 DATA_RATE_PER_SEC = int(os.getenv('DATA_RATE_PER_SEC', '100'))
+ZONE = os.getenv('ZONE', 'main')  # 'main', 'ot', or 'it'
 
 # ============================================================================
 # Data Models
@@ -478,7 +479,8 @@ async def ready_handler(request):
 
 async def run_simulator():
     """Main simulation loop"""
-    logger.info(f"Starting {SIMULATOR_TYPE} simulator")
+    logger.info(f"Starting {SIMULATOR_TYPE} simulator in zone: {ZONE}")
+    logger.info(f"Kafka bootstrap: {KAFKA_BOOTSTRAP_SERVERS}")
     logger.info(f"Data rate: {DATA_RATE_PER_SEC} points/second")
     logger.info(f"Metrics port: {METRICS_PORT}")
 
@@ -490,12 +492,28 @@ async def run_simulator():
         'opcua': OPCUASimulator
     }
 
-    kafka_topics = {
-        'scada': 'scada-metrics',
-        'mes': 'mes-events',
-        'plm': 'plm-data',
-        'opcua': 'opcua-nodes'
-    }
+    # Topic names depend on which zone we're running in
+    if ZONE == 'ot':
+        kafka_topics = {
+            'scada': 'ot-scada-raw',
+            'mes': 'ot-mes-raw',
+            'plm': 'ot-plm-raw',
+            'opcua': 'ot-opcua-raw'
+        }
+    elif ZONE == 'it':
+        kafka_topics = {
+            'scada': 'it-scada-data',
+            'mes': 'it-mes-data',
+            'plm': 'it-plm-data',
+            'opcua': 'it-opcua-data'
+        }
+    else:
+        kafka_topics = {
+            'scada': 'scada-metrics',
+            'mes': 'mes-events',
+            'plm': 'plm-data',
+            'opcua': 'opcua-nodes'
+        }
 
     if SIMULATOR_TYPE not in simulators:
         logger.error(f"Unknown simulator type: {SIMULATOR_TYPE}")
@@ -503,6 +521,7 @@ async def run_simulator():
 
     simulator = simulators[SIMULATOR_TYPE]()
     kafka_topic = kafka_topics[SIMULATOR_TYPE]
+    logger.info(f"Sending data to Kafka topic: {kafka_topic}")
 
     # Calculate interval between data points
     interval = 1.0 / DATA_RATE_PER_SEC
