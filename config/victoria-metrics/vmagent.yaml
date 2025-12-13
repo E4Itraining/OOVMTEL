@@ -58,10 +58,5 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:8429']
 
-remoteWrite:
-  - url: http://victoria-metrics:8428/api/v1/write
-    queue_config:
-      max_samples_per_send: 10000
-      batch_send_deadline: 5s
-      capacity: 100000
-      max_shards: 30
+# Note: remoteWrite is configured via command-line args in docker-compose.yml
+# -remoteWrite.url=http://victoria-metrics:8428/api/v1/write
