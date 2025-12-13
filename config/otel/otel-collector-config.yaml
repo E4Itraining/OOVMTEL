@@ -66,13 +66,41 @@ receivers:
       filesystem:
 
   # Prometheus receiver for legacy systems
+  # Enhanced with debugging options for scrape diagnostics
   prometheus:
     config:
+      global:
+        # Global scrape timeout - increase for slow endpoints
+        scrape_timeout: 8s
+        # Log scrape failures at debug level
+        evaluation_interval: 10s
       scrape_configs:
         - job_name: 'industrial-exporters'
           scrape_interval: 10s
+          scrape_timeout: 8s
+          # Honor timestamps from exporters for accurate time series
+          honor_timestamps: true
+          # Add metrics path explicitly for clarity
+          metrics_path: '/metrics'
+          # Enable extra debug metrics about scraping
+          enable_http2: false
           static_configs:
             - targets: ['scada-simulator:8080', 'mes-simulator:8081', 'plm-simulator:8082']
+              labels:
+                environment: 'industrial'
+                collector: 'otel'
+        # Separate job for opcua-simulator (not included in main job)
+        - job_name: 'opcua-exporter'
+          scrape_interval: 10s
+          scrape_timeout: 8s
+          honor_timestamps: true
+          metrics_path: '/metrics'
+          static_configs:
+            - targets: ['opcua-simulator:8083']
+              labels:
+                environment: 'industrial'
+                collector: 'otel'
+                simulator_type: 'opcua'
 
   # Filelog receiver for industrial logs
   filelog:
@@ -186,10 +214,13 @@ exporters:
       compression: lz4
 
   # Debug exporter for development (replaces deprecated 'logging' exporter)
+  # Enhanced verbosity for metrics debugging
   debug:
-    verbosity: normal
-    sampling_initial: 5
-    sampling_thereafter: 200
+    verbosity: detailed
+    sampling_initial: 10
+    sampling_thereafter: 100
+    # Show all data points in output for debugging prometheus scraping issues
+    use_internal_logger: true
 
 extensions:
   # Health check
@@ -239,7 +270,16 @@ service:
 
   telemetry:
     logs:
-      level: info
+      level: debug
+      # Enable development mode for more readable logs
+      development: true
+      # Add caller information for debugging
+      encoding: console
+      # Disable stacktrace for cleaner output
+      disable_stacktrace: true
+      # Sample initial logs at debug level
+      initial_fields:
+        service: otel-collector
     metrics:
       address: 0.0.0.0:8888
       level: detailed
