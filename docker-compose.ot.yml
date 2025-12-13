@@ -19,17 +19,19 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
+      # Enable 4-letter-word commands for healthcheck (disabled by default in ZK 3.5+)
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok,srvr,stat"
     volumes:
       - zookeeper_ot_data:/var/lib/zookeeper/data
       - zookeeper_ot_logs:/var/lib/zookeeper/log
     networks:
       - ot-network
     healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep -q imok"]
+      test: ["CMD-SHELL", "echo ruok | timeout 5 bash -c 'exec 3<>/dev/tcp/localhost/2181 && cat >&3 && cat <&3' | grep -q imok"]
       interval: 10s
       timeout: 10s
-      retries: 10
-      start_period: 30s
+      retries: 15
+      start_period: 45s
     restart: unless-stopped
 
   kafka-ot:
