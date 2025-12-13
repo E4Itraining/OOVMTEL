@@ -1,0 +1,50 @@
+# =============================================================================
+# OpenSearch Dashboards Configuration
+# Modern, Responsive Log Analytics for Industrial Observability
+# =============================================================================
+
+# Server configuration
+server.host: "0.0.0.0"
+server.port: 5601
+server.name: "oovmtel-opensearch-dashboards"
+
+# OpenSearch connection
+opensearch.hosts: ["http://opensearch:9200"]
+opensearch.ssl.verificationMode: none
+opensearch.requestTimeout: 60000
+opensearch.shardTimeout: 30000
+
+# Security disabled for development (enable in production)
+opensearch_security.multitenancy.enabled: false
+opensearch_security.readonly_mode.roles: []
+
+# Logging configuration
+logging.dest: stdout
+logging.verbose: false
+
+# Application settings
+opensearch_dashboards.index: ".opensearch_dashboards"
+opensearch_dashboards.defaultAppId: "discover"
+
+# Branding and UI customization
+opensearchDashboards.branding:
+  logo:
+    defaultUrl: ""
+  mark:
+    defaultUrl: ""
+  loadingLogo:
+    defaultUrl: ""
+  faviconUrl: ""
+  applicationTitle: "OOVMTEL Log Analytics"
+
+# Data management
+data.search.usageTelemetry.enabled: false
+
+# Performance settings
+opensearch.requestHeadersWhitelist: ["securitytenant", "Authorization"]
+
+# Visualization settings
+vis.default.type: "line"
+
+# Query settings
+opensearch.batched.preferBatchedReduceSearchPath: true

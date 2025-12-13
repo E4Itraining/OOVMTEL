@@ -66,10 +66,24 @@ services:
     ports:
       - "8090:8080"
     environment:
-      KAFKA_CLUSTERS_0_NAME: oovmtel
+      KAFKA_CLUSTERS_0_NAME: oovmtel-main
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_READONLY: "false"
+      # Modern UI Settings
+      DYNAMIC_CONFIG_ENABLED: "true"
+      AUTH_TYPE: "DISABLED"
+      # Performance settings
+      WEBCLIENT_MAX_IN_MEMORY_BUFFER_SIZE: "20MB"
+    volumes:
+      - ./config/kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml:ro
     networks:
       - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   kafka-init:
@@ -306,8 +320,22 @@ services:
     environment:
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
       DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+      # Modern UI Settings
+      SERVER_NAME: "oovmtel-opensearch-dashboards"
+      SERVER_HOST: "0.0.0.0"
+      # Performance settings
+      OPENSEARCH_REQUESTTIMEOUT: "60000"
+    volumes:
+      - ./config/opensearch-dashboards/opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml:ro
+      - ./config/opensearch-dashboards/saved-objects.ndjson:/usr/share/opensearch-dashboards/config/saved-objects.ndjson:ro
     networks:
       - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"state\":\"green\"\\|\"level\":\"available\"' || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
     restart: unless-stopped
 
   # ===========================================================================
@@ -371,14 +399,30 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Core settings
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=grafana-opensearch-datasource,victoriametrics-metrics-datasource
+      # Plugin configuration
+      - GF_INSTALL_PLUGINS=grafana-opensearch-datasource,victoriametrics-metrics-datasource,grafana-clock-panel,grafana-piechart-panel
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=victoriametrics-metrics-datasource
+      # Modern UI Settings
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/json/industrial-control-center.json
+      # Performance and features
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      - GF_LIVE_MAX_CONNECTIONS=100
+      - GF_LIVE_ALLOWED_ORIGINS=*
+      # Disable analytics
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_NEWS_NEWS_FEED_ENABLED=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
     networks:
       - oovmtel-network
     healthcheck:
@@ -386,6 +430,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   # ===========================================================================

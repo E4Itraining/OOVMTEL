@@ -1,0 +1,53 @@
+# =============================================================================
+# Kafka UI Configuration
+# Modern, Responsive Cluster Monitoring for OOVMTEL Platform
+# =============================================================================
+
+kafka:
+  clusters:
+    - name: oovmtel-main
+      bootstrapServers: kafka:9092
+      metrics:
+        type: PROMETHEUS
+        port: 9092
+      properties:
+        # Consumer settings
+        fetch.max.wait.ms: 500
+        fetch.min.bytes: 1
+      # Read-only mode for safety (disable for management operations)
+      readOnly: false
+
+# Authentication (disabled for development)
+auth:
+  type: DISABLED
+
+# Application settings
+webclient:
+  max-in-memory-buffer-size: 20MB
+
+# Management features
+management:
+  health:
+    ldap:
+      enabled: false
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.provectus: INFO
+    reactor.netty: WARN
+
+# Server settings
+server:
+  port: 8080
+
+# UI Customization
+dynamic:
+  config:
+    enabled: true
+
+# Feature flags
+kafka-ui:
+  show-topic-analysis: true
+  show-cluster-metrics: true
