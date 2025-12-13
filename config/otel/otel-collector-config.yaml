@@ -219,8 +219,6 @@ exporters:
     verbosity: detailed
     sampling_initial: 10
     sampling_thereafter: 100
-    # Show all data points in output for debugging prometheus scraping issues
-    use_internal_logger: true
 
 extensions:
   # Health check
