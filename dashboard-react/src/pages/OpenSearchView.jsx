@@ -199,11 +199,20 @@ function OpenSearchView() {
           </CardBody>
         </Card>
 
-        {/* Log Levels Distribution */}
+        {/* Log Levels Distribution - ENHANCED with center label */}
         <Card>
           <CardHeader title="Distribution Logs" icon={TrendingUp} />
           <CardBody>
-            <DonutChart data={logLevelData} height={180} innerRadius={45} outerRadius={70} />
+            <DonutChart
+              data={logLevelData}
+              height={180}
+              innerRadius={45}
+              outerRadius={70}
+              centerValue="2.8M"
+              centerLabel="Total Logs"
+              showLabels
+              labelType="percent"
+            />
             <div className="mt-4 space-y-2">
               {logLevelData.map((level) => (
                 <div key={level.name} className="flex items-center justify-between text-sm">
@@ -221,18 +230,31 @@ function OpenSearchView() {
 
       {/* Ingestion Chart & Recent Logs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Ingestion Rate */}
+        {/* Ingestion Rate - ENHANCED with dual axis and thresholds */}
         <Card>
           <CardHeader title="Taux d'Ingestion (24h)" icon={TrendingUp} />
           <CardBody>
             <TimeSeriesChart
               data={ingestionData}
               lines={[
-                { dataKey: 'logs', color: 'cyan', name: 'Logs/sec' },
-                { dataKey: 'traces', color: 'purple', name: 'Traces/sec' }
+                { dataKey: 'logs', color: 'cyan', name: 'Logs' }
               ]}
-              height={250}
+              height={280}
               showLegend
+              yAxisLabel="Logs"
+              yAxisUnit="rec/s"
+              xAxisLabel="Heure"
+              dualYAxis
+              rightAxisLabel="Traces"
+              rightAxisUnit="rec/s"
+              rightAxisLines={[
+                { dataKey: 'traces', color: 'purple', name: 'Traces', dashed: true }
+              ]}
+              warningThreshold={550}
+              criticalThreshold={650}
+              showThresholdZones
+              enableBrush
+              brushHeight={30}
             />
           </CardBody>
         </Card>

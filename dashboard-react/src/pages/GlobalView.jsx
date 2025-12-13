@@ -146,7 +146,7 @@ function BusinessView({ metrics, navigate }) {
           </CardBody>
         </Card>
 
-        {/* OEE Trend */}
+        {/* OEE Trend - ENHANCED with thresholds and labels */}
         <Card>
           <CardHeader title="Tendance OEE (24h)" icon={TrendingUp} />
           <CardBody>
@@ -154,6 +154,16 @@ function BusinessView({ metrics, navigate }) {
               data={oeeHistory}
               lines={[{ dataKey: 'value', color: 'cyan', name: 'OEE' }]}
               height={220}
+              yAxisLabel="OEE"
+              yAxisUnit="%"
+              xAxisLabel="Heure"
+              yMin={60}
+              yMax={100}
+              warningThreshold={75}
+              criticalThreshold={65}
+              showThresholdZones
+              referenceLines={[{ y: 85, color: '#22c55e', label: 'Target', dashed: true }]}
+              tooltipUnit="%"
             />
           </CardBody>
         </Card>
@@ -314,7 +324,7 @@ function TechView({ metrics, navigate }) {
 
       {/* Pipeline & Resources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Data Pipeline */}
+        {/* Data Pipeline - ENHANCED with axis labels and brush */}
         <Card>
           <CardHeader title="Data Pipeline Throughput" icon={Activity} />
           <CardBody>
@@ -323,7 +333,16 @@ function TechView({ metrics, navigate }) {
               lines={[
                 { dataKey: 'value', color: 'cyan', name: 'Throughput' }
               ]}
-              height={220}
+              height={260}
+              yAxisLabel="Débit"
+              yAxisUnit="pts/s"
+              xAxisLabel="Temps"
+              warningThreshold={1400}
+              criticalThreshold={1600}
+              referenceLines={[{ y: 1000, color: '#22c55e', label: 'Baseline', dashed: true }]}
+              enableBrush
+              brushHeight={30}
+              tooltipUnit="pts/s"
             />
           </CardBody>
         </Card>
