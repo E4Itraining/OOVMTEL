@@ -428,10 +428,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      otel-collector:
-        condition: service_healthy
-      victoria-metrics:
-        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
@@ -443,7 +439,7 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -458,10 +454,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      otel-collector:
-        condition: service_healthy
-      victoria-metrics:
-        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
@@ -473,7 +465,7 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -488,10 +480,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      otel-collector:
-        condition: service_healthy
-      victoria-metrics:
-        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
@@ -503,7 +491,7 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8082/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -518,10 +506,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      otel-collector:
-        condition: service_healthy
-      victoria-metrics:
-        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
@@ -533,7 +517,7 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8083/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
