@@ -12,7 +12,7 @@ cd "$PROJECT_DIR"
 
 echo "Stopping OOVMTEL Platform..."
 
-# Stop all services
-docker compose down
+# Stop all services and remove orphan containers
+docker compose down --remove-orphans
 
 echo "OOVMTEL Platform stopped."
