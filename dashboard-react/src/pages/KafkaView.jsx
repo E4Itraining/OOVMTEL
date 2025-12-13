@@ -122,7 +122,7 @@ function KafkaView() {
 
       {/* Throughput Chart & Topic Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Throughput Over Time */}
+        {/* Throughput Over Time - ENHANCED with stacking and axis labels */}
         <Card className="lg:col-span-2">
           <CardHeader title="Débit Temps Réel" icon={Activity} />
           <CardBody>
@@ -132,20 +132,35 @@ function KafkaView() {
                 { dataKey: 'incoming', color: 'cyan', name: 'Entrant' },
                 { dataKey: 'outgoing', color: 'purple', name: 'Sortant' }
               ]}
-              height={250}
+              height={280}
+              stacked
+              yAxisLabel="Débit"
+              yAxisUnit="msg/s"
+              xAxisLabel="Temps"
+              warningThreshold={2000}
+              criticalThreshold={2500}
+              showTooltipTotal
+              enableBrush
+              brushHeight={30}
+              tooltipUnit="msg/s"
             />
           </CardBody>
         </Card>
 
-        {/* Topic Distribution */}
+        {/* Topic Distribution - ENHANCED with axis labels and target */}
         <Card>
           <CardHeader title="Throughput par Topic" icon={TrendingUp} />
           <CardBody>
             <BarChartComponent
               data={topicThroughputData}
-              bars={[{ dataKey: 'value', color: 'cyan', name: 'msg/s' }]}
-              height={250}
+              bars={[{ dataKey: 'value', color: 'cyan', name: 'Débit' }]}
+              height={280}
               horizontal
+              xAxisLabel="msg/s"
+              yAxisUnit="msg/s"
+              targetLine={500}
+              categoryWidth={100}
+              tooltipUnit="msg/s"
             />
           </CardBody>
         </Card>

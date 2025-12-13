@@ -214,7 +214,7 @@ function DetailedView() {
           </CardBody>
         </Card>
 
-        {/* CPU & Memory Chart */}
+        {/* CPU & Memory Chart - ENHANCED with dual axis and thresholds */}
         <Card className="lg:col-span-2">
           <CardHeader title="CPU & Memory (1h)" icon={Activity} />
           <CardBody>
@@ -224,11 +224,20 @@ function DetailedView() {
                 memory: memoryData[i]?.value || 0
               }))}
               lines={[
-                { dataKey: 'value', color: 'cyan', name: 'CPU %' },
-                { dataKey: 'memory', color: 'purple', name: 'Memory %' }
+                { dataKey: 'value', color: 'cyan', name: 'CPU' },
+                { dataKey: 'memory', color: 'purple', name: 'Memory' }
               ]}
-              height={220}
+              height={240}
               showLegend
+              yAxisLabel="Utilisation"
+              yAxisUnit="%"
+              xAxisLabel="Minute"
+              yMin={0}
+              yMax={100}
+              warningThreshold={75}
+              criticalThreshold={90}
+              showThresholdZones
+              tooltipUnit="%"
             />
           </CardBody>
         </Card>
@@ -236,26 +245,46 @@ function DetailedView() {
 
       {/* Performance Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Throughput */}
+        {/* Throughput - ENHANCED with axis labels and brush */}
         <Card>
           <CardHeader title="Throughput (1h)" icon={TrendingUp} />
           <CardBody>
             <AreaChartComponent
               data={throughputData}
               areas={[{ dataKey: 'value', color: 'cyan', name: 'Throughput' }]}
-              height={220}
+              height={260}
+              yAxisLabel="Débit"
+              yAxisUnit="ops/s"
+              xAxisLabel="Temps"
+              referenceLines={[{ y: 800, color: '#22c55e', label: 'SLA Min', dashed: true }]}
+              warningThreshold={1200}
+              criticalThreshold={1500}
+              enableBrush
+              brushHeight={30}
+              tooltipUnit="ops/s"
             />
           </CardBody>
         </Card>
 
-        {/* Latency */}
+        {/* Latency - ENHANCED with SLA thresholds */}
         <Card>
           <CardHeader title="Latency P95 (1h)" icon={Clock} />
           <CardBody>
             <TimeSeriesChart
               data={latencyData}
-              lines={[{ dataKey: 'value', color: 'purple', name: 'Latency ms' }]}
-              height={220}
+              lines={[{ dataKey: 'value', color: 'purple', name: 'Latency' }]}
+              height={260}
+              yAxisLabel="Latence"
+              yAxisUnit="ms"
+              xAxisLabel="Temps"
+              yMin={0}
+              warningThreshold={50}
+              criticalThreshold={100}
+              showThresholdZones
+              referenceLines={[{ y: 30, color: '#22c55e', label: 'SLA', dashed: true }]}
+              enableBrush
+              brushHeight={30}
+              tooltipUnit="ms"
             />
           </CardBody>
         </Card>
