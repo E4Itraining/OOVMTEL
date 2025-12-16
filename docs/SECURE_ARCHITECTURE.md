@@ -4,73 +4,106 @@
 
 Cette architecture implémente une séparation stricte des zones IT et OT conformément aux standards **IEC 62443** et aux exigences **NIS2**. Elle utilise une approche de **data diode logicielle** pour garantir un flux de données unidirectionnel de l'OT vers l'IT.
 
-## Schéma d'Architecture
+## Schéma d'Architecture Principal
 
+```mermaid
+flowchart TB
+    subgraph OT_ZONE["ZONE OT - IEC 62443 Level 2/3<br/>Réseau: 172.29.0.0/24"]
+        direction TB
+        subgraph SOURCES["Sources Industrielles"]
+            SCADA["SCADA"]
+            MES["MES"]
+            PLM["PLM"]
+            OPCUA["OPC-UA"]
+        end
+        OTEL_OT["OTel Collector OT<br/>:4319-4320<br/>Minimal footprint"]
+        KAFKA_OT["Kafka Edge OT<br/>Rétention: 4h<br/>Buffer local"]
+
+        SOURCES --> OTEL_OT --> KAFKA_OT
+    end
+
+    subgraph DMZ_ZONE["ZONE DMZ - IEC 62443 Level 3/3.5<br/>Réseau: 172.30.0.0/24"]
+        direction TB
+        MM["Kafka MirrorMaker 2<br/>OT → IT: ENABLED<br/>IT → OT: DISABLED"]
+        PROTO["Protocol Break<br/>Sanitization<br/>Validation schéma"]
+        DIODE["Data Diode Validator<br/>Monitoring flux inverse<br/>Alertes sécurité"]
+    end
+
+    subgraph IT_ZONE["ZONE IT - IEC 62443 Level 4/5<br/>Réseau: 172.31.0.0/16"]
+        direction TB
+        KAFKA_IT["Kafka Cluster IT (HA)<br/>3 brokers KRaft<br/>RF=3, 7j rétention"]
+        OTEL_IT["OTel Collectors IT (x2 + LB)<br/>Gouvernance cardinalité<br/>Routing logs intelligent"]
+
+        subgraph STORAGE["Storage Layer"]
+            VM_HA["VictoriaMetrics<br/>Cluster HA"]
+            OO_IT["OpenObserve<br/>Logs/Traces temps réel"]
+            OS_IT["OpenSearch<br/>Compliance 365j"]
+        end
+
+        GRAFANA_IT["Grafana<br/>Pipeline Health<br/>AI Observability<br/>Business Views"]
+
+        KAFKA_IT --> OTEL_IT --> STORAGE --> GRAFANA_IT
+    end
+
+    KAFKA_OT --> |"UNIDIRECTIONNEL"| MM
+    MM --> PROTO --> DIODE --> KAFKA_IT
+
+    style OT_ZONE fill:#ffcdd2,stroke:#c62828
+    style DMZ_ZONE fill:#ffe0b2,stroke:#ef6c00
+    style IT_ZONE fill:#c8e6c9,stroke:#2e7d32
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        ZONE OT (IEC 62443 Level 2/3)                        │
-│                           Réseau: 172.29.0.0/24                             │
-│  ┌──────────────┐    ┌───────────────────┐    ┌─────────────────────────┐  │
-│  │ SCADA        │    │                   │    │                         │  │
-│  │ MES          │───▶│ OTel Collector OT │───▶│ Kafka Edge (OT)         │  │
-│  │ PLM          │    │ (Minimal footprint│    │ - Rétention: 4h         │  │
-│  │ OPC-UA       │    │  Export only)     │    │ - Buffer local          │  │
-│  └──────────────┘    └───────────────────┘    └───────────┬─────────────┘  │
-│                                                           │                 │
-└───────────────────────────────────────────────────────────┼─────────────────┘
-                                                            │
-                                                            │ UNIDIRECTIONNEL
-                                                            ▼
-┌───────────────────────────────────────────────────────────────────────────────┐
-│                        ZONE DMZ (IEC 62443 Level 3/3.5)                       │
-│                           Réseau: 172.30.0.0/24                               │
-│  ┌─────────────────────────────────────────────────────────────────────────┐  │
-│  │                    Kafka MirrorMaker 2                                  │  │
-│  │  ┌─────────────────────────────────────────────────────────────────┐   │  │
-│  │  │ OT → IT: ENABLED    │    IT → OT: DISABLED (Data Diode)         │   │  │
-│  │  └─────────────────────────────────────────────────────────────────┘   │  │
-│  │                                                                         │  │
-│  │  ┌───────────────────────┐    ┌────────────────────────────────────┐   │  │
-│  │  │ Protocol Break        │    │ Data Diode Validator               │   │  │
-│  │  │ - Sanitization        │    │ - Monitoring flux inverse          │   │  │
-│  │  │ - Validation schéma   │    │ - Alertes sécurité                 │   │  │
-│  │  └───────────────────────┘    └────────────────────────────────────┘   │  │
-│  └─────────────────────────────────────────────────────────────────────────┘  │
-└───────────────────────────────────────────────────────────┬───────────────────┘
-                                                            │
-                                                            │ DONNÉES VALIDÉES
-                                                            ▼
-┌───────────────────────────────────────────────────────────────────────────────┐
-│                         ZONE IT (IEC 62443 Level 4/5)                         │
-│                            Réseau: 172.31.0.0/16                              │
-│                                                                               │
-│  ┌─────────────────────────┐    ┌──────────────────────────────────────────┐ │
-│  │ Kafka Cluster IT (HA)   │    │ OTel Collectors IT (x2 + LB)             │ │
-│  │ - 3 brokers             │───▶│ - Gouvernance cardinalité                │ │
-│  │ - Replication factor: 3 │    │ - Routing logs intelligent               │ │
-│  │ - Rétention: 7 jours    │    │ - Tail sampling traces                   │ │
-│  └─────────────────────────┘    └──────────────┬───────────────────────────┘ │
-│                                                 │                             │
-│         ┌───────────────────────────────────────┼───────────────────────────┐ │
-│         │                                       │                           │ │
-│         ▼                                       ▼                           ▼ │
-│  ┌──────────────────┐    ┌──────────────────────────┐    ┌────────────────┐  │
-│  │ VictoriaMetrics  │    │ OpenObserve              │    │ OpenSearch     │  │
-│  │ Cluster (HA)     │    │ - Logs temps réel        │    │ - Compliance   │  │
-│  │ - vminsert       │    │ - Traces temps réel      │    │ - Audit        │  │
-│  │ - vmselect       │    │                          │    │ - Rétention    │  │
-│  │ - vmstorage x2   │    │                          │    │   longue       │  │
-│  └────────┬─────────┘    └───────────┬──────────────┘    └───────┬────────┘  │
-│           │                          │                           │           │
-│           └──────────────────────────┼───────────────────────────┘           │
-│                                      ▼                                       │
-│                           ┌────────────────────┐                             │
-│                           │ Grafana            │                             │
-│                           │ - Pipeline Health  │                             │
-│                           │ - AI Observability │                             │
-│                           │ - Business Views   │                             │
-│                           └────────────────────┘                             │
-└───────────────────────────────────────────────────────────────────────────────┘
+
+## Data Diode Pattern
+
+```mermaid
+flowchart LR
+    subgraph OT["Zone OT"]
+        K_OT["Kafka OT"]
+    end
+
+    subgraph DMZ["Zone DMZ - Data Diode"]
+        MM2["MirrorMaker 2"]
+        VAL["Validator"]
+    end
+
+    subgraph IT["Zone IT"]
+        K_IT["Kafka IT"]
+    end
+
+    K_OT --> |"OT→IT: ALLOWED"| MM2
+    MM2 --> VAL --> K_IT
+
+    K_IT -.- |"IT→OT: BLOCKED"| MM2
+
+    style DMZ fill:#fff3e0
+```
+
+## Conformité IEC 62443
+
+```mermaid
+flowchart TB
+    subgraph LEVELS["Niveaux de Sécurité IEC 62443"]
+        L1["Level 1: Basic"]
+        L2["Level 2: Functional<br/>Zone OT"]
+        L3["Level 3: Structural<br/>Zone DMZ"]
+        L4["Level 4: High<br/>Zone IT"]
+        L5["Level 5: Critical"]
+    end
+
+    subgraph CONTROLS["Contrôles Implémentés"]
+        C1["Séparation zones OT/IT"]
+        C2["Data diode logicielle"]
+        C3["Monitoring flux unidirectionnel"]
+        C4["Validation données en transit"]
+        C5["Suppression données sensibles OT"]
+    end
+
+    L2 --> C1
+    L3 --> C2 & C3
+    L4 --> C4 & C5
+
+    style LEVELS fill:#e3f2fd
+    style CONTROLS fill:#f3e5f5
 ```
 
 ## Composants par Zone
@@ -109,67 +142,68 @@ Cette architecture implémente une séparation stricte des zones IT et OT confor
 
 ## Flux de Données
 
-### 1. Collecte OT → Kafka OT
+### Vue d'Ensemble des Flux
 
-```
-SCADA/MES/PLM/OPC-UA
-    │
-    ├──▶ Prometheus scraping (métriques)
-    │         │
-    │         ▼
-    │    OTel Collector OT
-    │         │
-    │         ├──▶ Attributs sécurité (zone: ot, level: iec62443-l2)
-    │         ├──▶ Contrôle cardinalité (hash device_id, supprime UUIDs)
-    │         └──▶ Filtre bruit (go_*, process_*)
-    │
-    └──▶ Kafka OT (topic: ot-telemetry-export)
-```
+```mermaid
+sequenceDiagram
+    participant SRC as Sources OT
+    participant OTEL_OT as OTel Collector OT
+    participant K_OT as Kafka OT
+    participant MM as MirrorMaker 2
+    participant PROTO as Protocol Break
+    participant K_IT as Kafka IT
+    participant OTEL_IT as OTel Collector IT
+    participant STORE as Storage
 
-### 2. Réplication DMZ (Data Diode)
+    SRC->>OTEL_OT: Prometheus scraping
+    Note over OTEL_OT: Attributs sécurité<br/>Contrôle cardinalité<br/>Filtre bruit
 
-```
-Kafka OT (ot-telemetry-export)
-    │
-    ▼
-MirrorMaker 2
-    │
-    ├──▶ Vérification: OT→IT ENABLED
-    ├──▶ Vérification: IT→OT DISABLED
-    └──▶ Renommage: ot-* → it-*
-    │
-    ▼
-Protocol Break (OTel Collector DMZ)
-    │
-    ├──▶ Suppression credentials (password, token, api_key)
-    ├──▶ Suppression IPs internes OT
-    ├──▶ Validation schéma
-    └──▶ Marquage dmz_validated: true
-    │
-    ▼
-Kafka IT (topic: it-industrial-telemetry)
+    OTEL_OT->>K_OT: ot-telemetry-export
+
+    K_OT->>MM: Réplication unidirectionnelle
+    Note over MM: OT→IT: ENABLED<br/>IT→OT: DISABLED
+
+    MM->>PROTO: Données brutes
+    Note over PROTO: Suppression credentials<br/>Suppression IPs OT<br/>Validation schéma
+
+    PROTO->>K_IT: it-industrial-telemetry
+
+    K_IT->>OTEL_IT: Consommation
+    Note over OTEL_IT: Gouvernance cardinalité<br/>Routing logs<br/>Tail sampling
+
+    par Export parallel
+        OTEL_IT->>STORE: VictoriaMetrics (metrics)
+        OTEL_IT->>STORE: OpenObserve (logs/traces)
+        OTEL_IT->>STORE: OpenSearch (compliance)
+    end
 ```
 
-### 3. Traitement IT → Stockage
+### Routing des Logs
 
+```mermaid
+flowchart LR
+    LOGS["Logs entrants"]
+
+    LOGS --> ROUTER{"Routing<br/>par niveau"}
+
+    ROUTER --> |ERROR| E_PATH["OpenObserve<br/>+ OpenSearch<br/>+ Alertes"]
+    ROUTER --> |WARN| W_PATH["OpenObserve<br/>+ OpenSearch"]
+    ROUTER --> |INFO| I_PATH["OpenObserve"]
+    ROUTER --> |DEBUG| D_PATH["OpenObserve"]
+
+    style E_PATH fill:#ffcdd2
+    style W_PATH fill:#fff3e0
+    style I_PATH fill:#e8f5e9
+    style D_PATH fill:#e3f2fd
 ```
-Kafka IT
-    │
-    ▼
-OTel Collector IT (x2 via LB)
-    │
-    ├──▶ Gouvernance cardinalité
-    ├──▶ Routing logs:
-    │       ERROR → OpenObserve + OpenSearch + Alertes
-    │       WARN  → OpenObserve + OpenSearch
-    │       INFO  → OpenObserve seul
-    │
-    ├──▶ Tail sampling traces (erreurs 100%, slow 100%, reste 5%)
-    │
-    └──▶ Export:
-            Métriques → VictoriaMetrics Cluster
-            Logs → OpenObserve (temps réel) + OpenSearch (compliance)
-            Traces → OpenObserve (temps réel) + OpenSearch (compliance)
+
+### Tail Sampling des Traces
+
+```mermaid
+pie title Tail Sampling Strategy
+    "Errors (100%)" : 30
+    "Slow requests (100%)" : 20
+    "Normal (5%)" : 50
 ```
 
 ## Gouvernance de Cardinalité
