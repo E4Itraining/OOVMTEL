@@ -228,7 +228,6 @@ exporters:
     retry:
       initial_interval: 5s
       max_interval: 30s
-      max_elapsed_time: 300s
     mapping:
       mode: ecs  # Elastic Common Schema pour compliance
 
