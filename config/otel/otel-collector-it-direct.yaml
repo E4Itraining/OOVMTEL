@@ -23,10 +23,6 @@ extensions:
   file_storage/buffer:
     directory: /var/lib/otelcol/buffer
     timeout: 10s
-    compaction:
-      on_start: true
-      on_rebound: true
-      directory: /var/lib/otelcol/buffer/compaction
 
 receivers:
   # OTLP receiver - from DMZ gateway (validated OT data)
@@ -69,14 +65,8 @@ receivers:
                 zone: it
                 service_type: storage
 
-        - job_name: 'opensearch'
-          scrape_interval: 30s
-          metrics_path: /_prometheus/metrics
-          static_configs:
-            - targets: ['opensearch:9200']
-              labels:
-                zone: it
-                service_type: analytics
+        # Note: OpenSearch prometheus metrics disabled - requires prometheus-exporter plugin
+        # Install with: ./bin/opensearch-plugin install prometheus-exporter
 
   # Filelog for IT application logs
   filelog:
