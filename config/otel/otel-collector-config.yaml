@@ -208,10 +208,9 @@ exporters:
     flush:
       bytes: 5000000
     retry:
-      enabled: true
       initial_interval: 5s
       max_interval: 30s
-      max_requests: 5
+      max_elapsed_time: 300s
     sending_queue:
       enabled: true
       num_consumers: 10
