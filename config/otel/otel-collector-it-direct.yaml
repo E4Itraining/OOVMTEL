@@ -197,12 +197,6 @@ exporters:
       enabled: true
       initial_interval: 5s
       max_interval: 30s
-      max_elapsed_time: 300s
-    sending_queue:
-      enabled: true
-      num_consumers: 10
-      queue_size: 5000
-      storage: file_storage/buffer
 
   # OpenObserve - real-time logs and traces
   otlphttp/openobserve:
@@ -232,11 +226,6 @@ exporters:
     retry:
       initial_interval: 5s
       max_interval: 30s
-      max_elapsed_time: 300s
-    sending_queue:
-      enabled: true
-      num_consumers: 10
-      queue_size: 5000
 
   # Debug exporter
   debug:
