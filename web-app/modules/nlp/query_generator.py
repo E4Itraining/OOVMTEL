@@ -200,7 +200,8 @@ class QueryGenerator:
             return f"avg by (equipment) ({base})"
         elif entities.production_lines:
             # Group by production line
-            return f'avg by (production_line) ({metric_name}{{production_line=~"{""|".join(entities.production_lines)}"}})'
+            lines_pattern = "|".join(entities.production_lines)
+            return f'avg by (production_line) ({metric_name}{{production_line=~"{lines_pattern}"}})'
         else:
             # Default: group by all labels
             return f"avg by (equipment) ({metric_name})"
