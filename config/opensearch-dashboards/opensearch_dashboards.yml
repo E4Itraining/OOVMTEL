@@ -14,17 +14,12 @@ opensearch.ssl.verificationMode: none
 opensearch.requestTimeout: 60000
 opensearch.shardTimeout: 30000
 
-# Security disabled for development (enable in production)
-opensearch_security.multitenancy.enabled: false
-opensearch_security.readonly_mode.roles: []
+# NOTE: Security plugin is disabled via DISABLE_SECURITY_DASHBOARDS_PLUGIN env var
+# Do NOT add opensearch_security.* settings when security is disabled
 
 # Logging configuration
 logging.dest: stdout
 logging.verbose: false
-
-# Application settings
-opensearch_dashboards.index: ".opensearch_dashboards"
-opensearch_dashboards.defaultAppId: "discover"
 
 # Branding and UI customization
 opensearchDashboards.branding:
@@ -40,11 +35,5 @@ opensearchDashboards.branding:
 # Data management
 data.search.usageTelemetry.enabled: false
 
-# Performance settings
-opensearch.requestHeadersWhitelist: ["securitytenant", "Authorization"]
-
-# Visualization settings
-vis.default.type: "line"
-
-# Query settings
-# Note: opensearch.batched.preferBatchedReduceSearchPath removed as it's not supported in OpenSearch Dashboards 2.11.1
+# Request headers (using non-deprecated key)
+opensearch.requestHeadersAllowlist: ["Authorization"]
