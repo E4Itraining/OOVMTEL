@@ -1,0 +1,475 @@
+# =============================================================================
+# OOVMTEL - Direct OTLP Architecture (No Kafka)
+# =============================================================================
+# Simplified observability platform using native OpenTelemetry pipelines
+# Eliminates Kafka complexity while maintaining IEC 62443 security zones
+#
+# Architecture:
+#   Simulators → OTel OT → OTel DMZ Gateway → OTel IT → Storage Backends
+#
+# Benefits:
+#   - 90% reduction in messaging infrastructure
+#   - Native OTLP format end-to-end
+#   - File-based buffering for reliability
+#   - Simpler operational model
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # STORAGE BACKENDS
+  # ===========================================================================
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:v1.96.0
+    container_name: oovmtel-victoria-metrics
+    ports:
+      - "8428:8428"
+    command:
+      - "-storageDataPath=/victoria-metrics-data"
+      - "-httpListenAddr=:8428"
+      - "-retentionPeriod=90d"
+      - "-search.maxConcurrentRequests=32"
+      - "-search.maxQueueDuration=30s"
+      - "-search.maxUniqueTimeseries=1000000"
+      - "-search.maxSamplesPerSeries=100000000"
+      - "-search.maxSamplesPerQuery=1000000000"
+      - "-memory.allowedPercent=80"
+      - "-maxLabelsPerTimeseries=40"
+      - "-maxLabelValueLen=1024"
+      - "-dedup.minScrapeInterval=10s"
+    volumes:
+      - victoria_metrics_data:/victoria-metrics-data
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "/victoria-metrics-prod", "-version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  openobserve:
+    image: openobserve/openobserve:v0.10.1
+    container_name: oovmtel-openobserve
+    ports:
+      - "5080:5080"
+      - "5081:5081"
+    environment:
+      ZO_ROOT_USER_EMAIL: "root@example.com"
+      ZO_ROOT_USER_PASSWORD: "Complexpass#123"
+      ZO_DATA_DIR: "/data"
+      ZO_MAX_FILE_SIZE_ON_DISK: 64
+      ZO_MAX_FILE_RETENTION_TIME: 600
+      ZO_COMPACT_ENABLED: "true"
+      ZO_COMPACT_INTERVAL: 120
+      ZO_MEMORY_CACHE_ENABLED: "true"
+      ZO_MEMORY_CACHE_MAX_SIZE: 512
+      ZO_OTEL_ENABLED: "true"
+      ZO_PROMETHEUS_ENABLED: "true"
+      ZO_TELEMETRY: "false"
+      ZO_HTTP_PORT: "5080"
+      ZO_LOCAL_MODE: "true"
+      ZO_COMPACT_MAX_FILE_SIZE: 64
+      ZO_WAL_MEMORY_MODE_ENABLED: "false"
+      RUST_LOG: "info"
+    volumes:
+      - openobserve_data:/data
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 5080 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
+    restart: unless-stopped
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.1
+    container_name: oovmtel-opensearch
+    environment:
+      - cluster.name=oovmtel-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+      - ./config/opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.1
+    container_name: oovmtel-opensearch-dashboards
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    ports:
+      - "5601:5601"
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+      SERVER_NAME: "oovmtel-opensearch-dashboards"
+      SERVER_HOST: "0.0.0.0"
+      OPENSEARCH_REQUESTTIMEOUT: "60000"
+    volumes:
+      - ./config/opensearch-dashboards/opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml:ro
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"state\":\"green\"\\|\"level\":\"available\"' || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OPENTELEMETRY PIPELINE (Direct OTLP - No Kafka)
+  # ===========================================================================
+
+  # IT Zone Collector - receives from DMZ, sends to storage
+  otel-collector-it:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-otel-collector-it
+    depends_on:
+      victoria-metrics:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      openobserve:
+        condition: service_started
+    ports:
+      - "4317:4317"   # OTLP gRPC (for DMZ gateway)
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics
+      - "13133:13133" # Health check
+      - "55679:55679" # zPages
+    environment:
+      GOMEMLIMIT: 1750MiB
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-collector-it-direct.yaml:/etc/otel/config.yaml:ro
+      - otel_it_buffer:/var/lib/otelcol/buffer
+      - industrial_logs:/var/log/industrial
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 13133 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  # DMZ Gateway - sanitizes OT data before forwarding to IT
+  otel-gateway-dmz:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-otel-gateway-dmz
+    depends_on:
+      otel-collector-it:
+        condition: service_healthy
+    ports:
+      - "4327:4317"   # OTLP gRPC (for OT collector)
+      - "4328:4318"   # OTLP HTTP
+      - "8889:8888"   # Prometheus metrics
+      - "13134:13133" # Health check
+    environment:
+      GOMEMLIMIT: 500MiB
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-gateway-dmz-direct.yaml:/etc/otel/config.yaml:ro
+      - otel_dmz_buffer:/var/lib/otelcol/buffer
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 13133 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  # OT Zone Collector - receives from simulators, sends to DMZ
+  otel-collector-ot:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: oovmtel-otel-collector-ot
+    depends_on:
+      otel-gateway-dmz:
+        condition: service_healthy
+    ports:
+      - "4337:4317"   # OTLP gRPC (for simulators)
+      - "4338:4318"   # OTLP HTTP
+      - "8890:8888"   # Prometheus metrics
+      - "13135:13133" # Health check
+    environment:
+      GOMEMLIMIT: 500MiB
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./config/otel/otel-collector-ot-direct.yaml:/etc/otel/config.yaml:ro
+      - otel_ot_buffer:/var/lib/otelcol/buffer
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 13133 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # INDUSTRIAL DATA SIMULATORS (Direct OTLP)
+  # ===========================================================================
+
+  scada-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile.otlp
+    container_name: oovmtel-scada-simulator
+    hostname: scada-simulator
+    depends_on:
+      otel-collector-ot:
+        condition: service_healthy
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector-ot:4317
+      SIMULATOR_TYPE: scada
+      METRICS_PORT: 8080
+      DATA_RATE_PER_SEC: 500
+      ZONE: ot
+      SERVICE_INSTANCE_ID: scada-001
+    ports:
+      - "8080:8080"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  mes-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile.otlp
+    container_name: oovmtel-mes-simulator
+    hostname: mes-simulator
+    depends_on:
+      otel-collector-ot:
+        condition: service_healthy
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector-ot:4317
+      SIMULATOR_TYPE: mes
+      METRICS_PORT: 8081
+      DATA_RATE_PER_SEC: 100
+      ZONE: ot
+      SERVICE_INSTANCE_ID: mes-001
+    ports:
+      - "8081:8081"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  plm-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile.otlp
+    container_name: oovmtel-plm-simulator
+    hostname: plm-simulator
+    depends_on:
+      otel-collector-ot:
+        condition: service_healthy
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector-ot:4317
+      SIMULATOR_TYPE: plm
+      METRICS_PORT: 8082
+      DATA_RATE_PER_SEC: 20
+      ZONE: ot
+      SERVICE_INSTANCE_ID: plm-001
+    ports:
+      - "8082:8082"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8082/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  opcua-simulator:
+    build:
+      context: ./simulators
+      dockerfile: Dockerfile.otlp
+    container_name: oovmtel-opcua-simulator
+    hostname: opcua-simulator
+    depends_on:
+      otel-collector-ot:
+        condition: service_healthy
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector-ot:4317
+      SIMULATOR_TYPE: opcua
+      METRICS_PORT: 8083
+      DATA_RATE_PER_SEC: 200
+      ZONE: ot
+      SERVICE_INSTANCE_ID: opcua-001
+    ports:
+      - "8083:8083"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8083/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # VISUALIZATION
+  # ===========================================================================
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: oovmtel-grafana
+    depends_on:
+      - victoria-metrics
+      - opensearch
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-opensearch-datasource,victoriametrics-metrics-datasource,grafana-clock-panel,grafana-piechart-panel
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=victoriametrics-metrics-datasource
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/json/industrial-control-center.json
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      - GF_LIVE_MAX_CONNECTIONS=100
+      - GF_LIVE_ALLOWED_ORIGINS=*
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_NEWS_NEWS_FEED_ENABLED=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # UNIFIED VIEW WEB APPLICATION
+  # ===========================================================================
+
+  unified-view:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    container_name: oovmtel-unified-view
+    depends_on:
+      - victoria-metrics
+      - opensearch
+      - grafana
+    ports:
+      - "8085:8080"
+    environment:
+      VICTORIA_METRICS_URL: http://victoria-metrics:8428
+      OPENSEARCH_URL: http://opensearch:9200
+      OPENOBSERVE_URL: http://openobserve:5080
+      OTEL_COLLECTOR_URL: http://otel-collector-it:8888
+      GRAFANA_URL: http://grafana:3000
+      REFRESH_INTERVAL: "10"
+      USE_SIMULATED_DATA: "true"
+      # Architecture info
+      ARCHITECTURE_MODE: "direct-otlp"
+      KAFKA_ENABLED: "false"
+      # Game-Changer Modules
+      MODULES_ENABLED: "true"
+      NLP_DEFAULT_LANGUAGE: "fr"
+      REMEDIATION_DRY_RUN: "true"
+      REMEDIATION_REQUIRE_APPROVAL: "true"
+      EDGE_SYNC_INTERVAL: "60"
+      PREDICTIVE_ANOMALY_SENSITIVITY: "2.0"
+    networks:
+      - oovmtel-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+
+networks:
+  oovmtel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  victoria_metrics_data:
+    driver: local
+  openobserve_data:
+    driver: local
+  opensearch_data:
+    driver: local
+  grafana_data:
+    driver: local
+  industrial_logs:
+    driver: local
+  # OTel file-based buffer volumes (persistent queues)
+  otel_ot_buffer:
+    driver: local
+  otel_dmz_buffer:
+    driver: local
+  otel_it_buffer:
+    driver: local

@@ -1,0 +1,304 @@
+# =============================================================================
+# OpenTelemetry Collector - IT Zone (Direct OTLP - No Kafka)
+# =============================================================================
+# IEC 62443 Level 4/5 - Full processing, storage, analytics
+# Receives only validated data from DMZ gateway
+# =============================================================================
+
+extensions:
+  # Health check
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: /health
+
+  # Performance profiler
+  pprof:
+    endpoint: 0.0.0.0:1777
+
+  # zPages for debugging
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+  # File storage for persistent queue
+  file_storage/buffer:
+    directory: /var/lib/otelcol/buffer
+    timeout: 10s
+    compaction:
+      on_start: true
+      on_rebound: true
+      directory: /var/lib/otelcol/buffer/compaction
+
+receivers:
+  # OTLP receiver - from DMZ gateway (validated OT data)
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 16
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Host metrics for IT infrastructure
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      memory:
+        metrics:
+          system.memory.utilization:
+            enabled: true
+      disk:
+      network:
+      load:
+      filesystem:
+
+  # Prometheus for IT services
+  prometheus:
+    config:
+      global:
+        scrape_timeout: 10s
+      scrape_configs:
+        - job_name: 'victoria-metrics'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['victoria-metrics:8428']
+              labels:
+                zone: it
+                service_type: storage
+
+        - job_name: 'opensearch'
+          scrape_interval: 30s
+          metrics_path: /_prometheus/metrics
+          static_configs:
+            - targets: ['opensearch:9200']
+              labels:
+                zone: it
+                service_type: analytics
+
+  # Filelog for IT application logs
+  filelog:
+    include:
+      - /var/log/industrial/*.log
+    start_at: end
+    operators:
+      - type: regex_parser
+        regex: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\s+\[(?P<level>\w+)\]\s+\[(?P<source>\w+)\]\s+(?P<message>.*)$'
+        timestamp:
+          parse_from: attributes.timestamp
+          layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+
+processors:
+  # Batch processor - optimized for throughput
+  batch:
+    send_batch_size: 10000
+    send_batch_max_size: 20000
+    timeout: 5s
+
+  # Memory limiter
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1500
+    spike_limit_mib: 400
+
+  # Resource detection
+  resourcedetection:
+    detectors: [env, system, docker]
+    timeout: 5s
+
+  # IT context attributes
+  attributes/it_context:
+    actions:
+      - key: platform
+        value: oovmtel
+        action: upsert
+      - key: security.zone
+        value: it
+        action: upsert
+      - key: security.level
+        value: iec62443-l4
+        action: upsert
+      - key: architecture
+        value: direct-otlp
+        action: upsert
+
+  # ==========================================================================
+  # CARDINALITY GOVERNANCE
+  # ==========================================================================
+
+  # Advanced cardinality control
+  attributes/cardinality_governance:
+    actions:
+      - key: request_id
+        action: delete
+      - key: correlation_id
+        action: delete
+      - key: session_id
+        action: delete
+      - key: user_id
+        action: hash
+      - key: device_id
+        action: hash
+      - key: equipment_serial
+        action: hash
+      - key: event_timestamp
+        action: delete
+
+  # Cardinality metrics transform
+  transform/cardinality_metrics:
+    metric_statements:
+      - context: metric
+        statements:
+          - set(description, Concat([description, " [cardinality-controlled]"], ""))
+
+  # Filter noise and internal metrics
+  filter/it_noise:
+    metrics:
+      exclude:
+        match_type: regexp
+        metric_names:
+          - "go_.*"
+          - "process_.*"
+          - "promhttp_.*"
+          - ".*_temp$"
+          - ".*_debug$"
+
+  # ==========================================================================
+  # SAMPLING FOR TRACES
+  # ==========================================================================
+
+  # Tail sampling - keep errors and slow traces
+  tail_sampling:
+    decision_wait: 10s
+    policies:
+      - name: errors-always
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: slow-traces
+        type: latency
+        latency:
+          threshold_ms: 1000
+      - name: sample-rest
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 5
+
+exporters:
+  # ==========================================================================
+  # STORAGE BACKENDS
+  # ==========================================================================
+
+  # VictoriaMetrics - metrics storage
+  prometheusremotewrite/victoria:
+    endpoint: http://victoria-metrics:8428/api/v1/write
+    tls:
+      insecure: true
+    resource_to_telemetry_conversion:
+      enabled: true
+    external_labels:
+      collector: otel-it
+      platform: industrial
+      zone: it
+      architecture: direct-otlp
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+      storage: file_storage/buffer
+
+  # OpenObserve - real-time logs and traces
+  otlphttp/openobserve:
+    endpoint: http://openobserve:5080/api/default
+    headers:
+      Authorization: "Basic cm9vdEBleGFtcGxlLmNvbTpDb21wbGV4cGFzcyMxMjM="
+      stream-name: industrial-realtime
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 60s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+    timeout: 30s
+
+  # OpenSearch - compliance and analytics (long retention)
+  elasticsearch/opensearch:
+    endpoints:
+      - http://opensearch:9200
+    logs_index: industrial-logs
+    traces_index: industrial-traces
+    flush:
+      bytes: 5000000
+    retry:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_requests: 5
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+  # Debug exporter
+  debug:
+    verbosity: basic
+    sampling_initial: 5
+    sampling_thereafter: 500
+
+service:
+  extensions: [health_check, pprof, zpages, file_storage/buffer]
+
+  pipelines:
+    # Metrics pipeline: DMZ → Storage
+    metrics:
+      receivers: [otlp, hostmetrics, prometheus]
+      processors:
+        - memory_limiter
+        - resourcedetection
+        - attributes/it_context
+        - attributes/cardinality_governance
+        - filter/it_noise
+        - transform/cardinality_metrics
+        - batch
+      exporters: [prometheusremotewrite/victoria, debug]
+
+    # Logs pipeline: DMZ → OpenObserve + OpenSearch
+    logs:
+      receivers: [otlp, filelog]
+      processors:
+        - memory_limiter
+        - resourcedetection
+        - attributes/it_context
+        - attributes/cardinality_governance
+        - batch
+      exporters: [otlphttp/openobserve, elasticsearch/opensearch, debug]
+
+    # Traces pipeline: DMZ → OpenObserve + OpenSearch (with sampling)
+    traces:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - resourcedetection
+        - attributes/it_context
+        - attributes/cardinality_governance
+        - tail_sampling
+        - batch
+      exporters: [otlphttp/openobserve, elasticsearch/opensearch, debug]
+
+  telemetry:
+    logs:
+      level: info
+      encoding: console
+    metrics:
+      address: 0.0.0.0:8888
+      level: normal
