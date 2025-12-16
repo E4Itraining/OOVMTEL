@@ -202,9 +202,6 @@ exporters:
     traces_index: industrial-traces
     flush:
       bytes: 5000000
-    retry:
-      initial_interval: 5s
-      max_interval: 30s
 
   # Kafka exporter for downstream processing
   kafka:

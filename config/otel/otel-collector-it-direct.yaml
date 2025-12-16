@@ -19,11 +19,6 @@ extensions:
   zpages:
     endpoint: 0.0.0.0:55679
 
-  # File storage for persistent queue
-  file_storage/buffer:
-    directory: /var/lib/otelcol/buffer
-    timeout: 10s
-
 receivers:
   # OTLP receiver - from DMZ gateway (validated OT data)
   otlp:
@@ -223,9 +218,6 @@ exporters:
     traces_index: industrial-traces
     flush:
       bytes: 5000000
-    retry:
-      initial_interval: 5s
-      max_interval: 30s
 
   # Debug exporter
   debug:
@@ -234,7 +226,7 @@ exporters:
     sampling_thereafter: 500
 
 service:
-  extensions: [health_check, pprof, zpages, file_storage/buffer]
+  extensions: [health_check, pprof, zpages]
 
   pipelines:
     # Metrics pipeline: DMZ → Storage
