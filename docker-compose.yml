@@ -185,10 +185,10 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "/victoria-metrics-prod", "-version"]
-      interval: 30s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8428/health || exit 1"]
+      interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
       start_period: 30s
     restart: unless-stopped
 
