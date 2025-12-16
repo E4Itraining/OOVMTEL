@@ -37,6 +37,11 @@ try:
     from modules.predictive import PredictiveEngine
     from modules.remediation import RemediationEngine, RunbookLibrary
     from modules.edge import EdgeAgent, EdgeConfig, EdgeAgentManager
+    from modules.hpc import (
+        HPCEngine, ClusterManager, SimulationEngine, ParallelProcessor,
+        HPCCluster, HPCJob, SimulationScenario, SimulationResult,
+        JobStatus, JobPriority, ComputeBackend, HPC_PRESETS
+    )
     MODULES_AVAILABLE = True
 except ImportError as e:
     MODULES_AVAILABLE = False
@@ -147,10 +152,11 @@ rca_engine: Optional[Any] = None
 predictive_engine: Optional[Any] = None
 remediation_engine: Optional[Any] = None
 edge_manager: Optional[Any] = None
+hpc_engine: Optional[Any] = None
 
 @app.on_event("startup")
 async def startup_event():
-    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager
+    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine
 
     http_client = httpx.AsyncClient(timeout=10.0)
 
@@ -170,7 +176,11 @@ async def startup_event():
             )
             remediation_engine = RemediationEngine(dry_run=True)  # Dry run by default
             edge_manager = EdgeAgentManager()
-            logger.info("Game-changer modules initialized successfully")
+            hpc_engine = HPCEngine(
+                auto_create_cluster=True,
+                default_cluster_preset="medium"
+            )
+            logger.info("Game-changer modules initialized successfully (including HPC)")
         except Exception as e:
             logger.error(f"Failed to initialize modules: {e}")
 
@@ -983,8 +993,476 @@ async def modules_status():
             "enabled": edge_manager is not None,
             "description": "Edge computing agent management",
             "agents_count": len(edge_manager.agents) if edge_manager else 0
+        },
+        "hpc": {
+            "enabled": hpc_engine is not None,
+            "description": "High Performance Computing for simulations and ML",
+            "clusters_count": len(hpc_engine.list_clusters()) if hpc_engine else 0,
+            "capabilities": ["gpu_acceleration", "distributed_training", "what_if_simulations", "parallel_processing"] if hpc_engine else []
         }
     }
+
+# =========================================
+# HPC - High Performance Computing Endpoints
+# =========================================
+
+@app.get("/api/hpc/status")
+async def hpc_status():
+    """Get HPC engine status and capabilities."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        return hpc_engine.get_engine_status()
+    except Exception as e:
+        logger.error(f"HPC status error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/health")
+async def hpc_health():
+    """Health check for HPC components."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        return hpc_engine.health_check()
+    except Exception as e:
+        logger.error(f"HPC health error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/metrics")
+async def hpc_metrics():
+    """Get aggregate HPC metrics."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        metrics = hpc_engine.get_hpc_metrics()
+        return metrics.model_dump()
+    except Exception as e:
+        logger.error(f"HPC metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Cluster Management
+@app.get("/api/hpc/clusters")
+async def list_hpc_clusters():
+    """List all HPC clusters."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        clusters = hpc_engine.list_clusters()
+        return {
+            "clusters": [c.model_dump() for c in clusters],
+            "count": len(clusters)
+        }
+    except Exception as e:
+        logger.error(f"List clusters error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ClusterCreateRequest(BaseModel):
+    name: str
+    preset: str = "medium"
+    description: str = ""
+
+@app.post("/api/hpc/clusters")
+async def create_hpc_cluster(request: ClusterCreateRequest):
+    """Create a new HPC cluster."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        cluster = hpc_engine.create_cluster(
+            name=request.name,
+            preset=request.preset,
+            description=request.description
+        )
+        return cluster.model_dump()
+    except Exception as e:
+        logger.error(f"Create cluster error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/clusters/{cluster_id}")
+async def get_hpc_cluster(cluster_id: str):
+    """Get specific HPC cluster details."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        cluster = hpc_engine.get_cluster(cluster_id)
+        if not cluster:
+            raise HTTPException(status_code=404, detail=f"Cluster {cluster_id} not found")
+        return cluster.model_dump()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get cluster error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/clusters/{cluster_id}/metrics")
+async def get_cluster_metrics(cluster_id: str):
+    """Get metrics for a specific cluster."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        metrics = hpc_engine.get_cluster_metrics(cluster_id)
+        if not metrics:
+            raise HTTPException(status_code=404, detail=f"Cluster {cluster_id} not found")
+        return metrics
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Cluster metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/presets")
+async def get_hpc_presets():
+    """Get available HPC cluster presets."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    return hpc_engine.get_available_presets()
+
+# Job Management
+class JobSubmitRequest(BaseModel):
+    name: str
+    job_type: str  # batch_processing, ml_training
+    parameters: Dict[str, Any] = {}
+    priority: str = "normal"
+    cluster_id: Optional[str] = None
+
+@app.post("/api/hpc/jobs")
+async def submit_hpc_job(request: JobSubmitRequest):
+    """Submit a job to the HPC cluster."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        priority_map = {
+            "critical": JobPriority.CRITICAL,
+            "high": JobPriority.HIGH,
+            "normal": JobPriority.NORMAL,
+            "low": JobPriority.LOW,
+            "background": JobPriority.BACKGROUND
+        }
+
+        job = await hpc_engine.submit_job(
+            name=request.name,
+            job_type=request.job_type,
+            parameters=request.parameters,
+            priority=priority_map.get(request.priority, JobPriority.NORMAL),
+            cluster_id=request.cluster_id
+        )
+
+        return {
+            "job_id": job.id,
+            "name": job.name,
+            "status": job.status.value,
+            "tasks_count": len(job.tasks)
+        }
+    except Exception as e:
+        logger.error(f"Submit job error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/hpc/jobs/{job_id}/execute")
+async def execute_hpc_job(job_id: str):
+    """Execute a submitted HPC job."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        job = await hpc_engine.execute_job(job_id)
+        return {
+            "job_id": job.id,
+            "status": job.status.value,
+            "progress_percent": job.progress_percent,
+            "output": job.output
+        }
+    except Exception as e:
+        logger.error(f"Execute job error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/jobs")
+async def list_hpc_jobs(status: Optional[str] = Query(None)):
+    """List HPC jobs."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        status_filter = None
+        if status:
+            status_map = {
+                "queued": JobStatus.QUEUED,
+                "running": JobStatus.RUNNING,
+                "completed": JobStatus.COMPLETED,
+                "failed": JobStatus.FAILED
+            }
+            status_filter = status_map.get(status)
+
+        jobs = hpc_engine.list_jobs(status_filter)
+        return {
+            "jobs": [{
+                "id": j.id,
+                "name": j.name,
+                "status": j.status.value,
+                "progress_percent": j.progress_percent,
+                "submitted_at": j.submitted_at.isoformat(),
+                "completed_at": j.completed_at.isoformat() if j.completed_at else None
+            } for j in jobs],
+            "count": len(jobs)
+        }
+    except Exception as e:
+        logger.error(f"List jobs error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/jobs/{job_id}")
+async def get_hpc_job(job_id: str):
+    """Get HPC job details."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        job = hpc_engine.get_job(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        return job.model_dump()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get job error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# What-If Simulations
+class SimulationRequest(BaseModel):
+    name: str
+    scenario_type: str  # equipment_failure, production_change, maintenance_delay, supply_chain, cost_change
+    modifications: Dict[str, Any]
+    horizon_hours: int = 24
+    iterations: int = 1000
+
+@app.post("/api/hpc/simulations")
+async def create_simulation(request: SimulationRequest):
+    """Create a what-if simulation scenario."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        # Get current metrics as base
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+
+        scenario = hpc_engine.create_simulation(
+            name=request.name,
+            scenario_type=request.scenario_type,
+            current_metrics=metrics,
+            modifications=request.modifications,
+            horizon_hours=request.horizon_hours,
+            iterations=request.iterations
+        )
+
+        return {
+            "scenario_id": scenario.id,
+            "name": scenario.name,
+            "type": scenario.type,
+            "status": scenario.status.value
+        }
+    except Exception as e:
+        logger.error(f"Create simulation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/hpc/simulations/{scenario_id}/run")
+async def run_simulation(scenario_id: str):
+    """Run a simulation scenario."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        # Get current metrics
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+
+        result = await hpc_engine.run_simulation(scenario_id, metrics)
+
+        return {
+            "scenario_id": result.scenario_id,
+            "scenario_name": result.scenario_name,
+            "duration_seconds": result.duration_seconds,
+            "iterations_completed": result.iterations_completed,
+            "predicted_outcomes": result.predicted_outcomes,
+            "oee_impact": result.oee_impact,
+            "production_impact": result.production_impact,
+            "quality_impact": result.quality_impact,
+            "cost_impact": result.cost_impact,
+            "risk_score": result.risk_score,
+            "risk_factors": result.risk_factors,
+            "mitigation_suggestions": result.mitigation_suggestions,
+            "confidence_level": result.confidence_level,
+            "statistics": result.statistics,
+            "charts": result.charts
+        }
+    except Exception as e:
+        logger.error(f"Run simulation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/simulations")
+async def list_simulations():
+    """List all simulation scenarios."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        scenarios = hpc_engine.list_simulations()
+        return {
+            "scenarios": [{
+                "id": s.id,
+                "name": s.name,
+                "type": s.type,
+                "status": s.status.value,
+                "created_at": s.created_at.isoformat()
+            } for s in scenarios],
+            "count": len(scenarios)
+        }
+    except Exception as e:
+        logger.error(f"List simulations error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/simulations/{scenario_id}/result")
+async def get_simulation_result(scenario_id: str):
+    """Get simulation result."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        result = hpc_engine.get_simulation_result(scenario_id)
+        if not result:
+            raise HTTPException(status_code=404, detail=f"No result for scenario {scenario_id}")
+        return result.model_dump()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get simulation result error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/hpc/simulation-templates")
+async def get_simulation_templates():
+    """Get available simulation templates."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    return hpc_engine.get_simulation_templates()
+
+@app.post("/api/hpc/simulations/compare")
+async def compare_simulations(scenario_ids: List[str] = Body(...)):
+    """Compare multiple simulation results."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        comparison = hpc_engine.compare_simulations(scenario_ids)
+        return comparison
+    except Exception as e:
+        logger.error(f"Compare simulations error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Batch Processing
+class BatchProcessRequest(BaseModel):
+    data: List[Dict[str, Any]]
+    processor_type: str = "aggregation"  # aggregation, anomaly_detection, trend_analysis, ml_inference
+    batch_size: int = 5000
+
+@app.post("/api/hpc/batch/process")
+async def process_batch(request: BatchProcessRequest):
+    """Process a batch of data through HPC pipeline."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        result = await hpc_engine.process_metrics_batch(
+            metrics_data=request.data,
+            processor_type=request.processor_type,
+            batch_size=request.batch_size
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Batch process error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ML Training
+class MLTrainRequest(BaseModel):
+    model_name: str
+    model_type: str  # neural_network, random_forest, xgboost, lstm
+    training_data: Dict[str, Any] = {"size": 10000}
+    hyperparameters: Dict[str, Any] = {}
+    epochs: int = 100
+
+@app.post("/api/hpc/ml/train")
+async def train_ml_model(request: MLTrainRequest):
+    """Train a predictive model using distributed HPC."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        result = await hpc_engine.train_predictive_model(
+            model_name=request.model_name,
+            model_type=request.model_type,
+            training_data=request.training_data,
+            hyperparameters=request.hyperparameters,
+            epochs=request.epochs
+        )
+        return result
+    except Exception as e:
+        logger.error(f"ML training error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Resource Optimization
+@app.post("/api/hpc/optimize")
+async def optimize_resources(workload_forecast: Dict[str, Any] = Body(...)):
+    """Get resource optimization recommendations."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        recommendations = hpc_engine.optimize_resource_allocation(workload_forecast)
+        return recommendations
+    except Exception as e:
+        logger.error(f"Optimization error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Demo endpoint
+@app.post("/api/hpc/demo/simulation")
+async def run_demo_simulation():
+    """Run a demo simulation for showcasing capabilities."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+        result = await hpc_engine.run_demo_simulation(metrics)
+        return {
+            "scenario_id": result.scenario_id,
+            "scenario_name": result.scenario_name,
+            "oee_impact": result.oee_impact,
+            "production_impact": result.production_impact,
+            "cost_impact": result.cost_impact,
+            "risk_score": result.risk_score,
+            "risk_factors": result.risk_factors,
+            "mitigation_suggestions": result.mitigation_suggestions
+        }
+    except Exception as e:
+        logger.error(f"Demo simulation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/hpc/demo/activity")
+async def simulate_cluster_activity(utilization: float = Query(50, ge=0, le=100)):
+    """Simulate cluster activity for demo purposes."""
+    if not MODULES_AVAILABLE or not hpc_engine:
+        raise HTTPException(status_code=503, detail="HPC module not available")
+
+    try:
+        hpc_engine.simulate_activity(utilization)
+        return {"status": "simulated", "utilization_percent": utilization}
+    except Exception as e:
+        logger.error(f"Simulate activity error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # =========================================
 # Background Tasks
