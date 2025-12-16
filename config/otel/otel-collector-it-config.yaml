@@ -225,9 +225,6 @@ exporters:
     traces_index: compliance-traces
     flush:
       bytes: 5000000
-    retry:
-      initial_interval: 5s
-      max_interval: 30s
     mapping:
       mode: ecs  # Elastic Common Schema pour compliance
 
