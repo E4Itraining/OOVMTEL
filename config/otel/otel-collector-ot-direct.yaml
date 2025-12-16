@@ -1,0 +1,223 @@
+# =============================================================================
+# OpenTelemetry Collector - OT Zone (Direct OTLP - No Kafka)
+# =============================================================================
+# IEC 62443 Level 2/3 - Lightweight collector with file-based buffering
+# SECURITY: Exports only to DMZ gateway via OTLP gRPC
+# =============================================================================
+
+extensions:
+  # Health check
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: /health
+
+  # File storage for persistent queue (survives restarts)
+  file_storage/buffer:
+    directory: /var/lib/otelcol/buffer
+    timeout: 10s
+    compaction:
+      on_start: true
+      on_rebound: true
+      directory: /var/lib/otelcol/buffer/compaction
+
+  # zPages for debugging
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+receivers:
+  # OTLP receiver for industrial equipment
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 8
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Prometheus scraping for legacy/Prometheus-based equipment
+  prometheus:
+    config:
+      global:
+        scrape_timeout: 10s
+        evaluation_interval: 15s
+      scrape_configs:
+        - job_name: 'ot-scada'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['scada-simulator:8080']
+              labels:
+                zone: ot
+                equipment_type: scada
+                security_level: l2
+
+        - job_name: 'ot-mes'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['mes-simulator:8081']
+              labels:
+                zone: ot
+                equipment_type: mes
+                security_level: l2
+
+        - job_name: 'ot-plm'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['plm-simulator:8082']
+              labels:
+                zone: ot
+                equipment_type: plm
+                security_level: l3
+
+        - job_name: 'ot-opcua'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['opcua-simulator:8083']
+              labels:
+                zone: ot
+                equipment_type: opcua
+                security_level: l2
+
+  # Host metrics for OT infrastructure
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      memory:
+      network:
+
+processors:
+  # Batch processor - optimized for OT
+  batch:
+    send_batch_size: 5000
+    send_batch_max_size: 10000
+    timeout: 10s
+
+  # Memory limiter - strict for edge deployment
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+    spike_limit_mib: 100
+
+  # OT security attributes
+  attributes/ot_security:
+    actions:
+      - key: security.zone
+        value: ot
+        action: upsert
+      - key: security.level
+        value: iec62443-l2
+        action: upsert
+      - key: data.classification
+        value: operational
+        action: upsert
+      - key: data.direction
+        value: ot-to-dmz
+        action: upsert
+
+  # Cardinality control - remove high-cardinality attributes
+  attributes/cardinality_control:
+    actions:
+      - key: timestamp_raw
+        action: delete
+      - key: request_id
+        action: delete
+      - key: trace_id
+        action: delete
+      - key: span_id
+        action: delete
+      - key: serial_number_raw
+        action: delete
+      - key: uuid
+        action: delete
+      - key: device_id
+        action: hash
+
+  # Normalize metrics
+  transform/normalize:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["zone"], "ot")
+          - set(attributes["processed_by"], "otel-collector-ot")
+
+  # Filter noise
+  filter/ot_noise:
+    metrics:
+      exclude:
+        match_type: regexp
+        metric_names:
+          - ".*_debug$"
+          - ".*_test$"
+          - "go_.*"
+          - "process_.*"
+
+exporters:
+  # ==========================================================================
+  # OTLP EXPORT to DMZ Gateway (replaces Kafka)
+  # ==========================================================================
+  otlp/dmz:
+    endpoint: otel-gateway-dmz:4317
+    tls:
+      insecure: true
+    # Persistent queue with file storage (survives restarts)
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 10000
+      storage: file_storage/buffer
+    # Retry configuration for network issues
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 300s
+      max_elapsed_time: 3600s  # Keep retrying for 1 hour
+
+  # Debug exporter
+  debug:
+    verbosity: basic
+    sampling_initial: 2
+    sampling_thereafter: 1000
+
+service:
+  extensions: [health_check, zpages, file_storage/buffer]
+
+  pipelines:
+    # Metrics pipeline: OT → DMZ
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics]
+      processors:
+        - memory_limiter
+        - attributes/ot_security
+        - attributes/cardinality_control
+        - filter/ot_noise
+        - transform/normalize
+        - batch
+      exporters: [otlp/dmz, debug]
+
+    # Logs pipeline: OT → DMZ
+    logs:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - attributes/ot_security
+        - attributes/cardinality_control
+        - batch
+      exporters: [otlp/dmz, debug]
+
+    # Traces pipeline: OT → DMZ
+    traces:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - attributes/ot_security
+        - attributes/cardinality_control
+        - batch
+      exporters: [otlp/dmz, debug]
+
+  telemetry:
+    logs:
+      level: warn
+      encoding: console
+    metrics:
+      address: 0.0.0.0:8888
+      level: basic

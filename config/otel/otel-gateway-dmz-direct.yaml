@@ -1,0 +1,200 @@
+# =============================================================================
+# OpenTelemetry Gateway - DMZ Zone (Direct OTLP - No Kafka)
+# =============================================================================
+# IEC 62443 Level 3 - Protocol break / Sanitization layer
+# SECURITY: Validates and sanitizes OT data before forwarding to IT
+# Acts as unidirectional gateway (OT → IT only)
+# =============================================================================
+
+extensions:
+  # Health check
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: /health
+
+  # File storage for persistent queue
+  file_storage/buffer:
+    directory: /var/lib/otelcol/buffer
+    timeout: 10s
+    compaction:
+      on_start: true
+      on_rebound: true
+      directory: /var/lib/otelcol/buffer/compaction
+
+  # zPages for debugging
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+receivers:
+  # OTLP receiver from OT zone
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 16
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # Memory limiter
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 300
+    spike_limit_mib: 75
+
+  # Batch processing
+  batch:
+    send_batch_size: 5000
+    timeout: 5s
+
+  # ==========================================================================
+  # SANITIZATION - Security validation before IT transit
+  # ==========================================================================
+
+  # DMZ stamp - mark data as validated
+  attributes/dmz_stamp:
+    actions:
+      - key: security.validated_by
+        value: dmz-gateway
+        action: upsert
+      - key: security.transit_zone
+        value: dmz
+        action: upsert
+      - key: security.protocol_break
+        value: "true"
+        action: upsert
+
+  # Security filter - remove sensitive data
+  attributes/security_filter:
+    actions:
+      # Remove potential credentials
+      - key: password
+        action: delete
+      - key: credential
+        action: delete
+      - key: secret
+        action: delete
+      - key: token
+        action: delete
+      - key: api_key
+        action: delete
+      - key: auth_token
+        action: delete
+      - key: bearer_token
+        action: delete
+      # Remove internal OT network information
+      - key: internal_ip
+        action: delete
+      - key: ot_network_address
+        action: delete
+      - key: private_ip
+        action: delete
+      - key: mac_address
+        action: delete
+      # Hash potentially sensitive identifiers
+      - key: operator_id
+        action: hash
+      - key: user_id
+        action: hash
+
+  # Validation transform - mark all data as validated
+  transform/validate:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["dmz_validated"], true)
+          - set(attributes["validation_version"], "1.0")
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["dmz_validated"], true)
+          - set(attributes["validation_version"], "1.0")
+    trace_statements:
+      - context: span
+        statements:
+          - set(attributes["dmz_validated"], true)
+          - set(attributes["validation_version"], "1.0")
+
+  # Filter potentially malicious or malformed data
+  filter/security:
+    metrics:
+      exclude:
+        match_type: regexp
+        metric_names:
+          # Block metrics that look like injection attempts
+          - ".*[<>\"'].*"
+          - ".*\\$\\{.*"
+          - ".*eval\\(.*"
+
+exporters:
+  # ==========================================================================
+  # OTLP EXPORT to IT Zone (replaces Kafka/MirrorMaker)
+  # ==========================================================================
+  otlp/it:
+    endpoint: otel-collector-it:4317
+    tls:
+      insecure: true
+    # Persistent queue with file storage
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 10000
+      storage: file_storage/buffer
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 300s
+      max_elapsed_time: 3600s
+
+  # Debug exporter
+  debug:
+    verbosity: basic
+    sampling_initial: 1
+    sampling_thereafter: 500
+
+service:
+  extensions: [health_check, zpages, file_storage/buffer]
+
+  pipelines:
+    # Metrics: OT → (sanitize) → IT
+    metrics:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - attributes/dmz_stamp
+        - attributes/security_filter
+        - filter/security
+        - transform/validate
+        - batch
+      exporters: [otlp/it, debug]
+
+    # Logs: OT → (sanitize) → IT
+    logs:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - attributes/dmz_stamp
+        - attributes/security_filter
+        - transform/validate
+        - batch
+      exporters: [otlp/it, debug]
+
+    # Traces: OT → (sanitize) → IT
+    traces:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - attributes/dmz_stamp
+        - attributes/security_filter
+        - transform/validate
+        - batch
+      exporters: [otlp/it, debug]
+
+  telemetry:
+    logs:
+      level: info
+      encoding: console
+    metrics:
+      address: 0.0.0.0:8888
+      level: basic
