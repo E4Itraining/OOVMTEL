@@ -1,72 +1,91 @@
 # OOVMTEL - Industrial Observability Platform
 
-**O**penObserve + **V**ictoria**M**etrics + Open**TEL**emetry
+**O**penObserve + **V**ictoria**M**etrics + Open**TEL**emetry + OpenSearch + Kafka
 
 Plateforme d'observabilité haute performance optimisée pour les environnements industriels (SCADA, MES, PLM, OPC-UA) avec support du streaming continu IT/OT à grande échelle.
 
-## Architecture
+> **Documentation complète:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
+## Architecture Globale
+
+```mermaid
+flowchart TB
+    subgraph SOURCES["DATA SOURCES - IT/OT"]
+        direction LR
+        SCADA["SCADA<br/>500 pts/sec"]
+        MES["MES<br/>100 evt/sec"]
+        PLM["PLM<br/>20 evt/sec"]
+        OPCUA["OPC-UA<br/>200 nodes/sec"]
+        IT["IT Systems"]
+    end
+
+    subgraph INGESTION["INGESTION LAYER"]
+        KAFKA["Kafka Cluster<br/>KRaft Mode<br/>9 topics, 24h retention"]
+        OTEL["OpenTelemetry Collector<br/>Batch 10k/5s<br/>Ports: 4317/4318"]
+    end
+
+    subgraph STORAGE["STORAGE LAYER"]
+        VM["VictoriaMetrics<br/>Time Series DB<br/>1M séries, 90j"]
+        OO["OpenObserve<br/>Logs & Traces<br/>7j retention"]
+        OS["OpenSearch<br/>Analytics<br/>365j compliance"]
+    end
+
+    subgraph VIZ["VISUALIZATION"]
+        GRAFANA["Grafana<br/>:3000"]
+        OSDASH["OS Dashboards<br/>:5601"]
+        UNIFIED["Unified View<br/>:8085"]
+        KAFKAUI["Kafka UI<br/>:8090"]
+    end
+
+    subgraph MODULES["GAME-CHANGER MODULES"]
+        NLP["NLP Chat"]
+        RCA["Auto-RCA"]
+        PRED["Predictive"]
+        REMED["Remediation"]
+        EDGE["Edge"]
+    end
+
+    SOURCES --> KAFKA & OTEL
+    KAFKA --> OTEL
+    OTEL --> STORAGE
+    STORAGE --> VIZ
+    STORAGE --> MODULES
+    MODULES --> UNIFIED
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                           OOVMTEL - Industrial Observability Platform                    │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                    DATA SOURCES (IT/OT)                                  │
-├─────────────────┬─────────────────┬─────────────────┬─────────────────┬─────────────────┤
-│     SCADA       │      MES        │      PLM        │    OPC-UA       │   IT Systems    │
-│   Controllers   │  Manufacturing  │   Engineering   │    Gateway      │   Applications  │
-│   500 pts/sec   │   100 evt/sec   │   20 evt/sec    │   200 nodes/sec │                 │
-└────────┬────────┴────────┬────────┴────────┬────────┴────────┬────────┴────────┬────────┘
-         │                 │                 │                 │                 │
-         ▼                 ▼                 ▼                 ▼                 ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                              KAFKA CLUSTER (Message Buffer)                              │
-│  ┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐           │
-│  │scada-metrics │  mes-events  │   plm-data   │ opcua-nodes  │ industrial-  │           │
-│  │  12 parts    │   8 parts    │   4 parts    │   8 parts    │  telemetry   │           │
-│  │  LZ4 comp    │  LZ4 comp    │              │   LZ4 comp   │  12 parts    │           │
-│  └──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘           │
-│                     Retention: 24h │ Compression: LZ4 │ Max: 10GB                        │
-└─────────────────────────────────────────────┬───────────────────────────────────────────┘
-                                              │
-                                              ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                         OPENTELEMETRY COLLECTOR (Central Pipeline)                       │
-│  ┌─────────────────────────────────────────────────────────────────────────────────┐    │
-│  │  RECEIVERS              │  PROCESSORS           │  EXPORTERS                    │    │
-│  │  ├─ OTLP (gRPC/HTTP)    │  ├─ Batch (10k/5s)    │  ├─ VictoriaMetrics (metrics) │    │
-│  │  ├─ Kafka (IT/OT)       │  ├─ Memory Limiter    │  ├─ OpenObserve (logs/traces) │    │
-│  │  ├─ Prometheus          │  ├─ Resource Detection│  ├─ OpenSearch (analytics)    │    │
-│  │  ├─ Host Metrics        │  ├─ Attributes/Industrial                             │    │
-│  │  └─ Filelog             │  └─ Transform         │  └─ Kafka (processed)         │    │
-│  └─────────────────────────────────────────────────────────────────────────────────┘    │
-│                   Ports: 4317 (gRPC) │ 4318 (HTTP) │ 8888 (Metrics)                      │
-└────────────┬──────────────────────────────┬──────────────────────────────┬──────────────┘
-             │                              │                              │
-             ▼                              ▼                              ▼
-┌────────────────────────┐  ┌────────────────────────┐  ┌────────────────────────────────┐
-│   VICTORIA METRICS     │  │      OPENOBSERVE       │  │         OPENSEARCH             │
-│   (Time Series DB)     │  │   (Logs & Traces)      │  │    (Full-Text Analytics)       │
-├────────────────────────┤  ├────────────────────────┤  ├────────────────────────────────┤
-│ • Retention: 90 days   │  │ • Logs ingestion       │  │ • Log analytics                │
-│ • 1M unique series     │  │ • Trace storage        │  │ • Trace correlation            │
-│ • Remote Write API     │  │ • OTEL native          │  │ • Full-text search             │
-│ • High cardinality     │  │ • Built-in dashboards  │  │ • Index State Management       │
-│ • Deduplication        │  │ • Memory cache: 1GB    │  │ • ISM policies                 │
-│ Port: 8428             │  │ Port: 5080             │  │ Port: 9200                     │
-└────────────┬───────────┘  └────────────┬───────────┘  └──────────────┬─────────────────┘
-             │                           │                             │
-             └───────────────────────────┼─────────────────────────────┘
-                                         │
-                                         ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                              VISUALIZATION & DASHBOARDS                                  │
-├─────────────────────────────┬─────────────────────────────┬─────────────────────────────┤
-│         GRAFANA             │    OPENSEARCH DASHBOARDS    │         KAFKA UI            │
-│    (Unified Dashboards)     │     (Log Analytics)         │    (Cluster Monitoring)     │
-│    Port: 3000               │     Port: 5601              │    Port: 8090               │
-└─────────────────────────────┴─────────────────────────────┴─────────────────────────────┘
+## Flux de Données IT/OT
+
+```mermaid
+flowchart LR
+    subgraph OT["Zone OT"]
+        SIM["Simulateurs<br/>Industriels"]
+    end
+
+    subgraph QUEUE["Message Queue"]
+        K1["scada-metrics"]
+        K2["mes-events"]
+        K3["plm-data"]
+        K4["opcua-nodes"]
+    end
+
+    subgraph PROCESS["Processing"]
+        OTEL_P["OTEL Collector<br/>• Batch<br/>• Memory Limiter<br/>• Cardinality"]
+    end
+
+    subgraph STORE["Storage"]
+        VM_S["VictoriaMetrics"]
+        OO_S["OpenObserve"]
+        OS_S["OpenSearch"]
+    end
+
+    SIM --> K1 & K2 & K3 & K4
+    K1 & K2 & K3 & K4 --> OTEL_P
+    OTEL_P --> VM_S & OO_S & OS_S
+
+    style OT fill:#e3f2fd
+    style QUEUE fill:#fff8e1
+    style PROCESS fill:#f3e5f5
+    style STORE fill:#e8f5e9
 ```
 
 ## Composants
@@ -80,37 +99,40 @@ Plateforme d'observabilité haute performance optimisée pour les environnements
 | **OTEL Collector** | Pipeline de télémétrie central | 4317, 4318 | 10k batch, 2GB memory |
 | **Grafana** | Visualisation unifiée | 3000 | Multi-datasource |
 
-## Flux de Données IT/OT
+## Modes de Déploiement
 
+OOVMTEL propose trois modes de déploiement:
+
+| Mode | Fichier | Description |
+|------|---------|-------------|
+| **Standard (Kafka)** | `docker-compose.yml` | Architecture complète avec Kafka |
+| **Direct OTLP** | `docker-compose.direct-otlp.yml` | Sans Kafka, 90% moins de ressources |
+| **Sécurisé (IEC 62443)** | `docker-compose.ot/dmz/it.yml` | Séparation IT/OT avec data diode |
+
+```mermaid
+flowchart LR
+    subgraph MODE1["Mode Kafka"]
+        K1["Kafka Buffer"]
+        O1["OTEL Collector"]
+        K1 --> O1
+    end
+
+    subgraph MODE2["Mode Direct OTLP"]
+        O2_OT["OTEL OT"]
+        O2_DMZ["OTEL DMZ"]
+        O2_IT["OTEL IT"]
+        O2_OT --> O2_DMZ --> O2_IT
+    end
+
+    subgraph MODE3["Mode Sécurisé"]
+        OT["Zone OT"]
+        DMZ["Zone DMZ<br/>Data Diode"]
+        IT["Zone IT"]
+        OT --> |Unidirectionnel| DMZ --> IT
+    end
 ```
-                    ┌──────────────────────────────────────────────┐
-                    │           Industrial Data Flow               │
-                    └──────────────────────────────────────────────┘
 
-    OT (Operational Technology)              IT (Information Technology)
-    ═══════════════════════════              ═══════════════════════════
-
-    ┌─────────────┐                          ┌─────────────┐
-    │    PLC      │──┐                       │   App       │──┐
-    └─────────────┘  │                       │   Server    │  │
-    ┌─────────────┐  │   ┌─────────────┐     └─────────────┘  │   ┌─────────────┐
-    │   SCADA     │──┼──▶│   Kafka     │◀────────────────────┼──▶│   OTEL      │
-    │   RTU       │  │   │   Buffer    │     ┌─────────────┐ │   │  Collector  │
-    └─────────────┘  │   └─────────────┘     │   Database  │ │   └─────────────┘
-    ┌─────────────┐  │          │            │   Server    │─┘          │
-    │   OPC-UA    │──┘          │            └─────────────┘            │
-    │   Server    │             │            ┌─────────────┐            │
-    └─────────────┘             │            │   Cloud     │            │
-                                │            │   Services  │────────────┘
-                                ▼            └─────────────┘
-                    ┌──────────────────────────────────────────────┐
-                    │          Unified Observability Stack          │
-                    │  ┌──────────┐ ┌──────────┐ ┌──────────────┐  │
-                    │  │ Victoria │ │OpenObserve│ │  OpenSearch  │  │
-                    │  │ Metrics  │ │          │ │              │  │
-                    │  └──────────┘ └──────────┘ └──────────────┘  │
-                    └──────────────────────────────────────────────┘
-```
+> **Voir:** [docs/DIRECT_OTLP_ARCHITECTURE.md](docs/DIRECT_OTLP_ARCHITECTURE.md) | [docs/SECURE_ARCHITECTURE.md](docs/SECURE_ARCHITECTURE.md)
 
 ## Démarrage Rapide
 
@@ -189,30 +211,28 @@ The Unified View is available at: **http://localhost:8085**
 
 ### Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    Unified Business-Tech View                                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐       │
-│  │  Business View  │     │   Unified View  │     │    Tech View    │       │
-│  │  - OEE/KPIs     │     │  - Cross-domain │     │  - Services     │       │
-│  │  - Production   │     │  - Timeline     │     │  - Resources    │       │
-│  │  - Equipment    │     │  - Correlation  │     │  - Pipeline     │       │
-│  └─────────────────┘     └─────────────────┘     └─────────────────┘       │
-│                                   │                                         │
-│                          ┌────────┴────────┐                               │
-│                          │   FastAPI API   │                               │
-│                          │   Port: 8085    │                               │
-│                          └────────┬────────┘                               │
-│                                   │                                         │
-│        ┌──────────────────────────┼──────────────────────────┐             │
-│        │                          │                          │             │
-│        ▼                          ▼                          ▼             │
-│  ┌───────────────┐        ┌───────────────┐        ┌───────────────┐       │
-│  │VictoriaMetrics│        │   OpenSearch  │        │     Kafka     │       │
-│  │   (metrics)   │        │    (logs)     │        │   (events)    │       │
-│  └───────────────┘        └───────────────┘        └───────────────┘       │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph FRONTEND["React Dashboard - Port 3001"]
+        BV["Business View<br/>OEE, KPIs, Production"]
+        UV["Unified View<br/>Cross-domain, Timeline"]
+        TV["Tech View<br/>Services, Resources"]
+    end
+
+    subgraph BACKEND["FastAPI Backend - Port 8085"]
+        API["REST API"]
+        WS["WebSocket"]
+        MODS["Game-Changer Modules<br/>NLP, RCA, Predictive"]
+    end
+
+    subgraph DATA["Data Sources"]
+        VM_D["VictoriaMetrics<br/>(metrics)"]
+        OS_D["OpenSearch<br/>(logs)"]
+        KF_D["Kafka<br/>(events)"]
+    end
+
+    FRONTEND <--> BACKEND
+    BACKEND <--> DATA
 ```
 
 ### Grafana Dashboard

@@ -6,61 +6,72 @@ The Direct OTLP architecture eliminates Kafka from the OOVMTEL platform, replaci
 
 ## Architecture Diagram
 
+```mermaid
+flowchart TB
+    subgraph OT_ZONE["OT ZONE - IEC 62443 Level 2/3"]
+        direction TB
+        subgraph SIMULATORS["Industrial Simulators (OTLP SDK)"]
+            SCADA["SCADA"]
+            MES["MES"]
+            PLM["PLM"]
+            OPCUA["OPC-UA"]
+        end
+        OTEL_OT["OTel Collector OT<br/>:4337/4338<br/>• File Buffer<br/>• Cardinality Control<br/>• Security Attributes"]
+
+        SIMULATORS --> OTEL_OT
+    end
+
+    subgraph DMZ_ZONE["DMZ ZONE - IEC 62443 Level 3"]
+        OTEL_DMZ["OTel Gateway DMZ<br/>:4327/4328<br/>• Protocol Break<br/>• Data Sanitization<br/>• Security Validation<br/>• File Buffer"]
+    end
+
+    subgraph IT_ZONE["IT ZONE - IEC 62443 Level 4/5"]
+        OTEL_IT["OTel Collector IT<br/>:4317/4318<br/>• Full Processing<br/>• Tail Sampling<br/>• Cardinality Governance"]
+
+        subgraph BACKENDS["Storage Backends"]
+            VM["VictoriaMetrics<br/>(Metrics)"]
+            OO["OpenObserve<br/>(Logs/Traces)"]
+            OS["OpenSearch<br/>(Analytics)"]
+        end
+
+        GRAFANA["Grafana<br/>(Dashboards)"]
+
+        OTEL_IT --> BACKENDS
+        BACKENDS --> GRAFANA
+    end
+
+    OTEL_OT --> |OTLP gRPC| OTEL_DMZ
+    OTEL_DMZ --> |OTLP gRPC| OTEL_IT
+
+    style OT_ZONE fill:#ffebee,stroke:#c62828
+    style DMZ_ZONE fill:#fff8e1,stroke:#f57f17
+    style IT_ZONE fill:#e8f5e9,stroke:#2e7d32
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              OT ZONE (Level 2/3)                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │    SCADA     │  │     MES      │  │     PLM      │  │   OPC-UA     │    │
-│  │  Simulator   │  │  Simulator   │  │  Simulator   │  │  Simulator   │    │
-│  │  (OTLP SDK)  │  │  (OTLP SDK)  │  │  (OTLP SDK)  │  │  (OTLP SDK)  │    │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘    │
-│         │                 │                 │                 │            │
-│         └─────────────────┼─────────────────┼─────────────────┘            │
-│                           │                 │                              │
-│                           ▼                 ▼                              │
-│                    ┌─────────────────────────────┐                         │
-│                    │    OTel Collector (OT)      │                         │
-│                    │  - File-based buffer        │                         │
-│                    │  - Cardinality control      │                         │
-│                    │  - Security attributes      │                         │
-│                    └─────────────┬───────────────┘                         │
-└──────────────────────────────────┼─────────────────────────────────────────┘
-                                   │ OTLP gRPC
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              DMZ ZONE (Level 3)                             │
-│                    ┌─────────────────────────────┐                         │
-│                    │    OTel Gateway (DMZ)       │                         │
-│                    │  - Protocol break           │                         │
-│                    │  - Data sanitization        │                         │
-│                    │  - Security validation      │                         │
-│                    │  - File-based buffer        │                         │
-│                    └─────────────┬───────────────┘                         │
-└──────────────────────────────────┼─────────────────────────────────────────┘
-                                   │ OTLP gRPC
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              IT ZONE (Level 4/5)                            │
-│                    ┌─────────────────────────────┐                         │
-│                    │    OTel Collector (IT)      │                         │
-│                    │  - Full processing          │                         │
-│                    │  - Tail sampling            │                         │
-│                    │  - Cardinality governance   │                         │
-│                    └─────────────┬───────────────┘                         │
-│                                  │                                          │
-│              ┌───────────────────┼───────────────────┐                     │
-│              ▼                   ▼                   ▼                     │
-│   ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐          │
-│   │ VictoriaMetrics  │ │   OpenObserve    │ │   OpenSearch     │          │
-│   │    (Metrics)     │ │  (Logs/Traces)   │ │   (Analytics)    │          │
-│   └──────────────────┘ └──────────────────┘ └──────────────────┘          │
-│                                  │                                          │
-│                                  ▼                                          │
-│                         ┌──────────────────┐                               │
-│                         │     Grafana      │                               │
-│                         │   (Dashboards)   │                               │
-│                         └──────────────────┘                               │
-└─────────────────────────────────────────────────────────────────────────────┘
+
+## Flux de Données Détaillé
+
+```mermaid
+sequenceDiagram
+    participant SIM as Simulateur OTLP
+    participant OT as OTEL Collector OT
+    participant DMZ as OTEL Gateway DMZ
+    participant IT as OTEL Collector IT
+    participant VM as VictoriaMetrics
+    participant OO as OpenObserve
+
+    SIM->>OT: OTLP gRPC (metrics/traces)
+    Note over OT: File Buffer<br/>Cardinality Control
+
+    OT->>DMZ: OTLP gRPC
+    Note over DMZ: Sanitization<br/>Remove credentials<br/>Validate schema
+
+    DMZ->>IT: OTLP gRPC
+    Note over IT: Full Processing<br/>Tail Sampling
+
+    par Export to backends
+        IT->>VM: Remote Write
+        IT->>OO: OTLP HTTP
+    end
 ```
 
 ## Components
@@ -321,3 +332,42 @@ curl http://localhost:8890/metrics | grep exporter
 | Operational complexity | High | Low |
 | Resource usage | High | Low |
 | Best for | Event streaming | Observability |
+
+## Resource Comparison Chart
+
+```mermaid
+pie title Memory Usage Comparison
+    "Kafka Architecture (10.5 GB)" : 10.5
+    "Direct OTLP (2.75 GB)" : 2.75
+```
+
+```mermaid
+xychart-beta
+    title "Resource Comparison: Kafka vs Direct OTLP"
+    x-axis ["Memory (GB)", "CPU (cores)", "Containers"]
+    y-axis "Value" 0 --> 12
+    bar [10.5, 4.25, 7]
+    bar [2.75, 1, 3]
+```
+
+## Migration Decision Tree
+
+```mermaid
+flowchart TD
+    START["Need message queue?"] --> Q1{Multi-consumer<br/>needed?}
+
+    Q1 --> |Yes| KAFKA["Use Kafka Mode"]
+    Q1 --> |No| Q2{Replay<br/>capability?}
+
+    Q2 --> |Yes| KAFKA
+    Q2 --> |No| Q3{Security zones<br/>IEC 62443?}
+
+    Q3 --> |Yes| OTLP["Use Direct OTLP"]
+    Q3 --> |No| Q4{Production<br/>critical?}
+
+    Q4 --> |Yes| KAFKA
+    Q4 --> |No| OTLP
+
+    style KAFKA fill:#fff3e0
+    style OTLP fill:#e8f5e9
+```
