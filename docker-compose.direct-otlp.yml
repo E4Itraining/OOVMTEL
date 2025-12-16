@@ -42,10 +42,10 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "/victoria-metrics-prod", "-version"]
-      interval: 30s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8428/health || exit 1"]
+      interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
       start_period: 30s
     restart: unless-stopped
 
@@ -79,10 +79,10 @@ services:
       - oovmtel-network
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 5080 || exit 1"]
-      interval: 15s
+      interval: 10s
       timeout: 10s
-      retries: 30
-      start_period: 120s
+      retries: 20
+      start_period: 30s
     restart: unless-stopped
 
   opensearch:
@@ -112,11 +112,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 120s
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s || exit 1"]
+      interval: 20s
+      timeout: 15s
+      retries: 15
+      start_period: 60s
     restart: unless-stopped
 
   opensearch-dashboards:
@@ -176,11 +176,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 13133 || exit 1"]
-      interval: 15s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      interval: 10s
       timeout: 10s
-      retries: 30
-      start_period: 60s
+      retries: 20
+      start_period: 30s
     restart: unless-stopped
 
   # DMZ Gateway - sanitizes OT data before forwarding to IT
@@ -204,11 +204,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 13133 || exit 1"]
-      interval: 15s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      interval: 10s
       timeout: 10s
-      retries: 30
-      start_period: 30s
+      retries: 15
+      start_period: 20s
     restart: unless-stopped
 
   # OT Zone Collector - receives from simulators, sends to DMZ
@@ -232,11 +232,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 13133 || exit 1"]
-      interval: 15s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      interval: 10s
       timeout: 10s
-      retries: 30
-      start_period: 30s
+      retries: 15
+      start_period: 20s
     restart: unless-stopped
 
   # ===========================================================================
