@@ -47,4 +47,4 @@ opensearch.requestHeadersWhitelist: ["securitytenant", "Authorization"]
 vis.default.type: "line"
 
 # Query settings
-opensearch.batched.preferBatchedReduceSearchPath: true
+# Note: opensearch.batched.preferBatchedReduceSearchPath removed as it's not supported in OpenSearch Dashboards 2.11.1
