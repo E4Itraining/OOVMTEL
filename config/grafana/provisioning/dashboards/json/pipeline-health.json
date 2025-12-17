@@ -77,7 +77,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-          "expr": "avg(up{job=~\"otel.*\"})",
+          "expr": "avg(up{job=\"otel-collector\"})",
           "legendFormat": "OTel Collectors",
           "refId": "A"
         }
@@ -125,12 +125,12 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-          "expr": "avg(up{job=~\".*kafka.*\"})",
-          "legendFormat": "Kafka",
+          "expr": "avg(up{job=\"vmagent\"})",
+          "legendFormat": "VMAgent",
           "refId": "A"
         }
       ],
-      "title": "Kafka Cluster Health",
+      "title": "VMAgent Health",
       "type": "stat"
     },
     {
@@ -173,12 +173,61 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-          "expr": "avg(up{job=~\"vmcluster\"})",
+          "expr": "avg(up{job=\"victoria-metrics\"})",
           "legendFormat": "VictoriaMetrics",
           "refId": "A"
         }
       ],
       "title": "VictoriaMetrics Health",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoria-metrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.75 },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "expr": "avg(up{job=~\"scada-metrics|mes-metrics|plm-metrics|opcua-gateway\"})",
+          "legendFormat": "Simulators",
+          "refId": "A"
+        }
+      ],
+      "title": "Industrial Simulators Health",
       "type": "stat"
     },
     {
@@ -233,7 +282,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
       "id": 5,
       "options": {
         "legend": {
@@ -614,13 +663,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-          "expr": "go_memstats_alloc_bytes{job=~\"otel.*\"}",
+          "expr": "go_memstats_alloc_bytes{job=\"otel-collector\"}",
           "legendFormat": "{{job}} - Allocated",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-          "expr": "go_memstats_sys_bytes{job=~\"otel.*\"}",
+          "expr": "go_memstats_sys_bytes{job=\"otel-collector\"}",
           "legendFormat": "{{job}} - System",
           "refId": "B"
         }
@@ -638,7 +687,7 @@
       },
       "id": 30,
       "panels": [],
-      "title": "Kafka Queue Lag",
+      "title": "Data Ingestion Pipeline",
       "type": "row"
     },
     {
@@ -712,12 +761,24 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-          "expr": "otelcol_receiver_kafka_consumer_group_lag",
-          "legendFormat": "{{topic}} - {{partition}}",
+          "expr": "rate(otelcol_receiver_accepted_metric_points{receiver=\"prometheus\"}[5m])",
+          "legendFormat": "Prometheus Receiver",
           "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "expr": "rate(otelcol_receiver_accepted_metric_points{receiver=\"hostmetrics\"}[5m])",
+          "legendFormat": "Host Metrics Receiver",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "expr": "rate(otelcol_receiver_accepted_metric_points{receiver=\"otlp\"}[5m])",
+          "legendFormat": "OTLP Receiver",
+          "refId": "C"
         }
       ],
-      "title": "Kafka Consumer Lag by Topic",
+      "title": "Data Ingestion Rate by Receiver",
       "type": "timeseries"
     },
     {

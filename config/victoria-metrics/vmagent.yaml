@@ -62,5 +62,13 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:8429']
 
+  # VictoriaMetrics internal metrics for cardinality and health monitoring
+  - job_name: 'victoria-metrics'
+    static_configs:
+      - targets: ['victoria-metrics:8428']
+    relabel_configs:
+      - target_label: component
+        replacement: tsdb
+
 # Note: remoteWrite is configured via command-line args in docker-compose.yml
 # -remoteWrite.url=http://victoria-metrics:8428/api/v1/write
