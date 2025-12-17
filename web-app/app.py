@@ -58,7 +58,6 @@ logger = logging.getLogger(__name__)
 class Config:
     VICTORIA_METRICS_URL = os.getenv('VICTORIA_METRICS_URL', 'http://victoria-metrics:8428')
     OPENSEARCH_URL = os.getenv('OPENSEARCH_URL', 'http://opensearch:9200')
-    KAFKA_URL = os.getenv('KAFKA_URL', 'http://kafka:9092')
     OPENOBSERVE_URL = os.getenv('OPENOBSERVE_URL', 'http://openobserve:5080')
     OTEL_COLLECTOR_URL = os.getenv('OTEL_COLLECTOR_URL', 'http://otel-collector:8888')
     GRAFANA_URL = os.getenv('GRAFANA_URL', 'http://grafana:3000')
@@ -93,7 +92,6 @@ class TechMetrics(BaseModel):
     traces_rate: int
     latency_p95: float
     error_rate: float
-    kafka_throughput: int
     cpu_usage: float
     memory_usage: float
     disk_usage: float
@@ -103,9 +101,6 @@ class TechMetrics(BaseModel):
     os_documents: int
     os_health: str
     os_nodes: int
-    kafka_topics: int
-    kafka_partitions: int
-    kafka_lag: int
 
 class Event(BaseModel):
     time: datetime
@@ -379,7 +374,6 @@ async def fetch_victoria_metrics_tech() -> Dict[str, Any]:
         "traces_rate": int(results.get("traces_rate", 12000)),
         "latency_p95": 45.0,
         "error_rate": 0.05,
-        "kafka_throughput": 2500000,
         "cpu_usage": 35.0,
         "memory_usage": 62.0,
         "disk_usage": 45.0,
@@ -388,10 +382,7 @@ async def fetch_victoria_metrics_tech() -> Dict[str, Any]:
         "vm_query_latency": 15.0,
         "os_documents": 125000,
         "os_health": "green",
-        "os_nodes": 1,
-        "kafka_topics": 6,
-        "kafka_partitions": 72,
-        "kafka_lag": 50
+        "os_nodes": 1
     }
 
 async def check_all_services() -> List[Dict[str, Any]]:
@@ -399,7 +390,6 @@ async def check_all_services() -> List[Dict[str, Any]]:
     services = [
         ("VictoriaMetrics", config.VICTORIA_METRICS_URL + "/health", 8428),
         ("OTEL Collector", config.OTEL_COLLECTOR_URL + "/health", 4317),
-        ("Kafka", config.KAFKA_URL, 9092),
         ("OpenSearch", config.OPENSEARCH_URL + "/_cluster/health", 9200),
         ("OpenObserve", config.OPENOBSERVE_URL + "/healthz", 5080),
         ("Grafana", config.GRAFANA_URL + "/api/health", 3000)
@@ -485,7 +475,6 @@ def generate_simulated_tech_metrics() -> Dict[str, Any]:
         "traces_rate": random.randint(10000, 15000),
         "latency_p95": random.uniform(30, 60),
         "error_rate": random.uniform(0.01, 0.1),
-        "kafka_throughput": random.randint(2000000, 3000000),
         "cpu_usage": random.uniform(25, 50),
         "memory_usage": random.uniform(55, 75),
         "disk_usage": random.uniform(40, 60),
@@ -494,10 +483,7 @@ def generate_simulated_tech_metrics() -> Dict[str, Any]:
         "vm_query_latency": random.uniform(10, 25),
         "os_documents": random.randint(100000, 150000),
         "os_health": "green",
-        "os_nodes": 1,
-        "kafka_topics": 6,
-        "kafka_partitions": 72,
-        "kafka_lag": random.randint(0, 100)
+        "os_nodes": 1
     }
 
 def generate_simulated_services() -> List[Dict[str, Any]]:
@@ -505,7 +491,6 @@ def generate_simulated_services() -> List[Dict[str, Any]]:
     return [
         {"name": "VictoriaMetrics", "status": "up", "port": 8428, "latency_ms": random.uniform(1, 5)},
         {"name": "OTEL Collector", "status": "up", "port": 4317, "latency_ms": random.uniform(1, 3)},
-        {"name": "Kafka", "status": "up", "port": 9092, "latency_ms": random.uniform(2, 8)},
         {"name": "OpenSearch", "status": "up", "port": 9200, "latency_ms": random.uniform(5, 15)},
         {"name": "OpenObserve", "status": "up", "port": 5080, "latency_ms": random.uniform(2, 6)},
         {"name": "Grafana", "status": "up", "port": 3000, "latency_ms": random.uniform(1, 4)}

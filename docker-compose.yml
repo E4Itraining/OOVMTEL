@@ -1,159 +1,10 @@
 # =============================================================================
 # OOVMTEL - Industrial Observability Platform
-# OpenObserve + VictoriaMetrics + OpenTelemetry + OpenSearch + Kafka
+# OpenObserve + VictoriaMetrics + OpenTelemetry + OpenSearch
 # Optimized for high-volume IT/OT data streaming
 # =============================================================================
 
 services:
-  # ===========================================================================
-  # KAFKA - Message Buffer KRaft mode (no Zookeeper)
-  # ===========================================================================
-
-  kafka:
-    image: confluentinc/cp-kafka:7.5.3
-    container_name: oovmtel-kafka
-    hostname: kafka
-    ports:
-      - "9092:9092"
-      - "9093:9093"
-    environment:
-      # KRaft mode configuration (single node)
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
-      CLUSTER_ID: MkU3OEVBNTcyNTRTNDYzNw
-      # Listener configuration
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: CONTROLLER://kafka:9094,INTERNAL://kafka:9092,EXTERNAL://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      # Single-node settings
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      # Performance tuning for high volume
-      KAFKA_NUM_PARTITIONS: 12
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
-      KAFKA_MIN_INSYNC_REPLICAS: 1
-      KAFKA_LOG_RETENTION_HOURS: 24
-      KAFKA_LOG_SEGMENT_BYTES: 1073741824
-      KAFKA_LOG_RETENTION_BYTES: 10737418240
-      KAFKA_COMPRESSION_TYPE: lz4
-      KAFKA_MESSAGE_MAX_BYTES: 10485760
-      KAFKA_REPLICA_FETCH_MAX_BYTES: 10485760
-      # JVM tuning
-      KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-    networks:
-      - oovmtel-network
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null || exit 1"]
-      interval: 20s
-      timeout: 20s
-      retries: 15
-      start_period: 90s
-    restart: unless-stopped
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: oovmtel-kafka-ui
-    depends_on:
-      kafka:
-        condition: service_healthy
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: oovmtel-main
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_READONLY: "false"
-      # Modern UI Settings
-      DYNAMIC_CONFIG_ENABLED: "true"
-      AUTH_TYPE: "DISABLED"
-      # Performance settings
-      WEBCLIENT_MAX_IN_MEMORY_BUFFER_SIZE: "20MB"
-    volumes:
-      - ./config/kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml:ro
-    networks:
-      - oovmtel-network
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
-
-  kafka-init:
-    image: confluentinc/cp-kafka:7.5.3
-    container_name: oovmtel-kafka-init
-    depends_on:
-      kafka:
-        condition: service_healthy
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - |
-        echo 'Creating Kafka topics for industrial data...'
-
-        # SCADA metrics topic - high throughput
-        kafka-topics --create --if-not-exists --topic scada-metrics --bootstrap-server kafka:9092 --partitions 12 --replication-factor 1 --config retention.ms=86400000 --config compression.type=lz4
-
-        # MES events topic
-        kafka-topics --create --if-not-exists --topic mes-events --bootstrap-server kafka:9092 --partitions 8 --replication-factor 1 --config retention.ms=86400000
-
-        # PLM data topic
-        kafka-topics --create --if-not-exists --topic plm-data --bootstrap-server kafka:9092 --partitions 4 --replication-factor 1 --config retention.ms=172800000
-
-        # OPC-UA nodes topic
-        kafka-topics --create --if-not-exists --topic opcua-nodes --bootstrap-server kafka:9092 --partitions 8 --replication-factor 1 --config retention.ms=86400000
-
-        # Industrial telemetry (OTLP)
-        kafka-topics --create --if-not-exists --topic industrial-telemetry --bootstrap-server kafka:9092 --partitions 12 --replication-factor 1 --config retention.ms=86400000
-
-        # Processed telemetry output
-        kafka-topics --create --if-not-exists --topic processed-telemetry --bootstrap-server kafka:9092 --partitions 6 --replication-factor 1 --config retention.ms=172800000
-
-        echo 'Kafka topics created successfully!'
-        kafka-topics --list --bootstrap-server kafka:9092
-    networks:
-      - oovmtel-network
-
-  # ===========================================================================
-  # DATA INGESTION LAUNCHER - Initializes data flow at startup
-  # ===========================================================================
-
-  data-ingestion-launcher:
-    image: confluentinc/cp-kafka:7.5.3
-    container_name: oovmtel-data-ingestion-launcher
-    depends_on:
-      kafka:
-        condition: service_healthy
-      victoria-metrics:
-        condition: service_healthy
-      opensearch:
-        condition: service_healthy
-      openobserve:
-        condition: service_healthy
-      otel-collector:
-        condition: service_healthy
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      VICTORIA_METRICS_URL: http://victoria-metrics:8428
-      OPENSEARCH_URL: http://opensearch:9200
-      OPENOBSERVE_URL: http://openobserve:5080
-      OTEL_COLLECTOR_URL: http://otel-collector:13133
-      MAX_RETRIES: 60
-      RETRY_INTERVAL: 5
-      KEEP_RUNNING: "false"
-    volumes:
-      - ./scripts/data-ingestion-launcher.sh:/usr/local/bin/data-ingestion-launcher.sh:ro
-    entrypoint: ["/bin/bash", "/usr/local/bin/data-ingestion-launcher.sh"]
-    networks:
-      - oovmtel-network
-    restart: "no"
-
   # ===========================================================================
   # VICTORIA METRICS - High-Performance Time Series Database
   # ===========================================================================
@@ -352,8 +203,6 @@ services:
     image: otel/opentelemetry-collector-contrib:0.91.0
     container_name: oovmtel-otel-collector
     depends_on:
-      kafka:
-        condition: service_healthy
       victoria-metrics:
         condition: service_healthy
       opensearch:
@@ -457,7 +306,6 @@ services:
     environment:
       VICTORIA_METRICS_URL: http://victoria-metrics:8428
       OPENSEARCH_URL: http://opensearch:9200
-      KAFKA_URL: kafka:9092
       OPENOBSERVE_URL: http://openobserve:5080
       OTEL_COLLECTOR_URL: http://otel-collector:8888
       GRAFANA_URL: http://grafana:3000
@@ -494,11 +342,7 @@ services:
       dockerfile: Dockerfile
     container_name: oovmtel-scada-simulator
     hostname: scada-simulator
-    depends_on:
-      kafka:
-        condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
       SIMULATOR_TYPE: scada
       METRICS_PORT: 8080
@@ -521,11 +365,7 @@ services:
       dockerfile: Dockerfile
     container_name: oovmtel-mes-simulator
     hostname: mes-simulator
-    depends_on:
-      kafka:
-        condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
       SIMULATOR_TYPE: mes
       METRICS_PORT: 8081
@@ -548,11 +388,7 @@ services:
       dockerfile: Dockerfile
     container_name: oovmtel-plm-simulator
     hostname: plm-simulator
-    depends_on:
-      kafka:
-        condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
       SIMULATOR_TYPE: plm
       METRICS_PORT: 8082
@@ -575,11 +411,7 @@ services:
       dockerfile: Dockerfile
     container_name: oovmtel-opcua-simulator
     hostname: opcua-simulator
-    depends_on:
-      kafka:
-        condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       OTEL_ENDPOINT: http://otel-collector:4318
       SIMULATOR_TYPE: opcua
       METRICS_PORT: 8083
@@ -612,8 +444,6 @@ networks:
 # =============================================================================
 
 volumes:
-  kafka_data:
-    driver: local
   victoria_metrics_data:
     driver: local
   vmagent_data:
