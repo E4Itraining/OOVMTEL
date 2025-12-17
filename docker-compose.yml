@@ -36,12 +36,12 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      # Simple port check - VictoriaMetrics /health returns just "OK"
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8428/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 30s
+      # Use netcat for simple TCP port check - more reliable than wget in minimal images
+      test: ["CMD-SHELL", "nc -z localhost 8428 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
     restart: unless-stopped
 
   vmagent:
@@ -74,11 +74,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8429/health 2>/dev/null || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
+      test: ["CMD-SHELL", "nc -z localhost 8429 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
     restart: unless-stopped
 
   # ===========================================================================
