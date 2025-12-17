@@ -19,10 +19,10 @@ MAX_RETRIES=${MAX_RETRIES:-60}
 RETRY_INTERVAL=${RETRY_INTERVAL:-5}
 KAFKA_ENABLED=${KAFKA_ENABLED:-false}
 KAFKA_BOOTSTRAP=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
-VICTORIA_METRICS_URL=${VICTORIA_METRICS_URL:-http://victoria-metrics:8428}
-OPENSEARCH_URL=${OPENSEARCH_URL:-http://opensearch:9200}
-OPENOBSERVE_URL=${OPENOBSERVE_URL:-http://openobserve:5080}
-OTEL_COLLECTOR_URL=${OTEL_COLLECTOR_URL:-http://otel-collector:13133}
+VICTORIA_METRICS_URL=${VICTORIA_METRICS_URL:-http://localhost:8428}
+OPENSEARCH_URL=${OPENSEARCH_URL:-http://localhost:9200}
+OPENOBSERVE_URL=${OPENOBSERVE_URL:-http://localhost:5080}
+OTEL_COLLECTOR_URL=${OTEL_COLLECTOR_URL:-http://localhost:13133}
 
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $1"
@@ -341,7 +341,7 @@ verify_data_flow() {
 
     # Check OTEL Collector pipelines
     check_count=$((check_count + 1))
-    if curl -sf "http://otel-collector:8888/metrics" 2>/dev/null | grep -q "otelcol_receiver"; then
+    if curl -sf "http://localhost:8888/metrics" 2>/dev/null | grep -q "otelcol_receiver"; then
         log_success "OTEL Collector receivers are active"
         success_count=$((success_count + 1))
     else
