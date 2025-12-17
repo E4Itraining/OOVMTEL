@@ -177,7 +177,7 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:13133/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 20
@@ -205,7 +205,7 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:13133/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 15
@@ -233,7 +233,7 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/health 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:13133/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 15
