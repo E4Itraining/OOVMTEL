@@ -251,12 +251,13 @@ services:
       - vmstorage_1_data:/storage
     networks:
       - it-network
+    # Note: VictoriaMetrics scratch image has no shell utilities
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8482/health 2>/dev/null || exit 1"]
+      test: ["CMD", "/vmstorage-prod", "-version"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 60s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
 
   vmstorage-2:
@@ -271,12 +272,13 @@ services:
       - vmstorage_2_data:/storage
     networks:
       - it-network
+    # Note: VictoriaMetrics scratch image has no shell utilities
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8482/health 2>/dev/null || exit 1"]
+      test: ["CMD", "/vmstorage-prod", "-version"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 60s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
 
   vminsert:
@@ -296,12 +298,13 @@ services:
       - "8480:8480"
     networks:
       - it-network
+    # Note: VictoriaMetrics scratch image has no shell utilities
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8480/health 2>/dev/null || exit 1"]
+      test: ["CMD", "/vminsert-prod", "-version"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 30s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
 
   vmselect:
@@ -321,12 +324,13 @@ services:
       - "8481:8481"
     networks:
       - it-network
+    # Note: VictoriaMetrics scratch image has no shell utilities
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8481/health 2>/dev/null | grep -q 'OK' || exit 1"]
+      test: ["CMD", "/vmselect-prod", "-version"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 60s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
 
   # Compatibility layer - proxies to cluster for backward compatibility

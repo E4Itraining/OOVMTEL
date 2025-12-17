@@ -35,12 +35,14 @@ services:
       - victoria_metrics_data:/victoria-metrics-data
     networks:
       - oovmtel-network
+    # Note: VictoriaMetrics scratch image has no shell utilities
+    # Using /api/v1/status/tsdb endpoint which returns quickly
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8428/health || exit 1"]
-      interval: 5s
+      test: ["CMD", "/victoria-metrics-prod", "-version"]
+      interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 10s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
 
   vmagent:
@@ -72,12 +74,13 @@ services:
       - vmagent_data:/tmp/vmagent
     networks:
       - oovmtel-network
+    # Note: vmagent scratch image has no shell utilities
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8429/health || exit 1"]
-      interval: 5s
+      test: ["CMD", "/vmagent-prod", "-version"]
+      interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 10s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
 
   # ===========================================================================
