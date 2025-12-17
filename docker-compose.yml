@@ -221,6 +221,12 @@ services:
       - vmagent_data:/tmp/vmagent
     networks:
       - oovmtel-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8429/health 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     restart: unless-stopped
 
   # ===========================================================================

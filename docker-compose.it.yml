@@ -256,7 +256,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 30s
+      start_period: 60s
     restart: unless-stopped
 
   vmstorage-2:
@@ -276,7 +276,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 30s
+      start_period: 60s
     restart: unless-stopped
 
   vminsert:
@@ -372,6 +372,12 @@ services:
       - vmagent_data:/tmp/vmagent
     networks:
       - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8429/health 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     restart: unless-stopped
 
   # ===========================================================================
