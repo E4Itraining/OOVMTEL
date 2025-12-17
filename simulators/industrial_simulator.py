@@ -17,7 +17,6 @@ from enum import Enum
 
 import aiohttp
 from aiohttp import web
-from kafka import KafkaProducer
 from prometheus_client import Counter, Gauge, Histogram, start_http_server, generate_latest, CONTENT_TYPE_LATEST
 
 # Configure logging
@@ -28,12 +27,10 @@ logging.basicConfig(
 logger = logging.getLogger('industrial-simulator')
 
 # Environment configuration
-KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
 OTEL_ENDPOINT = os.getenv('OTEL_ENDPOINT', 'http://otel-collector:4318')
 SIMULATOR_TYPE = os.getenv('SIMULATOR_TYPE', 'scada')
 METRICS_PORT = int(os.getenv('METRICS_PORT', '8080'))
 DATA_RATE_PER_SEC = int(os.getenv('DATA_RATE_PER_SEC', '100'))
-ZONE = os.getenv('ZONE', 'main')  # 'main', 'ot', or 'it'
 
 # ============================================================================
 # Data Models
@@ -159,7 +156,6 @@ class SCADASimulator:
 
     def __init__(self):
         self.base_values: Dict[str, float] = {}
-        self.kafka_producer: Optional[KafkaProducer] = None
         self._init_base_values()
 
     def _init_base_values(self):
@@ -258,7 +254,6 @@ class MESSimulator:
         self.workstation_status: Dict[str, EquipmentStatus] = {
             ws: EquipmentStatus.RUNNING for ws in self.WORKSTATIONS
         }
-        self.kafka_producer: Optional[KafkaProducer] = None
 
     def generate_event(self) -> MESEvent:
         """Generate a MES production event"""
@@ -317,7 +312,7 @@ class PLMSimulator:
     AUTHORS = [f'engineer_{i:03d}' for i in range(1, 16)]
 
     def __init__(self):
-        self.kafka_producer: Optional[KafkaProducer] = None
+        pass
 
     def generate_data(self) -> PLMData:
         """Generate PLM engineering data"""
@@ -363,7 +358,6 @@ class OPCUASimulator:
 
     def __init__(self):
         self.nodes: Dict[str, Dict] = {}
-        self.kafka_producer: Optional[KafkaProducer] = None
         self._init_nodes()
 
     def _init_nodes(self):
@@ -422,38 +416,6 @@ class OPCUASimulator:
 
 
 # ============================================================================
-# Kafka Producer
-# ============================================================================
-
-def create_kafka_producer() -> Optional[KafkaProducer]:
-    """Create Kafka producer with retry logic"""
-    max_retries = 5
-    retry_delay = 5
-
-    for attempt in range(max_retries):
-        try:
-            producer = KafkaProducer(
-                bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS.split(','),
-                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-                key_serializer=lambda k: k.encode('utf-8') if k else None,
-                compression_type='lz4',
-                batch_size=65536,
-                linger_ms=10,
-                acks='all',
-                retries=3
-            )
-            logger.info(f"Connected to Kafka at {KAFKA_BOOTSTRAP_SERVERS}")
-            return producer
-        except Exception as e:
-            logger.warning(f"Kafka connection attempt {attempt + 1} failed: {e}")
-            if attempt < max_retries - 1:
-                time.sleep(retry_delay)
-
-    logger.error("Failed to connect to Kafka after all retries")
-    return None
-
-
-# ============================================================================
 # HTTP Server for Metrics
 # ============================================================================
 
@@ -479,8 +441,7 @@ async def ready_handler(request):
 
 async def run_simulator():
     """Main simulation loop"""
-    logger.info(f"Starting {SIMULATOR_TYPE} simulator in zone: {ZONE}")
-    logger.info(f"Kafka bootstrap: {KAFKA_BOOTSTRAP_SERVERS}")
+    logger.info(f"Starting {SIMULATOR_TYPE} simulator")
     logger.info(f"Data rate: {DATA_RATE_PER_SEC} points/second")
     logger.info(f"Metrics port: {METRICS_PORT}")
 
@@ -492,42 +453,16 @@ async def run_simulator():
         'opcua': OPCUASimulator
     }
 
-    # Topic names depend on which zone we're running in
-    if ZONE == 'ot':
-        kafka_topics = {
-            'scada': 'ot-scada-raw',
-            'mes': 'ot-mes-raw',
-            'plm': 'ot-plm-raw',
-            'opcua': 'ot-opcua-raw'
-        }
-    elif ZONE == 'it':
-        kafka_topics = {
-            'scada': 'it-scada-data',
-            'mes': 'it-mes-data',
-            'plm': 'it-plm-data',
-            'opcua': 'it-opcua-data'
-        }
-    else:
-        kafka_topics = {
-            'scada': 'scada-metrics',
-            'mes': 'mes-events',
-            'plm': 'plm-data',
-            'opcua': 'opcua-nodes'
-        }
-
     if SIMULATOR_TYPE not in simulators:
         logger.error(f"Unknown simulator type: {SIMULATOR_TYPE}")
         return
 
     simulator = simulators[SIMULATOR_TYPE]()
-    kafka_topic = kafka_topics[SIMULATOR_TYPE]
-    logger.info(f"Sending data to Kafka topic: {kafka_topic}")
 
     # Calculate interval between data points
     interval = 1.0 / DATA_RATE_PER_SEC
 
-    # IMPORTANT: Start HTTP server FIRST before Kafka connection
-    # This ensures healthchecks pass while waiting for Kafka
+    # Start HTTP server for metrics
     app = web.Application()
     app.router.add_get('/metrics', metrics_handler)
     app.router.add_get('/health', health_handler)
@@ -539,13 +474,7 @@ async def run_simulator():
     await site.start()
     logger.info(f"Metrics server started on port {METRICS_PORT}")
 
-    # Now connect to Kafka (this can block for up to 25s)
-    # HTTP server is already running, so healthchecks will pass
-    kafka_producer = await asyncio.get_event_loop().run_in_executor(
-        None, create_kafka_producer
-    )
-
-    # Main loop
+    # Main loop - generates data and exposes via Prometheus metrics
     data_count = 0
     last_log_time = time.time()
 
@@ -563,19 +492,8 @@ async def run_simulator():
             else:
                 data = simulator.generate_node_data()
 
-            # Update Prometheus metrics
+            # Update Prometheus metrics (scraped by OTEL collector)
             simulator.update_prometheus_metrics(data)
-
-            # Send to Kafka
-            if kafka_producer:
-                try:
-                    kafka_producer.send(
-                        kafka_topic,
-                        key=getattr(data, 'tag_id', None) or getattr(data, 'node_id', None) or str(data_count),
-                        value=asdict(data)
-                    )
-                except Exception as e:
-                    logger.error(f"Kafka send error: {e}")
 
             data_count += 1
 
