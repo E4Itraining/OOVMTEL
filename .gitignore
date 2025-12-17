@@ -32,6 +32,7 @@ credentials/
 # Local overrides
 docker-compose.override.yml
 .env.local
+.oovmtel-architecture
 
 # Node.js / React
 node_modules/
