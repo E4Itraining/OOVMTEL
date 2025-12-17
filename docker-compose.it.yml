@@ -251,6 +251,12 @@ services:
       - vmstorage_1_data:/storage
     networks:
       - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8482/health 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
     restart: unless-stopped
 
   vmstorage-2:
@@ -265,6 +271,12 @@ services:
       - vmstorage_2_data:/storage
     networks:
       - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8482/health 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
     restart: unless-stopped
 
   vminsert:
@@ -272,8 +284,10 @@ services:
     container_name: oovmtel-vminsert
     hostname: vminsert
     depends_on:
-      - vmstorage-1
-      - vmstorage-2
+      vmstorage-1:
+        condition: service_healthy
+      vmstorage-2:
+        condition: service_healthy
     command:
       - "-storageNode=vmstorage-1:8400"
       - "-storageNode=vmstorage-2:8400"
@@ -282,6 +296,12 @@ services:
       - "8480:8480"
     networks:
       - it-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8480/health 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
     restart: unless-stopped
 
   vmselect:
@@ -289,8 +309,10 @@ services:
     container_name: oovmtel-vmselect
     hostname: vmselect
     depends_on:
-      - vmstorage-1
-      - vmstorage-2
+      vmstorage-1:
+        condition: service_healthy
+      vmstorage-2:
+        condition: service_healthy
     command:
       - "-storageNode=vmstorage-1:8401"
       - "-storageNode=vmstorage-2:8401"
@@ -313,8 +335,10 @@ services:
     container_name: oovmtel-victoria-metrics
     hostname: victoria-metrics
     depends_on:
-      - vminsert
-      - vmselect
+      vminsert:
+        condition: service_healthy
+      vmselect:
+        condition: service_healthy
     volumes:
       - ./config/nginx/victoria-metrics-proxy.conf:/etc/nginx/nginx.conf:ro
     ports:
@@ -334,7 +358,7 @@ services:
     container_name: oovmtel-vmagent
     depends_on:
       vminsert:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8429:8429"
     command:
@@ -453,7 +477,7 @@ services:
       kafka-it:
         condition: service_healthy
       vminsert:
-        condition: service_started
+        condition: service_healthy
       opensearch:
         condition: service_healthy
     environment:
@@ -482,7 +506,7 @@ services:
       kafka-it:
         condition: service_healthy
       vminsert:
-        condition: service_started
+        condition: service_healthy
       opensearch:
         condition: service_healthy
     environment:
