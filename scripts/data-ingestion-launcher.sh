@@ -17,6 +17,7 @@ NC='\033[0m'
 # Configuration
 MAX_RETRIES=${MAX_RETRIES:-60}
 RETRY_INTERVAL=${RETRY_INTERVAL:-5}
+KAFKA_ENABLED=${KAFKA_ENABLED:-false}
 KAFKA_BOOTSTRAP=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
 VICTORIA_METRICS_URL=${VICTORIA_METRICS_URL:-http://victoria-metrics:8428}
 OPENSEARCH_URL=${OPENSEARCH_URL:-http://opensearch:9200}
@@ -327,13 +328,15 @@ verify_data_flow() {
         log_warn "OpenSearch cluster status: $os_status"
     fi
 
-    # Check Kafka consumer groups
-    check_count=$((check_count + 1))
-    if kafka-consumer-groups --bootstrap-server "$KAFKA_BOOTSTRAP" --list &>/dev/null; then
-        log_success "Kafka consumer groups accessible"
-        success_count=$((success_count + 1))
-    else
-        log_warn "Could not list Kafka consumer groups"
+    # Check Kafka consumer groups (only if Kafka is enabled)
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        check_count=$((check_count + 1))
+        if kafka-consumer-groups --bootstrap-server "$KAFKA_BOOTSTRAP" --list &>/dev/null; then
+            log_success "Kafka consumer groups accessible"
+            success_count=$((success_count + 1))
+        else
+            log_warn "Could not list Kafka consumer groups"
+        fi
     fi
 
     # Check OTEL Collector pipelines
@@ -357,27 +360,33 @@ generate_status_report() {
     log_header "DATA INGESTION STATUS REPORT"
 
     echo -e "${CYAN}Services Status:${NC}"
-    echo "  - Kafka:           $(check_service_status kafka)"
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        echo "  - Kafka:           $(check_service_status kafka)"
+    fi
     echo "  - VictoriaMetrics: $(check_service_status victoria-metrics)"
     echo "  - OpenSearch:      $(check_service_status opensearch)"
     echo "  - OpenObserve:     $(check_service_status openobserve)"
     echo "  - OTEL Collector:  $(check_service_status otel-collector)"
     echo ""
 
-    echo -e "${CYAN}Kafka Topics:${NC}"
-    kafka-topics --bootstrap-server "$KAFKA_BOOTSTRAP" --list 2>/dev/null | while read -r topic; do
-        local partitions
-        partitions=$(kafka-topics --bootstrap-server "$KAFKA_BOOTSTRAP" --describe --topic "$topic" 2>/dev/null | grep -c "Partition:" || echo "?")
-        echo "  - $topic (partitions: $partitions)"
-    done
-    echo ""
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        echo -e "${CYAN}Kafka Topics:${NC}"
+        kafka-topics --bootstrap-server "$KAFKA_BOOTSTRAP" --list 2>/dev/null | while read -r topic; do
+            local partitions
+            partitions=$(kafka-topics --bootstrap-server "$KAFKA_BOOTSTRAP" --describe --topic "$topic" 2>/dev/null | grep -c "Partition:" || echo "?")
+            echo "  - $topic (partitions: $partitions)"
+        done
+        echo ""
+    fi
 
     echo -e "${CYAN}Data Ingestion Endpoints:${NC}"
     echo "  - OTLP gRPC:       otel-collector:4317"
     echo "  - OTLP HTTP:       otel-collector:4318"
     echo "  - Prometheus:      victoria-metrics:8428"
     echo "  - OpenSearch:      opensearch:9200"
-    echo "  - Kafka:           kafka:9092"
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        echo "  - Kafka:           kafka:9092"
+    fi
     echo ""
 
     echo -e "${GREEN}Data ingestion is ready to receive data!${NC}"
@@ -434,7 +443,10 @@ main() {
 
     log_info "Starting data ingestion initialization..."
     log_info "Configuration:"
-    log_info "  - Kafka: $KAFKA_BOOTSTRAP"
+    log_info "  - Kafka Enabled: $KAFKA_ENABLED"
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        log_info "  - Kafka: $KAFKA_BOOTSTRAP"
+    fi
     log_info "  - VictoriaMetrics: $VICTORIA_METRICS_URL"
     log_info "  - OpenSearch: $OPENSEARCH_URL"
     log_info "  - OpenObserve: $OPENOBSERVE_URL"
@@ -444,7 +456,11 @@ main() {
     # Phase 1: Wait for all services
     log_header "Phase 1: Service Health Checks"
 
-    wait_for_kafka || exit 1
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        wait_for_kafka || exit 1
+    else
+        log_info "Kafka disabled - skipping Kafka health check"
+    fi
     wait_for_victoria_metrics || exit 1
     wait_for_opensearch || exit 1
     wait_for_openobserve || exit 1
@@ -452,15 +468,21 @@ main() {
 
     log_success "All services are healthy!"
 
-    # Phase 2: Verify/Create Kafka topics
-    log_header "Phase 2: Kafka Topics Verification"
-    verify_kafka_topics
+    # Phase 2: Verify/Create Kafka topics (only if Kafka is enabled)
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        log_header "Phase 2: Kafka Topics Verification"
+        verify_kafka_topics
+    else
+        log_info "Kafka disabled - skipping topic verification"
+    fi
 
     # Phase 3: Initialize data stores
     log_header "Phase 3: Data Store Initialization"
     initialize_opensearch_indices
     send_test_metric
-    send_test_kafka_message
+    if [ "$KAFKA_ENABLED" = "true" ]; then
+        send_test_kafka_message
+    fi
 
     # Phase 4: Verify data flow
     log_header "Phase 4: Data Flow Verification"
