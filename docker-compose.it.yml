@@ -373,11 +373,11 @@ services:
     networks:
       - it-network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 8429 || exit 1"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8429/health"]
       interval: 5s
       timeout: 3s
-      retries: 20
-      start_period: 10s
+      retries: 10
+      start_period: 5s
     restart: unless-stopped
 
   # ===========================================================================
