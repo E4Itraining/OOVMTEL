@@ -36,12 +36,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      # Use netcat for simple TCP port check - more reliable than wget in minimal images
-      test: ["CMD-SHELL", "nc -z localhost 8428 || exit 1"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8428/health"]
       interval: 5s
       timeout: 3s
-      retries: 30
-      start_period: 10s
+      retries: 10
+      start_period: 5s
     restart: unless-stopped
 
   vmagent:
@@ -74,11 +73,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 8429 || exit 1"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8429/health"]
       interval: 5s
       timeout: 3s
-      retries: 20
-      start_period: 10s
+      retries: 10
+      start_period: 5s
     restart: unless-stopped
 
   # ===========================================================================
