@@ -36,11 +36,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8428/health"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8428/health || exit 1"]
       interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
     restart: unless-stopped
 
   vmagent:
@@ -73,11 +73,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8429/health"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8429/health || exit 1"]
       interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
     restart: unless-stopped
 
   # ===========================================================================
