@@ -42,11 +42,11 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8428/health 2>/dev/null | grep -q 'OK' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 60s
+      test: ["CMD-SHELL", "nc -z localhost 8428 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
     restart: unless-stopped
 
   openobserve:
