@@ -41,11 +41,12 @@ services:
       - victoria_metrics_data:/victoria-metrics-data
     networks:
       - oovmtel-network
+    # Note: VictoriaMetrics scratch image has no shell utilities
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8428/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      test: ["CMD", "/victoria-metrics-prod", "-version"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
       start_period: 5s
     restart: unless-stopped
 
