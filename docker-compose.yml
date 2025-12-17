@@ -36,11 +36,12 @@ services:
     networks:
       - oovmtel-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8428/health 2>/dev/null | grep -q 'OK' || exit 1"]
+      # Simple port check - VictoriaMetrics /health returns just "OK"
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8428/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 60s
+      retries: 20
+      start_period: 30s
     restart: unless-stopped
 
   vmagent:
