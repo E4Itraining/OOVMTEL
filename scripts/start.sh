@@ -4,9 +4,9 @@
 # Industrial Observability Platform
 # =============================================================================
 # Usage: ./start.sh [simple|secure|direct-otlp]
-#   simple      - Single network, Kafka-based (default)
+#   simple      - Single network, direct OTLP (default)
 #   secure      - IT/OT/DMZ zones with MirrorMaker 2 (IEC 62443 compliant)
-#   direct-otlp - Direct OTLP pipeline without Kafka
+#   direct-otlp - Direct OTLP with IT/OT/DMZ zone separation
 # =============================================================================
 
 set -e
@@ -78,53 +78,76 @@ start_simple() {
     echo -e "${BLUE}"
     echo "=============================================="
     echo "  OOVMTEL - Simple Architecture"
-    echo "  (Single network, Kafka-based)"
+    echo "  (Direct OTLP pipeline, no Kafka)"
     echo "=============================================="
     echo -e "${NC}"
 
-    # Start Kafka (KRaft mode)
-    echo -e "${YELLOW}Starting Kafka (KRaft mode)...${NC}"
-    docker compose up -d kafka
-    sleep 15
+    # Build simulators first
+    echo -e "${YELLOW}Building industrial simulators...${NC}"
+    docker compose build scada-simulator mes-simulator plm-simulator opcua-simulator
 
-    # Wait for Kafka
-    echo -e "${YELLOW}Waiting for Kafka to be ready...${NC}"
-    MAX_RETRIES=30
-    RETRY_COUNT=0
-    until docker compose exec -T kafka kafka-topics --bootstrap-server localhost:9092 --list &> /dev/null; do
-        RETRY_COUNT=$((RETRY_COUNT + 1))
-        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-            echo -e "${RED}Kafka failed to start in time${NC}"
-            exit 1
-        fi
-        echo "Waiting for Kafka... ($RETRY_COUNT/$MAX_RETRIES)"
-        sleep 2
-    done
-    echo -e "${GREEN}Kafka is ready!${NC}"
-
-    # Initialize Kafka topics
-    echo -e "${YELLOW}Creating Kafka topics...${NC}"
-    docker compose up kafka-init
-
-    # Start storage services
+    # Start storage services first
     echo -e "${YELLOW}Starting storage services...${NC}"
     docker compose up -d victoria-metrics opensearch openobserve
-    sleep 15
 
-    # Start OTEL Collector
+    # Wait for VictoriaMetrics
+    echo -e "${YELLOW}Waiting for VictoriaMetrics to be ready...${NC}"
+    MAX_RETRIES=30
+    RETRY_COUNT=0
+    until curl -sf http://localhost:8428/health &>/dev/null; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            echo -e "${RED}VictoriaMetrics failed to start in time${NC}"
+            exit 1
+        fi
+        echo "Waiting for VictoriaMetrics... ($RETRY_COUNT/$MAX_RETRIES)"
+        sleep 2
+    done
+    echo -e "${GREEN}VictoriaMetrics is ready!${NC}"
+
+    # Wait for OpenSearch
+    echo -e "${YELLOW}Waiting for OpenSearch to be ready...${NC}"
+    RETRY_COUNT=0
+    MAX_RETRIES=60
+    until curl -sf http://localhost:9200/_cluster/health 2>/dev/null | grep -q '"status":"green"\|"status":"yellow"'; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            echo -e "${YELLOW}OpenSearch health check timed out, continuing...${NC}"
+            break
+        fi
+        echo "Waiting for OpenSearch... ($RETRY_COUNT/$MAX_RETRIES)"
+        sleep 2
+    done
+    echo -e "${GREEN}OpenSearch is ready!${NC}"
+
+    # Start simulators (they have healthchecks and otel-collector depends on them)
+    echo -e "${YELLOW}Starting industrial simulators...${NC}"
+    docker compose up -d scada-simulator mes-simulator plm-simulator opcua-simulator
+
+    # Wait for simulators to be healthy
+    echo -e "${YELLOW}Waiting for simulators to be ready...${NC}"
+    RETRY_COUNT=0
+    MAX_RETRIES=30
+    until curl -sf http://localhost:8080/health &>/dev/null; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            echo -e "${YELLOW}Simulator health check timed out, continuing...${NC}"
+            break
+        fi
+        echo "Waiting for simulators... ($RETRY_COUNT/$MAX_RETRIES)"
+        sleep 2
+    done
+    echo -e "${GREEN}Simulators are ready!${NC}"
+
+    # Start OTEL Collector (depends on storage services and simulators)
     echo -e "${YELLOW}Starting OpenTelemetry Collector...${NC}"
     docker compose up -d otel-collector
-    sleep 5
-
-    # Start Grafana and UI services
-    echo -e "${YELLOW}Starting visualization services...${NC}"
-    docker compose up -d grafana kafka-ui opensearch-dashboards vmagent
 
     # Wait for OTEL Collector
     echo -e "${YELLOW}Waiting for OTEL Collector to be ready...${NC}"
     RETRY_COUNT=0
     MAX_RETRIES=30
-    until docker compose exec -T otel-collector wget -qO- http://localhost:13133/health 2>/dev/null | grep -q "Server available"; do
+    until curl -sf http://localhost:13133/health 2>/dev/null | grep -q "Server available"; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
         if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
             echo -e "${YELLOW}OTEL Collector health check timed out, continuing...${NC}"
@@ -135,16 +158,24 @@ start_simple() {
     done
     echo -e "${GREEN}OTEL Collector is ready!${NC}"
 
-    # Launch data ingestion
-    echo -e "${YELLOW}Initializing data ingestion...${NC}"
-    docker compose up data-ingestion-launcher
-    echo -e "${GREEN}Data ingestion initialized!${NC}"
+    # Start visualization and UI services (vmagent depends on simulators being healthy)
+    echo -e "${YELLOW}Starting visualization services...${NC}"
+    docker compose up -d grafana opensearch-dashboards vmagent
 
-    # Build and start simulators
-    echo -e "${YELLOW}Building and starting industrial simulators...${NC}"
-    docker compose build scada-simulator mes-simulator plm-simulator opcua-simulator
-    docker compose up -d scada-simulator mes-simulator plm-simulator opcua-simulator
-    sleep 10
+    # Wait for Grafana
+    echo -e "${YELLOW}Waiting for Grafana to be ready...${NC}"
+    RETRY_COUNT=0
+    MAX_RETRIES=30
+    until curl -sf http://localhost:3000/api/health &>/dev/null; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            echo -e "${YELLOW}Grafana health check timed out, continuing...${NC}"
+            break
+        fi
+        echo "Waiting for Grafana... ($RETRY_COUNT/$MAX_RETRIES)"
+        sleep 2
+    done
+    echo -e "${GREEN}Grafana is ready!${NC}"
 
     print_simple_summary
 }
@@ -167,7 +198,8 @@ print_simple_summary() {
     echo ""
     echo -e "  ${BLUE}OpenSearch Dashboards:${NC} http://localhost:5601"
     echo ""
-    echo -e "  ${BLUE}Kafka UI:${NC}             http://localhost:8090"
+    echo -e "  ${BLUE}OTEL Collector:${NC}       http://localhost:4317 (gRPC)"
+    echo "                        http://localhost:4318 (HTTP)"
     echo ""
     echo "To view logs: docker compose logs -f"
     echo "To stop:      ./scripts/stop.sh"
@@ -337,9 +369,9 @@ show_usage() {
     echo "Usage: $0 [simple|secure|direct-otlp]"
     echo ""
     echo "Architectures:"
-    echo "  simple      - Single network with Kafka (default)"
+    echo "  simple      - Single network, direct OTLP (default)"
     echo "  secure      - IT/OT/DMZ zones with MirrorMaker 2"
-    echo "  direct-otlp - Direct OTLP pipeline without Kafka"
+    echo "  direct-otlp - Direct OTLP with IT/OT/DMZ zone separation"
     echo ""
 }
 
