@@ -18,6 +18,7 @@ import os
 import asyncio
 import logging
 import uuid
+import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
@@ -65,6 +66,14 @@ class Config:
     USE_SIMULATED_DATA = os.getenv('USE_SIMULATED_DATA', 'true').lower() == 'true'
 
 config = Config()
+
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code."""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
+
 
 # Pydantic Models
 class ServiceStatus(BaseModel):
@@ -1460,9 +1469,10 @@ async def metrics_refresh_loop():
         if websocket_connections:
             try:
                 metrics = await get_unified_metrics()
+                metrics_json = json.dumps(metrics.dict(), default=json_serial)
                 for ws in websocket_connections:
                     try:
-                        await ws.send_json(metrics.dict())
+                        await ws.send_text(metrics_json)
                     except Exception as e:
                         logger.warning(f"Error sending to WebSocket: {e}")
             except Exception as e:
