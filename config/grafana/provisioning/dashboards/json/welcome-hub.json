@@ -1,0 +1,214 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Portail d'accueil OOVMTEL - Guide des dashboards et parcours personnalises par profil utilisateur",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#0d1b2a 0%,#1b263b 50%,#415a77 100%);padding:24px;border-radius:12px;border:2px solid #778da9;box-shadow:0 8px 32px rgba(0,0,0,0.3)\">\n  <h1 style=\"color:#e0e1dd;margin:0;font-size:36px;font-weight:800;letter-spacing:3px;text-shadow:2px 2px 4px rgba(0,0,0,0.5)\">OOVMTEL</h1>\n  <p style=\"color:#778da9;margin:8px 0 0 0;font-size:16px;font-weight:500\">Open Observability Platform for Industrial & Manufacturing Telemetry</p>\n  <p style=\"color:#415a77;margin:4px 0 0 0;font-size:13px\">Plateforme unifiee de supervision temps reel | Convergence IT/OT | Industrie 4.0</p>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 4 },
+      "id": 2,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1b263b 0%,#0d1b2a 100%);padding:20px 24px;border-radius:10px;border-left:4px solid #00d4aa\">\n  <h2 style=\"color:#00d4aa;margin:0 0 12px 0;font-size:20px;font-weight:700\">Bienvenue sur votre Centre de Pilotage Industriel</h2>\n  <p style=\"color:#e0e1dd;margin:0 0 16px 0;font-size:14px;line-height:1.7\">\n    OOVMTEL est votre plateforme centrale d'observabilite industrielle. Elle collecte, traite et visualise en temps reel l'ensemble des donnees de votre infrastructure IT/OT : <strong style=\"color:#00d4aa\">metriques de production</strong>, <strong style=\"color:#536dfe\">donnees SCADA</strong>, <strong style=\"color:#ffc107\">logs systemes</strong> et <strong style=\"color:#e94560\">traces applicatives</strong>.\n  </p>\n  <div style=\"display:flex;gap:20px;flex-wrap:wrap\">\n    <div style=\"flex:1;min-width:200px;background:rgba(0,212,170,0.1);padding:12px;border-radius:8px;border:1px solid rgba(0,212,170,0.3)\">\n      <h4 style=\"color:#00d4aa;margin:0 0 6px 0;font-size:13px\">Collecte Temps Reel</h4>\n      <p style=\"color:#a0a0a0;margin:0;font-size:12px\">OpenTelemetry & Kafka pour une ingestion haute performance de vos donnees industrielles</p>\n    </div>\n    <div style=\"flex:1;min-width:200px;background:rgba(83,109,254,0.1);padding:12px;border-radius:8px;border:1px solid rgba(83,109,254,0.3)\">\n      <h4 style=\"color:#536dfe;margin:0 0 6px 0;font-size:13px\">Stockage Performant</h4>\n      <p style=\"color:#a0a0a0;margin:0;font-size:12px\">VictoriaMetrics & OpenSearch pour des requetes ultra-rapides sur vos historiques</p>\n    </div>\n    <div style=\"flex:1;min-width:200px;background:rgba(255,193,7,0.1);padding:12px;border-radius:8px;border:1px solid rgba(255,193,7,0.3)\">\n      <h4 style=\"color:#ffc107;margin:0 0 6px 0;font-size:13px\">Visualisation Avancee</h4>\n      <p style=\"color:#a0a0a0;margin:0;font-size:12px\">Dashboards Grafana adaptes a chaque profil metier pour une prise de decision eclairee</p>\n    </div>\n    <div style=\"flex:1;min-width:200px;background:rgba(233,69,96,0.1);padding:12px;border-radius:8px;border:1px solid rgba(233,69,96,0.3)\">\n      <h4 style=\"color:#e94560;margin:0 0 6px 0;font-size:13px\">Alerting Intelligent</h4>\n      <p style=\"color:#a0a0a0;margin:0;font-size:12px\">Notifications proactives et maintenance predictive pour anticiper les incidents</p>\n    </div>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+      "id": 100,
+      "panels": [],
+      "title": "PARCOURS PAR PROFIL - Choisissez votre vue",
+      "type": "row"
+    },
+    {
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 11 },
+      "id": 10,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);padding:20px;border-radius:10px;border:2px solid #e94560;height:calc(100% - 44px);display:flex;flex-direction:column\">\n  <div style=\"text-align:center;margin-bottom:16px\">\n    <div style=\"width:60px;height:60px;background:linear-gradient(135deg,#e94560,#ff6b6b);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px\">&#x1F3AF;</div>\n    <h3 style=\"color:#e94560;margin:0;font-size:18px;font-weight:700\">DIRIGEANT</h3>\n    <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Direction Generale & COMEX</p>\n  </div>\n  <div style=\"flex:1;color:#e0e1dd;font-size:13px;line-height:1.6\">\n    <p style=\"margin:0 0 12px 0\"><strong>Votre objectif :</strong> Vision strategique de la performance industrielle et identification rapide des leviers d'amelioration.</p>\n    <p style=\"margin:0 0 8px 0;color:#778da9;font-size:12px\"><strong style=\"color:#e94560\">Dashboard recommande :</strong></p>\n    <a href=\"/d/industrial-control-center\" style=\"display:block;background:rgba(233,69,96,0.15);padding:10px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(233,69,96,0.4);margin-bottom:8px\">\n      <strong style=\"color:#e94560\">Industrial Control Center</strong><br/>\n      <span style=\"font-size:11px;color:#778da9\">Vue executive avec OEE, KPIs et alertes critiques</span>\n    </a>\n    <p style=\"margin:8px 0 0 0;font-size:11px;color:#a0a0a0\"><strong>Impact :</strong> Decisions eclairees, reduction des couts operationnels, amelioration continue</p>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 11 },
+      "id": 11,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);padding:20px;border-radius:10px;border:2px solid #536dfe;height:calc(100% - 44px);display:flex;flex-direction:column\">\n  <div style=\"text-align:center;margin-bottom:16px\">\n    <div style=\"width:60px;height:60px;background:linear-gradient(135deg,#536dfe,#7c8cff);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px\">&#x1F4BB;</div>\n    <h3 style=\"color:#536dfe;margin:0;font-size:18px;font-weight:700\">DSI / IT</h3>\n    <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Direction des Systemes d'Information</p>\n  </div>\n  <div style=\"flex:1;color:#e0e1dd;font-size:13px;line-height:1.6\">\n    <p style=\"margin:0 0 12px 0\"><strong>Votre objectif :</strong> Garantir la disponibilite et la performance de l'infrastructure IT/OT convergente.</p>\n    <p style=\"margin:0 0 8px 0;color:#778da9;font-size:12px\"><strong style=\"color:#536dfe\">Dashboards recommandes :</strong></p>\n    <a href=\"/d/system-health-overview\" style=\"display:block;background:rgba(83,109,254,0.15);padding:10px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(83,109,254,0.4);margin-bottom:6px\">\n      <strong style=\"color:#536dfe\">System Health Overview</strong><br/>\n      <span style=\"font-size:11px;color:#778da9\">Sante infrastructure, services et ressources</span>\n    </a>\n    <a href=\"/d/pipeline-health\" style=\"display:block;background:rgba(83,109,254,0.1);padding:8px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(83,109,254,0.3)\">\n      <strong style=\"color:#778da9\">Pipeline Health</strong> <span style=\"font-size:10px\">- Observabilite du pipeline</span>\n    </a>\n    <p style=\"margin:8px 0 0 0;font-size:11px;color:#a0a0a0\"><strong>Impact :</strong> SLA garanti, incidents reduits, capacite optimisee</p>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 11 },
+      "id": 12,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);padding:20px;border-radius:10px;border:2px solid #00d4aa;height:calc(100% - 44px);display:flex;flex-direction:column\">\n  <div style=\"text-align:center;margin-bottom:16px\">\n    <div style=\"width:60px;height:60px;background:linear-gradient(135deg,#00d4aa,#00f5c4);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px\">&#x1F4B0;</div>\n    <h3 style=\"color:#00d4aa;margin:0;font-size:18px;font-weight:700\">ROI / FINANCE</h3>\n    <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Direction Financiere & Controlle de Gestion</p>\n  </div>\n  <div style=\"flex:1;color:#e0e1dd;font-size:13px;line-height:1.6\">\n    <p style=\"margin:0 0 12px 0\"><strong>Votre objectif :</strong> Mesurer le retour sur investissement et optimiser les couts operationnels.</p>\n    <p style=\"margin:0 0 8px 0;color:#778da9;font-size:12px\"><strong style=\"color:#00d4aa\">Dashboard recommande :</strong></p>\n    <a href=\"/d/unified-business-tech\" style=\"display:block;background:rgba(0,212,170,0.15);padding:10px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(0,212,170,0.4);margin-bottom:8px\">\n      <strong style=\"color:#00d4aa\">Unified Business-Tech View</strong><br/>\n      <span style=\"font-size:11px;color:#778da9\">KPIs business correles aux metriques techniques</span>\n    </a>\n    <p style=\"margin:8px 0 0 0;font-size:11px;color:#a0a0a0\"><strong>Impact :</strong> Visibilite couts/benefices, justification investissements, optimisation budgetaire</p>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 19 },
+      "id": 13,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);padding:20px;border-radius:10px;border:2px solid #ffc107;height:calc(100% - 44px);display:flex;flex-direction:column\">\n  <div style=\"text-align:center;margin-bottom:16px\">\n    <div style=\"width:60px;height:60px;background:linear-gradient(135deg,#ffc107,#ffdb4d);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px\">&#x1F3ED;</div>\n    <h3 style=\"color:#ffc107;margin:0;font-size:18px;font-weight:700\">BUSINESS / METIER</h3>\n    <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Operations & Production</p>\n  </div>\n  <div style=\"flex:1;color:#e0e1dd;font-size:13px;line-height:1.6\">\n    <p style=\"margin:0 0 12px 0\"><strong>Votre objectif :</strong> Piloter la production en temps reel et maximiser l'OEE (efficacite globale).</p>\n    <p style=\"margin:0 0 8px 0;color:#778da9;font-size:12px\"><strong style=\"color:#ffc107\">Dashboards recommandes :</strong></p>\n    <a href=\"/d/industrial-control-center\" style=\"display:block;background:rgba(255,193,7,0.15);padding:10px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(255,193,7,0.4);margin-bottom:6px\">\n      <strong style=\"color:#ffc107\">Industrial Control Center</strong><br/>\n      <span style=\"font-size:11px;color:#778da9\">Monitoring temps reel production & equipements</span>\n    </a>\n    <a href=\"/d/realtime-streaming\" style=\"display:block;background:rgba(255,193,7,0.1);padding:8px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(255,193,7,0.3)\">\n      <strong style=\"color:#778da9\">Real-time Streaming</strong> <span style=\"font-size:10px\">- Flux de donnees live</span>\n    </a>\n    <p style=\"margin:8px 0 0 0;font-size:11px;color:#a0a0a0\"><strong>Impact :</strong> OEE optimise, defauts reduits, temps de cycle ameliore</p>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 19 },
+      "id": 14,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);padding:20px;border-radius:10px;border:2px solid #9c27b0;height:calc(100% - 44px);display:flex;flex-direction:column\">\n  <div style=\"text-align:center;margin-bottom:16px\">\n    <div style=\"width:60px;height:60px;background:linear-gradient(135deg,#9c27b0,#ba68c8);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px\">&#x1F916;</div>\n    <h3 style=\"color:#9c27b0;margin:0;font-size:18px;font-weight:700\">DATA / IA</h3>\n    <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Data Science & Intelligence Artificielle</p>\n  </div>\n  <div style=\"flex:1;color:#e0e1dd;font-size:13px;line-height:1.6\">\n    <p style=\"margin:0 0 12px 0\"><strong>Votre objectif :</strong> Superviser les modeles IA/ML et optimiser les algorithmes predictifs.</p>\n    <p style=\"margin:0 0 8px 0;color:#778da9;font-size:12px\"><strong style=\"color:#9c27b0\">Dashboards recommandes :</strong></p>\n    <a href=\"/d/ai-observability\" style=\"display:block;background:rgba(156,39,176,0.15);padding:10px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(156,39,176,0.4);margin-bottom:6px\">\n      <strong style=\"color:#9c27b0\">AI Observability Hub</strong><br/>\n      <span style=\"font-size:11px;color:#778da9\">Inference, latence et performance des modeles</span>\n    </a>\n    <a href=\"/d/realtime-streaming\" style=\"display:block;background:rgba(156,39,176,0.1);padding:8px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(156,39,176,0.3)\">\n      <strong style=\"color:#778da9\">Real-time Streaming</strong> <span style=\"font-size:10px\">- Donnees d'entrainement</span>\n    </a>\n    <p style=\"margin:8px 0 0 0;font-size:11px;color:#a0a0a0\"><strong>Impact :</strong> Modeles optimises, predictions fiables, maintenance predictive</p>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 19 },
+      "id": 15,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);padding:20px;border-radius:10px;border:2px solid #ff5722;height:calc(100% - 44px);display:flex;flex-direction:column\">\n  <div style=\"text-align:center;margin-bottom:16px\">\n    <div style=\"width:60px;height:60px;background:linear-gradient(135deg,#ff5722,#ff8a65);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px\">&#x2699;</div>\n    <h3 style=\"color:#ff5722;margin:0;font-size:18px;font-weight:700\">DEVOPS / SRE</h3>\n    <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Infrastructure & Fiabilite</p>\n  </div>\n  <div style=\"flex:1;color:#e0e1dd;font-size:13px;line-height:1.6\">\n    <p style=\"margin:0 0 12px 0\"><strong>Votre objectif :</strong> Assurer la fiabilite du pipeline de donnees et l'integrite des systemes.</p>\n    <p style=\"margin:0 0 8px 0;color:#778da9;font-size:12px\"><strong style=\"color:#ff5722\">Dashboards recommandes :</strong></p>\n    <a href=\"/d/pipeline-health\" style=\"display:block;background:rgba(255,87,34,0.15);padding:10px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(255,87,34,0.4);margin-bottom:6px\">\n      <strong style=\"color:#ff5722\">Pipeline Health</strong><br/>\n      <span style=\"font-size:11px;color:#778da9\">OTEL Collectors, Kafka, taux d'ingestion</span>\n    </a>\n    <a href=\"/d/system-health-overview\" style=\"display:block;background:rgba(255,87,34,0.1);padding:8px 12px;border-radius:6px;text-decoration:none;color:#e0e1dd;border:1px solid rgba(255,87,34,0.3)\">\n      <strong style=\"color:#778da9\">System Health</strong> <span style=\"font-size:10px\">- Infrastructure globale</span>\n    </a>\n    <p style=\"margin:8px 0 0 0;font-size:11px;color:#a0a0a0\"><strong>Impact :</strong> Zero perte de donnees, latence minimale, SLO respectes</p>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "id": 200,
+      "panels": [],
+      "title": "CATALOGUE DES DASHBOARDS - Vue d'ensemble",
+      "type": "row"
+    },
+    {
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 28 },
+      "id": 20,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1b263b 0%,#0d1b2a 100%);padding:20px;border-radius:10px;height:calc(100% - 44px)\">\n  <h3 style=\"color:#e0e1dd;margin:0 0 16px 0;font-size:16px;border-bottom:1px solid #415a77;padding-bottom:10px\">&#x1F4CA; Dashboards Operationnels</h3>\n  \n  <div style=\"margin-bottom:16px\">\n    <a href=\"/d/industrial-control-center\" style=\"text-decoration:none\">\n      <div style=\"background:rgba(233,69,96,0.1);padding:14px;border-radius:8px;border-left:4px solid #e94560;margin-bottom:2px\">\n        <h4 style=\"color:#e94560;margin:0 0 6px 0;font-size:14px\">Industrial Control Center</h4>\n        <p style=\"color:#a0a0a0;margin:0 0 8px 0;font-size:12px\">Centre de controle temps reel de l'infrastructure OT/IT. Vue executive avec indicateurs OEE, disponibilite, performance et qualite.</p>\n        <div style=\"display:flex;gap:8px;flex-wrap:wrap\">\n          <span style=\"background:#e94560;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">TEMPS REEL</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">OEE</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">SCADA</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">ALERTES</span>\n        </div>\n      </div>\n    </a>\n  </div>\n  \n  <div style=\"margin-bottom:16px\">\n    <a href=\"/d/unified-business-tech\" style=\"text-decoration:none\">\n      <div style=\"background:rgba(0,212,170,0.1);padding:14px;border-radius:8px;border-left:4px solid #00d4aa\">\n        <h4 style=\"color:#00d4aa;margin:0 0 6px 0;font-size:14px\">Unified Business-Tech View</h4>\n        <p style=\"color:#a0a0a0;margin:0 0 8px 0;font-size:12px\">Vue unifiee combinant KPIs metier et metriques techniques. Correlation entre performance business et sante infrastructure.</p>\n        <div style=\"display:flex;gap:8px;flex-wrap:wrap\">\n          <span style=\"background:#00d4aa;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">KPIs BUSINESS</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">QUALITE</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">PRODUCTION</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">INFRA</span>\n        </div>\n      </div>\n    </a>\n  </div>\n  \n  <div>\n    <a href=\"/d/realtime-streaming\" style=\"text-decoration:none\">\n      <div style=\"background:rgba(255,193,7,0.1);padding:14px;border-radius:8px;border-left:4px solid #ffc107\">\n        <h4 style=\"color:#ffc107;margin:0 0 6px 0;font-size:14px\">Real-time Streaming Analytics</h4>\n        <p style=\"color:#a0a0a0;margin:0 0 8px 0;font-size:12px\">Analyse en streaming des flux de donnees. Visualisation live Kafka, debit evenementiel et sante des pipelines.</p>\n        <div style=\"display:flex;gap:8px;flex-wrap:wrap\">\n          <span style=\"background:#ffc107;color:black;padding:2px 8px;border-radius:4px;font-size:10px\">STREAMING</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">KAFKA</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">EVENTS/SEC</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">LIVE</span>\n        </div>\n      </div>\n    </a>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 28 },
+      "id": 21,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1b263b 0%,#0d1b2a 100%);padding:20px;border-radius:10px;height:calc(100% - 44px)\">\n  <h3 style=\"color:#e0e1dd;margin:0 0 16px 0;font-size:16px;border-bottom:1px solid #415a77;padding-bottom:10px\">&#x1F527; Dashboards Techniques</h3>\n  \n  <div style=\"margin-bottom:16px\">\n    <a href=\"/d/system-health-overview\" style=\"text-decoration:none\">\n      <div style=\"background:rgba(83,109,254,0.1);padding:14px;border-radius:8px;border-left:4px solid #536dfe\">\n        <h4 style=\"color:#536dfe;margin:0 0 6px 0;font-size:14px\">System Health Overview</h4>\n        <p style=\"color:#a0a0a0;margin:0 0 8px 0;font-size:12px\">Monitoring complet de la sante systeme. Statut des services, utilisation CPU/memoire/disque et metriques reseau.</p>\n        <div style=\"display:flex;gap:8px;flex-wrap:wrap\">\n          <span style=\"background:#536dfe;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">INFRASTRUCTURE</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">SERVICES</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">RESSOURCES</span>\n        </div>\n      </div>\n    </a>\n  </div>\n  \n  <div style=\"margin-bottom:16px\">\n    <a href=\"/d/pipeline-health\" style=\"text-decoration:none\">\n      <div style=\"background:rgba(255,87,34,0.1);padding:14px;border-radius:8px;border-left:4px solid #ff5722\">\n        <h4 style=\"color:#ff5722;margin:0 0 6px 0;font-size:14px\">OOVMTEL Pipeline Health</h4>\n        <p style=\"color:#a0a0a0;margin:0 0 8px 0;font-size:12px\">Sante du pipeline d'observabilite. Monitoring des collecteurs OTEL, brokers Kafka et taux d'ingestion storage.</p>\n        <div style=\"display:flex;gap:8px;flex-wrap:wrap\">\n          <span style=\"background:#ff5722;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">PIPELINE</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">OTEL</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">KAFKA</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">INGESTION</span>\n        </div>\n      </div>\n    </a>\n  </div>\n  \n  <div>\n    <a href=\"/d/ai-observability\" style=\"text-decoration:none\">\n      <div style=\"background:rgba(156,39,176,0.1);padding:14px;border-radius:8px;border-left:4px solid #9c27b0\">\n        <h4 style=\"color:#9c27b0;margin:0 0 6px 0;font-size:14px\">AI Observability Hub</h4>\n        <p style=\"color:#a0a0a0;margin:0 0 8px 0;font-size:12px\">Hub d'observabilite IA/ML. Monitoring des workloads d'inference, latence des modeles et metriques de performance.</p>\n        <div style=\"display:flex;gap:8px;flex-wrap:wrap\">\n          <span style=\"background:#9c27b0;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">IA/ML</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">INFERENCE</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">LATENCE</span>\n          <span style=\"background:#415a77;color:white;padding:2px 8px;border-radius:4px;font-size:10px\">MODELES</span>\n        </div>\n      </div>\n    </a>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 38 },
+      "id": 300,
+      "panels": [],
+      "title": "VALEUR AJOUTEE - Impacts mesurables",
+      "type": "row"
+    },
+    {
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 39 },
+      "id": 30,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"background:linear-gradient(180deg,#1b263b 0%,#0d1b2a 100%);padding:24px;border-radius:10px\">\n  <h3 style=\"color:#e0e1dd;margin:0 0 20px 0;font-size:18px;text-align:center\">&#x1F4C8; Benefices Cles de la Plateforme OOVMTEL</h3>\n  <div style=\"display:flex;gap:16px;flex-wrap:wrap;justify-content:center\">\n    \n    <div style=\"flex:1;min-width:180px;max-width:220px;text-align:center;background:rgba(0,212,170,0.1);padding:16px;border-radius:10px;border:1px solid rgba(0,212,170,0.3)\">\n      <div style=\"font-size:32px;color:#00d4aa;font-weight:700\">+15%</div>\n      <div style=\"color:#00d4aa;font-size:13px;font-weight:600;margin:4px 0\">OEE Ameliore</div>\n      <div style=\"color:#778da9;font-size:11px\">Optimisation continue via monitoring temps reel</div>\n    </div>\n    \n    <div style=\"flex:1;min-width:180px;max-width:220px;text-align:center;background:rgba(83,109,254,0.1);padding:16px;border-radius:10px;border:1px solid rgba(83,109,254,0.3)\">\n      <div style=\"font-size:32px;color:#536dfe;font-weight:700\">-40%</div>\n      <div style=\"color:#536dfe;font-size:13px;font-weight:600;margin:4px 0\">Temps d'Arret</div>\n      <div style=\"color:#778da9;font-size:11px\">Detection proactive des anomalies et alertes</div>\n    </div>\n    \n    <div style=\"flex:1;min-width:180px;max-width:220px;text-align:center;background:rgba(255,193,7,0.1);padding:16px;border-radius:10px;border:1px solid rgba(255,193,7,0.3)\">\n      <div style=\"font-size:32px;color:#ffc107;font-weight:700\">-25%</div>\n      <div style=\"color:#ffc107;font-size:13px;font-weight:600;margin:4px 0\">Couts Maintenance</div>\n      <div style=\"color:#778da9;font-size:11px\">Passage de curatif a predictif</div>\n    </div>\n    \n    <div style=\"flex:1;min-width:180px;max-width:220px;text-align:center;background:rgba(233,69,96,0.1);padding:16px;border-radius:10px;border:1px solid rgba(233,69,96,0.3)\">\n      <div style=\"font-size:32px;color:#e94560;font-weight:700\">x3</div>\n      <div style=\"color:#e94560;font-size:13px;font-weight:600;margin:4px 0\">Vitesse Decision</div>\n      <div style=\"color:#778da9;font-size:11px\">Donnees consolidees et accessibles instantanement</div>\n    </div>\n    \n    <div style=\"flex:1;min-width:180px;max-width:220px;text-align:center;background:rgba(156,39,176,0.1);padding:16px;border-radius:10px;border:1px solid rgba(156,39,176,0.3)\">\n      <div style=\"font-size:32px;color:#9c27b0;font-weight:700\">99.9%</div>\n      <div style=\"color:#9c27b0;font-size:13px;font-weight:600;margin:4px 0\">Fiabilite Donnees</div>\n      <div style=\"color:#778da9;font-size:11px\">Pipeline robuste avec zero perte de donnees</div>\n    </div>\n    \n  </div>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 },
+      "id": 400,
+      "panels": [],
+      "title": "ACCES RAPIDE - Liens directs",
+      "type": "row"
+    },
+    {
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 46 },
+      "id": 40,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:8px 0\">\n  <a href=\"/d/industrial-control-center\" style=\"background:linear-gradient(135deg,#e94560,#ff6b6b);padding:12px 24px;border-radius:8px;text-decoration:none;color:white;font-weight:600;font-size:13px;box-shadow:0 4px 12px rgba(233,69,96,0.4);transition:transform 0.2s\">&#x1F3AF; Control Center</a>\n  <a href=\"/d/unified-business-tech\" style=\"background:linear-gradient(135deg,#00d4aa,#00f5c4);padding:12px 24px;border-radius:8px;text-decoration:none;color:white;font-weight:600;font-size:13px;box-shadow:0 4px 12px rgba(0,212,170,0.4)\">&#x1F4B0; Business-Tech</a>\n  <a href=\"/d/system-health-overview\" style=\"background:linear-gradient(135deg,#536dfe,#7c8cff);padding:12px 24px;border-radius:8px;text-decoration:none;color:white;font-weight:600;font-size:13px;box-shadow:0 4px 12px rgba(83,109,254,0.4)\">&#x1F4BB; System Health</a>\n  <a href=\"/d/realtime-streaming\" style=\"background:linear-gradient(135deg,#ffc107,#ffdb4d);padding:12px 24px;border-radius:8px;text-decoration:none;color:#1a1a2e;font-weight:600;font-size:13px;box-shadow:0 4px 12px rgba(255,193,7,0.4)\">&#x26A1; Streaming</a>\n  <a href=\"/d/pipeline-health\" style=\"background:linear-gradient(135deg,#ff5722,#ff8a65);padding:12px 24px;border-radius:8px;text-decoration:none;color:white;font-weight:600;font-size:13px;box-shadow:0 4px 12px rgba(255,87,34,0.4)\">&#x2699; Pipeline</a>\n  <a href=\"/d/ai-observability\" style=\"background:linear-gradient(135deg,#9c27b0,#ba68c8);padding:12px 24px;border-radius:8px;text-decoration:none;color:white;font-weight:600;font-size:13px;box-shadow:0 4px 12px rgba(156,39,176,0.4)\">&#x1F916; AI Hub</a>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": { "h": 2, "w": 24, "x": 0, "y": 49 },
+      "id": 50,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "<div style=\"text-align:center;padding:8px;color:#415a77;font-size:11px\">\n  <p style=\"margin:0\">OOVMTEL Platform v2.0 | Open Observability for Industrial Manufacturing | Powered by OpenTelemetry, Kafka, VictoriaMetrics & Grafana</p>\n  <p style=\"margin:4px 0 0 0;color:#778da9\">&#x1F512; Architecture IEC 62443 Compliant | &#x1F30D; Convergence IT/OT | &#x1F680; Industrie 4.0 Ready</p>\n</div>",
+        "mode": "html"
+      },
+      "transparent": true,
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": ["welcome", "home", "guide", "personas", "industrial", "oovmtel"],
+  "templating": {
+    "list": []
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {
+    "hidden": true
+  },
+  "timezone": "browser",
+  "title": "Welcome Hub - Portail OOVMTEL",
+  "uid": "welcome-hub",
+  "version": 1,
+  "weekStart": ""
+}
