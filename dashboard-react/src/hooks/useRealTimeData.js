@@ -4,6 +4,8 @@ import { useDashboard } from '../context/DashboardContext'
 const API_BASE = '/api'
 const WS_URL = `ws://${window.location.host}/ws`
 const POLLING_INTERVAL = 5000
+// Always offline mode - use demo data without attempting API connections
+const OFFLINE_MODE = true
 
 // Demo data to use when API is unavailable
 const DEMO_DATA = {
@@ -213,8 +215,21 @@ export function useRealTimeData() {
   }, [fetchMetrics])
 
   useEffect(() => {
-    // Try to fetch metrics first, then connect WebSocket
+    // Initialize data - either from API or demo data
     const initializeData = async () => {
+      // Always offline mode - use demo data without API calls
+      if (OFFLINE_MODE) {
+        console.log('Offline mode enabled - using demo data')
+        loadDemoData()
+        setIsConnected(false)
+        // Start demo data polling to simulate real-time updates
+        if (!pollingRef.current) {
+          pollingRef.current = setInterval(loadDemoData, POLLING_INTERVAL)
+        }
+        return
+      }
+
+      // Online mode - try to connect to API
       try {
         // Quick connectivity check with timeout
         const controller = new AbortController()
@@ -254,7 +269,7 @@ export function useRealTimeData() {
         pollingRef.current = null
       }
     }
-  }, [connectWebSocket, fetchMetrics, loadDemoData, startPolling])
+  }, [connectWebSocket, fetchMetrics, loadDemoData, startPolling, setIsConnected])
 
   return { refetch: fetchMetrics, loadDemoData }
 }
