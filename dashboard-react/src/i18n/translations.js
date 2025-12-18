@@ -79,6 +79,10 @@ export const translations = {
       main: {
         home: 'Accueil',
         globalView: 'Vue Globale',
+        commandCenter: 'Centre de Commande',
+        technicalView: 'Vue Technique',
+        businessKPI: 'KPIs Métier',
+        aiAssistant: 'Assistant IA',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
@@ -278,6 +282,169 @@ export const translations = {
       quickActions: 'Actions Rapides'
     },
 
+    // Welcome/Onboarding Page
+    welcome: {
+      title: 'Bienvenue sur Synapsix',
+      subtitle: 'Plateforme d\'Observabilité Industrielle',
+      tagline: 'Propulsé par l\'IA',
+      selectPersona: 'Sélectionnez votre profil pour personnaliser votre expérience',
+      continue: 'Continuer',
+      skip: 'Passer cette étape',
+      hint: 'Vous pouvez changer de profil à tout moment dans les paramètres'
+    },
+
+    // Personas
+    personas: {
+      operationsManager: {
+        title: 'Responsable Opérations',
+        description: 'Supervision des lignes de production et gestion des équipements',
+        feature1: 'Suivi OEE en temps réel',
+        feature2: 'Alertes équipements critiques',
+        feature3: 'Planification maintenance'
+      },
+      plantDirector: {
+        title: 'Directeur d\'Usine',
+        description: 'Vision stratégique et KPIs financiers',
+        feature1: 'Tableaux de bord exécutifs',
+        feature2: 'Impact financier production',
+        feature3: 'Tendances et prévisions'
+      },
+      devopsEngineer: {
+        title: 'Ingénieur DevOps',
+        description: 'Infrastructure et pipelines de données',
+        feature1: 'Santé des services',
+        feature2: 'Monitoring des pipelines',
+        feature3: 'Analyse des performances'
+      },
+      securityAnalyst: {
+        title: 'Analyste Sécurité',
+        description: 'Surveillance des menaces et vulnérabilités',
+        feature1: 'Alertes de sécurité',
+        feature2: 'Détection d\'anomalies',
+        feature3: 'Audit des accès'
+      },
+      complianceOfficer: {
+        title: 'Responsable Conformité',
+        description: 'Conformité réglementaire et politiques',
+        feature1: 'Statut conformité',
+        feature2: 'Rapports d\'audit',
+        feature3: 'Gestion des politiques'
+      },
+      dataAnalyst: {
+        title: 'Analyste Données',
+        description: 'Analyse des métriques et logs',
+        feature1: 'Exploration des données',
+        feature2: 'Détection de patterns',
+        feature3: 'Export et rapports'
+      }
+    },
+
+    // Command Center
+    commandCenter: {
+      title: 'Centre de Commande',
+      subtitle: 'Vue d\'ensemble de la santé système et des alertes',
+      quickAccess: 'Accès rapide',
+      keyMetrics: 'Métriques clés',
+      quickNav: {
+        technical: {
+          title: 'Vue Technique',
+          description: 'Infrastructure, services et pipelines'
+        },
+        business: {
+          title: 'KPIs Métier',
+          description: 'OEE, production et impact financier'
+        },
+        security: {
+          title: 'Sécurité',
+          description: 'Vulnérabilités et conformité'
+        },
+        observability: {
+          title: 'Observabilité',
+          description: 'Incidents et remédiation'
+        }
+      },
+      systemHealth: {
+        title: 'Santé Système',
+        subtitle: 'État des services backend',
+        overall: 'Score Global',
+        servicesHealthy: 'services opérationnels',
+        backendServices: 'Services Backend'
+      },
+      alerts: {
+        title: 'Alertes',
+        active: 'actives',
+        noAlerts: 'Aucune alerte active'
+      },
+      aiAssistant: {
+        title: 'Assistant IA',
+        description: 'Posez vos questions en langage naturel'
+      }
+    },
+
+    // Technical View
+    technicalView: {
+      title: 'Vue Technique',
+      subtitle: 'Infrastructure, services backend et pipelines de données',
+      pipeline: {
+        title: 'Pipeline de Données',
+        subtitle: 'Flux de collecte vers stockage'
+      },
+      backends: {
+        title: 'Services Backend'
+      },
+      throughput: {
+        title: 'Débit',
+        subtitle: 'Métriques, logs et traces par heure'
+      }
+    },
+
+    // Business KPI View
+    businessKPI: {
+      title: 'KPIs Métier',
+      subtitle: 'Performance de production, qualité et impact financier',
+      period: {
+        today: 'Aujourd\'hui',
+        week: 'Semaine',
+        month: 'Mois'
+      },
+      oee: {
+        title: 'OEE Global',
+        subtitle: 'Efficacité Globale des Équipements',
+        components: 'Composantes OEE',
+        componentsSubtitle: 'Disponibilité × Performance × Qualité',
+        trend: 'Tendance OEE',
+        trendSubtitle: 'Évolution sur les dernières 24 heures'
+      },
+      financial: {
+        title: 'Impact Financier',
+        subtitle: 'Revenus et coûts de production'
+      },
+      production: {
+        byProduct: 'Production par Produit',
+        distribution: 'Distribution de la production'
+      },
+      equipment: {
+        status: 'État des Équipements',
+        statusSubtitle: 'Lignes de production'
+      },
+      maintenance: {
+        title: 'Maintenance',
+        subtitle: 'Planification et historique'
+      }
+    },
+
+    // AI Assistant
+    aiAssistant: {
+      title: 'Assistant IA',
+      subtitle: 'Posez vos questions en langage naturel',
+      online: 'En ligne',
+      welcome: 'Comment puis-je vous aider ?',
+      welcomeDescription: 'Je peux analyser vos données, générer des rapports et répondre à vos questions sur la production, l\'infrastructure et la sécurité.',
+      suggestions: 'Suggestions',
+      quickActions: 'Actions rapides',
+      placeholder: 'Posez votre question...'
+    },
+
     // Security & Compliance
     security: {
       title: 'Sécurité & Conformité',
@@ -438,6 +605,10 @@ export const translations = {
       main: {
         home: 'Home',
         globalView: 'Global View',
+        commandCenter: 'Command Center',
+        technicalView: 'Technical View',
+        businessKPI: 'Business KPIs',
+        aiAssistant: 'AI Assistant',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
@@ -637,6 +808,169 @@ export const translations = {
       quickActions: 'Quick Actions'
     },
 
+    // Welcome/Onboarding Page
+    welcome: {
+      title: 'Welcome to Synapsix',
+      subtitle: 'Industrial Observability Platform',
+      tagline: 'Powered by AI',
+      selectPersona: 'Select your profile to personalize your experience',
+      continue: 'Continue',
+      skip: 'Skip this step',
+      hint: 'You can change your profile anytime in settings'
+    },
+
+    // Personas
+    personas: {
+      operationsManager: {
+        title: 'Operations Manager',
+        description: 'Production line supervision and equipment management',
+        feature1: 'Real-time OEE tracking',
+        feature2: 'Critical equipment alerts',
+        feature3: 'Maintenance planning'
+      },
+      plantDirector: {
+        title: 'Plant Director',
+        description: 'Strategic vision and financial KPIs',
+        feature1: 'Executive dashboards',
+        feature2: 'Production financial impact',
+        feature3: 'Trends and forecasts'
+      },
+      devopsEngineer: {
+        title: 'DevOps Engineer',
+        description: 'Infrastructure and data pipelines',
+        feature1: 'Service health',
+        feature2: 'Pipeline monitoring',
+        feature3: 'Performance analysis'
+      },
+      securityAnalyst: {
+        title: 'Security Analyst',
+        description: 'Threat and vulnerability monitoring',
+        feature1: 'Security alerts',
+        feature2: 'Anomaly detection',
+        feature3: 'Access auditing'
+      },
+      complianceOfficer: {
+        title: 'Compliance Officer',
+        description: 'Regulatory compliance and policies',
+        feature1: 'Compliance status',
+        feature2: 'Audit reports',
+        feature3: 'Policy management'
+      },
+      dataAnalyst: {
+        title: 'Data Analyst',
+        description: 'Metrics and log analysis',
+        feature1: 'Data exploration',
+        feature2: 'Pattern detection',
+        feature3: 'Export and reports'
+      }
+    },
+
+    // Command Center
+    commandCenter: {
+      title: 'Command Center',
+      subtitle: 'System health overview and alerts',
+      quickAccess: 'Quick Access',
+      keyMetrics: 'Key Metrics',
+      quickNav: {
+        technical: {
+          title: 'Technical View',
+          description: 'Infrastructure, services and pipelines'
+        },
+        business: {
+          title: 'Business KPIs',
+          description: 'OEE, production and financial impact'
+        },
+        security: {
+          title: 'Security',
+          description: 'Vulnerabilities and compliance'
+        },
+        observability: {
+          title: 'Observability',
+          description: 'Incidents and remediation'
+        }
+      },
+      systemHealth: {
+        title: 'System Health',
+        subtitle: 'Backend services status',
+        overall: 'Overall Score',
+        servicesHealthy: 'services healthy',
+        backendServices: 'Backend Services'
+      },
+      alerts: {
+        title: 'Alerts',
+        active: 'active',
+        noAlerts: 'No active alerts'
+      },
+      aiAssistant: {
+        title: 'AI Assistant',
+        description: 'Ask questions in natural language'
+      }
+    },
+
+    // Technical View
+    technicalView: {
+      title: 'Technical View',
+      subtitle: 'Infrastructure, backend services and data pipelines',
+      pipeline: {
+        title: 'Data Pipeline',
+        subtitle: 'Collection to storage flow'
+      },
+      backends: {
+        title: 'Backend Services'
+      },
+      throughput: {
+        title: 'Throughput',
+        subtitle: 'Metrics, logs and traces per hour'
+      }
+    },
+
+    // Business KPI View
+    businessKPI: {
+      title: 'Business KPIs',
+      subtitle: 'Production performance, quality and financial impact',
+      period: {
+        today: 'Today',
+        week: 'Week',
+        month: 'Month'
+      },
+      oee: {
+        title: 'Overall OEE',
+        subtitle: 'Overall Equipment Effectiveness',
+        components: 'OEE Components',
+        componentsSubtitle: 'Availability × Performance × Quality',
+        trend: 'OEE Trend',
+        trendSubtitle: 'Evolution over the last 24 hours'
+      },
+      financial: {
+        title: 'Financial Impact',
+        subtitle: 'Revenue and production costs'
+      },
+      production: {
+        byProduct: 'Production by Product',
+        distribution: 'Production distribution'
+      },
+      equipment: {
+        status: 'Equipment Status',
+        statusSubtitle: 'Production lines'
+      },
+      maintenance: {
+        title: 'Maintenance',
+        subtitle: 'Planning and history'
+      }
+    },
+
+    // AI Assistant
+    aiAssistant: {
+      title: 'AI Assistant',
+      subtitle: 'Ask questions in natural language',
+      online: 'Online',
+      welcome: 'How can I help you?',
+      welcomeDescription: 'I can analyze your data, generate reports and answer your questions about production, infrastructure and security.',
+      suggestions: 'Suggestions',
+      quickActions: 'Quick actions',
+      placeholder: 'Ask your question...'
+    },
+
     // Security & Compliance
     security: {
       title: 'Security & Compliance',
@@ -797,6 +1131,10 @@ export const translations = {
       main: {
         home: 'Home',
         globalView: 'Globaal Overzicht',
+        commandCenter: 'Commandocentrum',
+        technicalView: 'Technisch Overzicht',
+        businessKPI: 'Zakelijke KPIs',
+        aiAssistant: 'AI Assistent',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
@@ -994,6 +1332,169 @@ export const translations = {
       manualResolved: 'Handmatig opgelost',
       // Actions
       quickActions: 'Snelle Acties'
+    },
+
+    // Welcome/Onboarding Page
+    welcome: {
+      title: 'Welkom bij Synapsix',
+      subtitle: 'Industrieel Observabiliteitsplatform',
+      tagline: 'Aangedreven door AI',
+      selectPersona: 'Selecteer uw profiel om uw ervaring te personaliseren',
+      continue: 'Doorgaan',
+      skip: 'Deze stap overslaan',
+      hint: 'U kunt uw profiel op elk moment wijzigen in instellingen'
+    },
+
+    // Personas
+    personas: {
+      operationsManager: {
+        title: 'Operations Manager',
+        description: 'Toezicht op productielijnen en apparatuurbeheer',
+        feature1: 'Realtime OEE tracking',
+        feature2: 'Kritieke apparatuurwaarschuwingen',
+        feature3: 'Onderhoudsplanning'
+      },
+      plantDirector: {
+        title: 'Fabrieksdirecteur',
+        description: 'Strategische visie en financiele KPIs',
+        feature1: 'Executive dashboards',
+        feature2: 'Productie financiele impact',
+        feature3: 'Trends en voorspellingen'
+      },
+      devopsEngineer: {
+        title: 'DevOps Engineer',
+        description: 'Infrastructuur en datapipelines',
+        feature1: 'Service gezondheid',
+        feature2: 'Pipeline monitoring',
+        feature3: 'Prestatieanalyse'
+      },
+      securityAnalyst: {
+        title: 'Beveiligingsanalist',
+        description: 'Bedreigingen en kwetsbaarheden monitoring',
+        feature1: 'Beveiligingswaarschuwingen',
+        feature2: 'Anomaliedetectie',
+        feature3: 'Toegangsauditing'
+      },
+      complianceOfficer: {
+        title: 'Compliance Officer',
+        description: 'Wettelijke naleving en beleid',
+        feature1: 'Compliance status',
+        feature2: 'Audit rapporten',
+        feature3: 'Beleidsbeheer'
+      },
+      dataAnalyst: {
+        title: 'Data Analist',
+        description: 'Metrieken en loganalyse',
+        feature1: 'Data exploratie',
+        feature2: 'Patroondetectie',
+        feature3: 'Export en rapporten'
+      }
+    },
+
+    // Command Center
+    commandCenter: {
+      title: 'Commandocentrum',
+      subtitle: 'Overzicht systeemgezondheid en waarschuwingen',
+      quickAccess: 'Snelle Toegang',
+      keyMetrics: 'Belangrijke Metrieken',
+      quickNav: {
+        technical: {
+          title: 'Technisch Overzicht',
+          description: 'Infrastructuur, services en pipelines'
+        },
+        business: {
+          title: 'Zakelijke KPIs',
+          description: 'OEE, productie en financiele impact'
+        },
+        security: {
+          title: 'Beveiliging',
+          description: 'Kwetsbaarheden en compliance'
+        },
+        observability: {
+          title: 'Observabiliteit',
+          description: 'Incidenten en remediatie'
+        }
+      },
+      systemHealth: {
+        title: 'Systeemgezondheid',
+        subtitle: 'Backend services status',
+        overall: 'Totaalscore',
+        servicesHealthy: 'services gezond',
+        backendServices: 'Backend Services'
+      },
+      alerts: {
+        title: 'Waarschuwingen',
+        active: 'actief',
+        noAlerts: 'Geen actieve waarschuwingen'
+      },
+      aiAssistant: {
+        title: 'AI Assistent',
+        description: 'Stel vragen in natuurlijke taal'
+      }
+    },
+
+    // Technical View
+    technicalView: {
+      title: 'Technisch Overzicht',
+      subtitle: 'Infrastructuur, backend services en datapipelines',
+      pipeline: {
+        title: 'Datapipeline',
+        subtitle: 'Collectie naar opslag stroom'
+      },
+      backends: {
+        title: 'Backend Services'
+      },
+      throughput: {
+        title: 'Doorvoer',
+        subtitle: 'Metrieken, logs en traces per uur'
+      }
+    },
+
+    // Business KPI View
+    businessKPI: {
+      title: 'Zakelijke KPIs',
+      subtitle: 'Productieprestaties, kwaliteit en financiele impact',
+      period: {
+        today: 'Vandaag',
+        week: 'Week',
+        month: 'Maand'
+      },
+      oee: {
+        title: 'Totale OEE',
+        subtitle: 'Algehele Apparatuur Effectiviteit',
+        components: 'OEE Componenten',
+        componentsSubtitle: 'Beschikbaarheid × Prestatie × Kwaliteit',
+        trend: 'OEE Trend',
+        trendSubtitle: 'Evolutie over de laatste 24 uur'
+      },
+      financial: {
+        title: 'Financiele Impact',
+        subtitle: 'Omzet en productiekosten'
+      },
+      production: {
+        byProduct: 'Productie per Product',
+        distribution: 'Productieverdeling'
+      },
+      equipment: {
+        status: 'Apparatuurstatus',
+        statusSubtitle: 'Productielijnen'
+      },
+      maintenance: {
+        title: 'Onderhoud',
+        subtitle: 'Planning en geschiedenis'
+      }
+    },
+
+    // AI Assistant
+    aiAssistant: {
+      title: 'AI Assistent',
+      subtitle: 'Stel vragen in natuurlijke taal',
+      online: 'Online',
+      welcome: 'Hoe kan ik u helpen?',
+      welcomeDescription: 'Ik kan uw gegevens analyseren, rapporten genereren en uw vragen over productie, infrastructuur en beveiliging beantwoorden.',
+      suggestions: 'Suggesties',
+      quickActions: 'Snelle acties',
+      placeholder: 'Stel uw vraag...'
     },
 
     // Security & Compliance

@@ -45,16 +45,32 @@ const getNavConfig = (t, userMode) => {
   // Main navigation items (always visible)
   const mainNav = [
     {
-      id: 'home',
+      id: 'command-center',
       path: '/',
       icon: Home,
-      getLabel: () => t('nav.main.globalView'),
-      submenu: [
-        { id: 'overview', icon: Eye, getLabel: () => t('nav.home.overview'), hash: '#overview' },
-        { id: 'quickStats', icon: Zap, getLabel: () => t('nav.home.quickStats'), hash: '#stats' },
-        { id: 'recentActivity', icon: Clock, getLabel: () => t('nav.home.recentActivity'), hash: '#activity' },
-        { id: 'favorites', icon: Star, getLabel: () => t('nav.home.favorites'), hash: '#favorites' }
-      ]
+      getLabel: () => t('nav.main.commandCenter'),
+      submenu: []
+    },
+    {
+      id: 'technical',
+      path: '/technical',
+      icon: Server,
+      getLabel: () => t('nav.main.technicalView'),
+      submenu: []
+    },
+    {
+      id: 'business-kpi',
+      path: '/business-kpi',
+      icon: BarChart3,
+      getLabel: () => t('nav.main.businessKPI'),
+      submenu: []
+    },
+    {
+      id: 'ai-assistant',
+      path: '/ai-assistant',
+      icon: MessageSquare,
+      getLabel: () => t('nav.main.aiAssistant'),
+      submenu: []
     }
   ]
 

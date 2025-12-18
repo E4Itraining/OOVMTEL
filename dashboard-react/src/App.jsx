@@ -3,6 +3,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { DashboardProvider } from './context/DashboardContext'
 import { I18nProvider } from './i18n'
 import Layout from './components/Layout'
+import WelcomePage from './pages/WelcomePage'
+import CommandCenter from './pages/CommandCenter'
+import TechnicalView from './pages/TechnicalView'
+import BusinessKPIView from './pages/BusinessKPIView'
+import AIAssistant from './pages/AIAssistant'
 import GlobalView from './pages/GlobalView'
 import DetailedView from './pages/DetailedView'
 import GrafanaView from './pages/GrafanaView'
@@ -17,8 +22,17 @@ function App() {
       <DashboardProvider>
         <BrowserRouter>
           <Routes>
+            {/* Welcome/Onboarding Page - No Layout */}
+            <Route path="/welcome" element={<WelcomePage />} />
+
+            {/* Main App with Layout */}
             <Route path="/" element={<Layout />}>
-              <Route index element={<GlobalView />} />
+              <Route index element={<CommandCenter />} />
+              <Route path="command-center" element={<CommandCenter />} />
+              <Route path="technical" element={<TechnicalView />} />
+              <Route path="business-kpi" element={<BusinessKPIView />} />
+              <Route path="ai-assistant" element={<AIAssistant />} />
+              <Route path="dashboard" element={<GlobalView />} />
               <Route path="details/:service" element={<DetailedView />} />
               <Route path="grafana" element={<GrafanaView />} />
               <Route path="opensearch" element={<OpenSearchView />} />
