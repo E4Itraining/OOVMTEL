@@ -39,7 +39,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -76,7 +76,7 @@
       "pluginVersion": "10.2.3",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "avg(up{job=\"otel-collector\"})",
           "legendFormat": "OTel Collectors",
           "refId": "A"
@@ -88,7 +88,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -124,7 +124,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "avg(up{job=\"vmagent\"})",
           "legendFormat": "VMAgent",
           "refId": "A"
@@ -136,7 +136,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -172,7 +172,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "avg(up{job=\"victoria-metrics\"})",
           "legendFormat": "VictoriaMetrics",
           "refId": "A"
@@ -184,7 +184,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -221,7 +221,7 @@
       "pluginVersion": "10.2.3",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "avg(up{job=~\"scada-metrics|mes-metrics|plm-metrics|opcua-gateway\"})",
           "legendFormat": "Simulators",
           "refId": "A"
@@ -233,7 +233,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -298,13 +298,13 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_receiver_accepted_metric_points[5m])",
           "legendFormat": "{{receiver}} - Accepted",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_receiver_refused_metric_points[5m])",
           "legendFormat": "{{receiver}} - Refused",
           "refId": "B"
@@ -329,7 +329,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -396,13 +396,13 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "histogram_quantile(0.99, rate(otelcol_exporter_send_latency_bucket[5m]))",
           "legendFormat": "{{exporter}} p99",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "histogram_quantile(0.50, rate(otelcol_exporter_send_latency_bucket[5m]))",
           "legendFormat": "{{exporter}} p50",
           "refId": "B"
@@ -414,7 +414,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -479,7 +479,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_exporter_sent_metric_points[5m])",
           "legendFormat": "{{exporter}}",
           "refId": "A"
@@ -504,7 +504,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -571,19 +571,19 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_processor_dropped_metric_points[5m])",
           "legendFormat": "Metrics Dropped - {{processor}}",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_processor_dropped_log_records[5m])",
           "legendFormat": "Logs Dropped - {{processor}}",
           "refId": "B"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_processor_dropped_spans[5m])",
           "legendFormat": "Spans Dropped - {{processor}}",
           "refId": "C"
@@ -595,7 +595,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -662,13 +662,13 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "go_memstats_alloc_bytes{job=\"otel-collector\"}",
           "legendFormat": "{{job}} - Allocated",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "go_memstats_sys_bytes{job=\"otel-collector\"}",
           "legendFormat": "{{job}} - System",
           "refId": "B"
@@ -693,7 +693,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -760,19 +760,19 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_receiver_accepted_metric_points{receiver=\"prometheus\"}[5m])",
           "legendFormat": "Prometheus Receiver",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_receiver_accepted_metric_points{receiver=\"hostmetrics\"}[5m])",
           "legendFormat": "Host Metrics Receiver",
           "refId": "B"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "rate(otelcol_receiver_accepted_metric_points{receiver=\"otlp\"}[5m])",
           "legendFormat": "OTLP Receiver",
           "refId": "C"
@@ -797,7 +797,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -863,19 +863,19 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "increase(otelcol_exporter_send_failed_metric_points[5m])",
           "legendFormat": "Metrics - {{exporter}}",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "increase(otelcol_exporter_send_failed_log_records[5m])",
           "legendFormat": "Logs - {{exporter}}",
           "refId": "B"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "increase(otelcol_exporter_send_failed_spans[5m])",
           "legendFormat": "Spans - {{exporter}}",
           "refId": "C"
@@ -900,7 +900,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -936,7 +936,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "vm_cache_entries{type=\"storage/hour_metric_ids\"}",
           "legendFormat": "Active Series",
           "refId": "A"
@@ -948,7 +948,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "victoria-metrics"
+        "uid": "VictoriaMetrics"
       },
       "fieldConfig": {
         "defaults": {
@@ -1015,13 +1015,13 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "vm_cache_entries{type=\"storage/hour_metric_ids\"}",
           "legendFormat": "Hourly Active Series",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "vm_new_timeseries_created_total",
           "legendFormat": "Total Series Created",
           "refId": "B"
