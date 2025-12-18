@@ -268,7 +268,7 @@ services:
       - GF_USERS_DEFAULT_THEME=dark
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/json/industrial-control-center.json
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/json/welcome-hub.json
       # Performance and features
       - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
       - GF_LIVE_MAX_CONNECTIONS=100
