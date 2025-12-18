@@ -17,6 +17,7 @@ import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { Card, CardHeader, CardBody, MetricCard } from '../components/ui/Card'
 import { TimeSeriesChart, BarChartComponent } from '../components/ui/Charts'
 import { StatusBadge } from '../components/ui/Status'
+import { useI18n } from '../i18n'
 
 const GRAFANA_URL = 'http://localhost:3000'
 
@@ -85,6 +86,7 @@ const alerts = [
 
 function GrafanaView() {
   const { userMode } = useDashboard()
+  const { t } = useI18n()
   const [selectedCategory, setSelectedCategory] = useState('all')
 
   const filteredDashboards = useMemo(() => {
@@ -116,9 +118,9 @@ function GrafanaView() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
               <Activity className="w-6 h-6 text-white" />
             </div>
-            Grafana
+            {t('services.grafana.title')}
           </h1>
-          <p className="text-gray-400 mt-1">Tableaux de bord et visualisations</p>
+          <p className="text-gray-400 mt-1">{t('services.grafana.description')}</p>
         </div>
         <a
           href={GRAFANA_URL}
@@ -127,7 +129,7 @@ function GrafanaView() {
           className="btn btn-primary"
         >
           <ExternalLink className="w-4 h-4" />
-          Ouvrir Grafana
+          {t('services.grafana.explore')}
         </a>
       </div>
 

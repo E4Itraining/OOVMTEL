@@ -20,6 +20,7 @@ import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { Card, CardHeader, CardBody, MetricCard } from '../components/ui/Card'
 import { TimeSeriesChart, BarChartComponent, AreaChartComponent } from '../components/ui/Charts'
 import { StatusBadge } from '../components/ui/Status'
+import { useI18n } from '../i18n'
 
 const KAFKA_UI_URL = 'http://localhost:8090'
 
@@ -41,6 +42,7 @@ const consumerGroups = [
 
 function KafkaView() {
   const { userMode, metrics } = useDashboard()
+  const { t } = useI18n()
   const [expandedTopic, setExpandedTopic] = useState(null)
 
   const throughputData = useMemo(() =>
@@ -76,9 +78,9 @@ function KafkaView() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
-            Kafka
+            {t('services.kafka.title')}
           </h1>
-          <p className="text-gray-400 mt-1">Streaming de données en temps réel</p>
+          <p className="text-gray-400 mt-1">{t('services.kafka.description')}</p>
         </div>
         <a
           href={KAFKA_UI_URL}
@@ -87,7 +89,7 @@ function KafkaView() {
           className="btn btn-primary"
         >
           <ExternalLink className="w-4 h-4" />
-          Ouvrir Kafka UI
+          {t('common.viewAll')}
         </a>
       </div>
 
