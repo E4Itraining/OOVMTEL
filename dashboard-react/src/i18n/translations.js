@@ -454,6 +454,7 @@ export const translations = {
       tabs: {
         overview: 'Vue d\'ensemble',
         compliance: 'Conformité',
+        euRegulations: 'Régulations EU',
         vulnerabilities: 'Vulnérabilités',
         aiInsights: 'Insights IA',
         audit: 'Audit',
@@ -560,6 +561,59 @@ export const translations = {
         retention: 'Rétention',
         days: 'jours',
         bandwidth: 'Bande passante'
+      },
+      // EU Regulations (AI Act & NIS 2)
+      euReg: {
+        inProgress: 'En cours',
+        aiActDesc: 'Règlement européen sur l\'intelligence artificielle',
+        nis2Desc: 'Directive européenne sur la cybersécurité des réseaux et systèmes d\'information',
+        aiSystems: 'Systèmes IA',
+        highRisk: 'Haut risque',
+        requirements: 'Exigences',
+        compliantReq: 'Conformes',
+        aiActTitle: 'AI Act - Classification des systèmes IA',
+        assessRisk: 'Évaluer le risque',
+        unacceptable: 'Inacceptable',
+        highRiskCat: 'Haut risque',
+        limited: 'Risque limité',
+        minimal: 'Risque minimal',
+        systems: 'systèmes',
+        aiInventory: 'Inventaire des systèmes IA',
+        provider: 'Fournisseur',
+        useCases: 'Cas d\'usage',
+        aiActRequirements: 'Exigences AI Act',
+        deadline: 'Échéance',
+        nis2Title: 'NIS 2 - Cybersécurité',
+        entityType: 'Type d\'entité',
+        essential: 'Entité essentielle',
+        sector: 'Secteur',
+        manufacturing: 'Industrie manufacturière',
+        notifyDelay: 'Délai notification',
+        authority: 'Autorité compétente',
+        nis2Requirements: 'Exigences NIS 2',
+        nis2Incidents: 'Incidents NIS 2',
+        resolved: 'Résolu',
+        active: 'Actif',
+        reportedToANSSI: 'Signalé à l\'ANSSI',
+        detection: 'Détection',
+        resolution: 'Résolution',
+        impact: 'Impact',
+        risk: {
+          minimal: 'Risque minimal',
+          limited: 'Risque limité',
+          high: 'Haut risque',
+          unacceptable: 'Inacceptable'
+        },
+        priority: {
+          critical: 'Critique',
+          high: 'Élevée',
+          medium: 'Moyenne'
+        },
+        impactLevel: {
+          low: 'Faible',
+          medium: 'Moyen',
+          high: 'Élevé'
+        }
       }
     }
   },
@@ -1003,6 +1057,7 @@ export const translations = {
       tabs: {
         overview: 'Overview',
         compliance: 'Compliance',
+        euRegulations: 'EU Regulations',
         vulnerabilities: 'Vulnerabilities',
         aiInsights: 'AI Insights',
         audit: 'Audit',
@@ -1109,6 +1164,59 @@ export const translations = {
         retention: 'Retention',
         days: 'days',
         bandwidth: 'Bandwidth'
+      },
+      // EU Regulations (AI Act & NIS 2)
+      euReg: {
+        inProgress: 'In Progress',
+        aiActDesc: 'European regulation on artificial intelligence',
+        nis2Desc: 'European directive on network and information systems security',
+        aiSystems: 'AI Systems',
+        highRisk: 'High Risk',
+        requirements: 'Requirements',
+        compliantReq: 'Compliant',
+        aiActTitle: 'AI Act - AI Systems Classification',
+        assessRisk: 'Assess Risk',
+        unacceptable: 'Unacceptable',
+        highRiskCat: 'High Risk',
+        limited: 'Limited Risk',
+        minimal: 'Minimal Risk',
+        systems: 'systems',
+        aiInventory: 'AI Systems Inventory',
+        provider: 'Provider',
+        useCases: 'Use Cases',
+        aiActRequirements: 'AI Act Requirements',
+        deadline: 'Deadline',
+        nis2Title: 'NIS 2 - Cybersecurity',
+        entityType: 'Entity Type',
+        essential: 'Essential Entity',
+        sector: 'Sector',
+        manufacturing: 'Manufacturing',
+        notifyDelay: 'Notification Delay',
+        authority: 'Competent Authority',
+        nis2Requirements: 'NIS 2 Requirements',
+        nis2Incidents: 'NIS 2 Incidents',
+        resolved: 'Resolved',
+        active: 'Active',
+        reportedToANSSI: 'Reported to ANSSI',
+        detection: 'Detection',
+        resolution: 'Resolution',
+        impact: 'Impact',
+        risk: {
+          minimal: 'Minimal Risk',
+          limited: 'Limited Risk',
+          high: 'High Risk',
+          unacceptable: 'Unacceptable'
+        },
+        priority: {
+          critical: 'Critical',
+          high: 'High',
+          medium: 'Medium'
+        },
+        impactLevel: {
+          low: 'Low',
+          medium: 'Medium',
+          high: 'High'
+        }
       }
     }
   },
@@ -1552,6 +1660,7 @@ export const translations = {
       tabs: {
         overview: 'Overzicht',
         compliance: 'Compliance',
+        euRegulations: 'EU Regelgeving',
         vulnerabilities: 'Kwetsbaarheden',
         aiInsights: 'AI Inzichten',
         audit: 'Audit',
@@ -1658,6 +1767,59 @@ export const translations = {
         retention: 'Bewaartijd',
         days: 'dagen',
         bandwidth: 'Bandbreedte'
+      },
+      // EU Regulations (AI Act & NIS 2)
+      euReg: {
+        inProgress: 'In Behandeling',
+        aiActDesc: 'Europese verordening inzake kunstmatige intelligentie',
+        nis2Desc: 'Europese richtlijn over netwerk- en informatiesysteembeveiliging',
+        aiSystems: 'AI Systemen',
+        highRisk: 'Hoog Risico',
+        requirements: 'Vereisten',
+        compliantReq: 'Conform',
+        aiActTitle: 'AI Act - AI Systeem Classificatie',
+        assessRisk: 'Risico Beoordelen',
+        unacceptable: 'Onacceptabel',
+        highRiskCat: 'Hoog Risico',
+        limited: 'Beperkt Risico',
+        minimal: 'Minimaal Risico',
+        systems: 'systemen',
+        aiInventory: 'AI Systemen Inventaris',
+        provider: 'Aanbieder',
+        useCases: 'Toepassingen',
+        aiActRequirements: 'AI Act Vereisten',
+        deadline: 'Deadline',
+        nis2Title: 'NIS 2 - Cyberbeveiliging',
+        entityType: 'Entiteitstype',
+        essential: 'Essentiële Entiteit',
+        sector: 'Sector',
+        manufacturing: 'Productie',
+        notifyDelay: 'Meldingstermijn',
+        authority: 'Bevoegde Autoriteit',
+        nis2Requirements: 'NIS 2 Vereisten',
+        nis2Incidents: 'NIS 2 Incidenten',
+        resolved: 'Opgelost',
+        active: 'Actief',
+        reportedToANSSI: 'Gemeld bij ANSSI',
+        detection: 'Detectie',
+        resolution: 'Oplossing',
+        impact: 'Impact',
+        risk: {
+          minimal: 'Minimaal Risico',
+          limited: 'Beperkt Risico',
+          high: 'Hoog Risico',
+          unacceptable: 'Onacceptabel'
+        },
+        priority: {
+          critical: 'Kritiek',
+          high: 'Hoog',
+          medium: 'Gemiddeld'
+        },
+        impactLevel: {
+          low: 'Laag',
+          medium: 'Gemiddeld',
+          high: 'Hoog'
+        }
       }
     }
   },
@@ -2101,6 +2263,7 @@ export const translations = {
       tabs: {
         overview: 'Übersicht',
         compliance: 'Compliance',
+        euRegulations: 'EU-Vorschriften',
         vulnerabilities: 'Schwachstellen',
         aiInsights: 'KI-Erkenntnisse',
         audit: 'Audit',
@@ -2207,6 +2370,59 @@ export const translations = {
         retention: 'Aufbewahrung',
         days: 'Tage',
         bandwidth: 'Bandbreite'
+      },
+      // EU Regulations (AI Act & NIS 2)
+      euReg: {
+        inProgress: 'In Bearbeitung',
+        aiActDesc: 'Europäische Verordnung über künstliche Intelligenz',
+        nis2Desc: 'Europäische Richtlinie über Netz- und Informationssicherheit',
+        aiSystems: 'KI-Systeme',
+        highRisk: 'Hohes Risiko',
+        requirements: 'Anforderungen',
+        compliantReq: 'Konform',
+        aiActTitle: 'AI Act - KI-Systemklassifizierung',
+        assessRisk: 'Risiko bewerten',
+        unacceptable: 'Inakzeptabel',
+        highRiskCat: 'Hohes Risiko',
+        limited: 'Begrenztes Risiko',
+        minimal: 'Minimales Risiko',
+        systems: 'Systeme',
+        aiInventory: 'KI-Systeme Inventar',
+        provider: 'Anbieter',
+        useCases: 'Anwendungsfälle',
+        aiActRequirements: 'AI Act Anforderungen',
+        deadline: 'Frist',
+        nis2Title: 'NIS 2 - Cybersicherheit',
+        entityType: 'Entitätstyp',
+        essential: 'Wesentliche Entität',
+        sector: 'Sektor',
+        manufacturing: 'Produktion',
+        notifyDelay: 'Meldefrist',
+        authority: 'Zuständige Behörde',
+        nis2Requirements: 'NIS 2 Anforderungen',
+        nis2Incidents: 'NIS 2 Vorfälle',
+        resolved: 'Gelöst',
+        active: 'Aktiv',
+        reportedToANSSI: 'An ANSSI gemeldet',
+        detection: 'Erkennung',
+        resolution: 'Lösung',
+        impact: 'Auswirkung',
+        risk: {
+          minimal: 'Minimales Risiko',
+          limited: 'Begrenztes Risiko',
+          high: 'Hohes Risiko',
+          unacceptable: 'Inakzeptabel'
+        },
+        priority: {
+          critical: 'Kritisch',
+          high: 'Hoch',
+          medium: 'Mittel'
+        },
+        impactLevel: {
+          low: 'Niedrig',
+          medium: 'Mittel',
+          high: 'Hoch'
+        }
       }
     }
   }
