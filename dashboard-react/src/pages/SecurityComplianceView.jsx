@@ -39,7 +39,15 @@ import {
   ArrowRight,
   ExternalLink,
   Filter,
-  Download
+  Download,
+  Video,
+  Play,
+  Pause,
+  Camera,
+  Circle,
+  MapPin,
+  Calendar,
+  Maximize2
 } from 'lucide-react'
 import { useDashboard } from '../context/DashboardContext'
 import { useI18n } from '../i18n'
@@ -269,6 +277,124 @@ const securityPolicies = [
   }
 ]
 
+// Mock data for security video feeds
+const securityVideoFeeds = [
+  {
+    id: 'cam-001',
+    name: 'Main Entrance',
+    location: 'Building A - Ground Floor',
+    status: 'online',
+    recording: true,
+    lastMotion: new Date(Date.now() - 5 * 60 * 1000),
+    resolution: '4K',
+    fps: 30,
+    alerts: 0
+  },
+  {
+    id: 'cam-002',
+    name: 'Server Room',
+    location: 'Building A - Basement',
+    status: 'online',
+    recording: true,
+    lastMotion: new Date(Date.now() - 15 * 60 * 1000),
+    resolution: '1080p',
+    fps: 30,
+    alerts: 2
+  },
+  {
+    id: 'cam-003',
+    name: 'Production Floor 1',
+    location: 'Building B - Main Hall',
+    status: 'online',
+    recording: true,
+    lastMotion: new Date(Date.now() - 2 * 60 * 1000),
+    resolution: '4K',
+    fps: 60,
+    alerts: 0
+  },
+  {
+    id: 'cam-004',
+    name: 'Parking Area',
+    location: 'Exterior - North',
+    status: 'offline',
+    recording: false,
+    lastMotion: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    resolution: '1080p',
+    fps: 30,
+    alerts: 1
+  },
+  {
+    id: 'cam-005',
+    name: 'Control Room',
+    location: 'Building A - Floor 2',
+    status: 'online',
+    recording: true,
+    lastMotion: new Date(Date.now() - 1 * 60 * 1000),
+    resolution: '4K',
+    fps: 30,
+    alerts: 0
+  },
+  {
+    id: 'cam-006',
+    name: 'Warehouse',
+    location: 'Building C',
+    status: 'online',
+    recording: true,
+    lastMotion: new Date(Date.now() - 30 * 60 * 1000),
+    resolution: '1080p',
+    fps: 30,
+    alerts: 0
+  }
+]
+
+// Mock data for video events/recordings
+const videoEvents = [
+  {
+    id: 'evt-001',
+    cameraId: 'cam-002',
+    cameraName: 'Server Room',
+    type: 'motion',
+    severity: 'warning',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000),
+    description: 'Unauthorized access attempt detected',
+    thumbnail: null,
+    duration: '00:02:34'
+  },
+  {
+    id: 'evt-002',
+    cameraId: 'cam-004',
+    cameraName: 'Parking Area',
+    type: 'offline',
+    severity: 'critical',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    description: 'Camera went offline unexpectedly',
+    thumbnail: null,
+    duration: null
+  },
+  {
+    id: 'evt-003',
+    cameraId: 'cam-001',
+    cameraName: 'Main Entrance',
+    type: 'motion',
+    severity: 'info',
+    timestamp: new Date(Date.now() - 5 * 60 * 1000),
+    description: 'Regular visitor entry detected',
+    thumbnail: null,
+    duration: '00:00:45'
+  },
+  {
+    id: 'evt-004',
+    cameraId: 'cam-002',
+    cameraName: 'Server Room',
+    type: 'intrusion',
+    severity: 'critical',
+    timestamp: new Date(Date.now() - 45 * 60 * 1000),
+    description: 'After-hours access detected - Security alerted',
+    thumbnail: null,
+    duration: '00:05:12'
+  }
+]
+
 // Generate chart data
 const generateSecurityTrendData = () => {
   const data = []
@@ -481,6 +607,175 @@ function PolicyCard({ policy, t }) {
   )
 }
 
+// Video Feed Card
+function VideoFeedCard({ feed, t, formatTime }) {
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="rounded-xl border border-industrial-border bg-industrial-card/50 overflow-hidden"
+    >
+      {/* Video Preview Area */}
+      <div className="relative aspect-video bg-black/50">
+        {/* Simulated video feed - gradient placeholder */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center">
+          {feed.status === 'online' ? (
+            <div className="relative w-full h-full">
+              {/* Simulated camera view with grid */}
+              <div className="absolute inset-0 opacity-20">
+                <div className="w-full h-full" style={{
+                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+                  backgroundSize: '20px 20px'
+                }} />
+              </div>
+              {/* Camera icon */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Camera className="w-12 h-12 text-gray-600" />
+              </div>
+              {/* Recording indicator */}
+              {feed.recording && (
+                <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded bg-red-500/90 text-white text-xs">
+                  <Circle className="w-2 h-2 fill-current animate-pulse" />
+                  REC
+                </div>
+              )}
+              {/* Live badge */}
+              <div className="absolute top-2 right-2 px-2 py-1 rounded bg-green-500/90 text-white text-xs font-medium">
+                LIVE
+              </div>
+              {/* Resolution badge */}
+              <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 text-white text-xs">
+                {feed.resolution} @ {feed.fps}fps
+              </div>
+              {/* Timestamp */}
+              <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/60 text-white text-xs font-mono">
+                {new Date().toLocaleTimeString()}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-gray-500">
+              <Video className="w-12 h-12" />
+              <span className="text-sm">{t('security.video.offline')}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Hover overlay with controls */}
+        <AnimatePresence>
+          {isHovered && feed.status === 'online' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 flex items-center justify-center gap-4"
+            >
+              <button className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
+                <Play className="w-6 h-6 text-white" />
+              </button>
+              <button className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
+                <Maximize2 className="w-6 h-6 text-white" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Camera Info */}
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <h4 className="font-semibold text-white">{feed.name}</h4>
+            <div className="flex items-center gap-1 text-sm text-gray-400">
+              <MapPin className="w-3 h-3" />
+              {feed.location}
+            </div>
+          </div>
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs ${
+            feed.status === 'online'
+              ? 'bg-green-500/20 text-green-400'
+              : 'bg-red-500/20 text-red-400'
+          }`}>
+            <Circle className={`w-2 h-2 fill-current ${feed.status === 'online' ? 'animate-pulse' : ''}`} />
+            {feed.status === 'online' ? t('security.video.online') : t('security.video.offline')}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-gray-400">
+          <span>{t('security.video.lastMotion')}: {formatTime(feed.lastMotion)}</span>
+          {feed.alerts > 0 && (
+            <span className="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
+              {feed.alerts} {t('security.video.alerts')}
+            </span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// Video Event Card
+function VideoEventCard({ event, t, formatTime }) {
+  const severityColors = {
+    critical: 'border-red-500/50 bg-red-500/10',
+    warning: 'border-yellow-500/50 bg-yellow-500/10',
+    info: 'border-blue-500/50 bg-blue-500/10'
+  }
+
+  const severityTextColors = {
+    critical: 'text-red-400',
+    warning: 'text-yellow-400',
+    info: 'text-blue-400'
+  }
+
+  const typeIcons = {
+    motion: Activity,
+    offline: XCircle,
+    intrusion: AlertTriangle
+  }
+
+  const Icon = typeIcons[event.type] || Video
+
+  return (
+    <motion.div
+      whileHover={{ x: 4 }}
+      className={`p-4 rounded-xl border ${severityColors[event.severity]} flex items-center gap-4`}
+    >
+      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${severityColors[event.severity]}`}>
+        <Icon className={`w-6 h-6 ${severityTextColors[event.severity]}`} />
+      </div>
+
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-mono text-sm text-gray-400">{event.cameraName}</span>
+          <span className={`px-2 py-0.5 rounded text-xs ${severityColors[event.severity]} ${severityTextColors[event.severity]}`}>
+            {event.type}
+          </span>
+        </div>
+        <h4 className="font-medium text-white">{event.description}</h4>
+        <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {formatTime(event.timestamp)}
+          </span>
+          {event.duration && (
+            <span className="flex items-center gap-1">
+              <Video className="w-3 h-3" />
+              {event.duration}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <button className="px-3 py-1.5 rounded-lg bg-industrial-accent/20 text-industrial-accent hover:bg-industrial-accent/30 transition-colors text-sm">
+        {t('security.video.viewRecording')}
+      </button>
+    </motion.div>
+  )
+}
+
 function SecurityComplianceView() {
   const { metrics, userMode } = useDashboard()
   const { t, formatTime, formatDate } = useI18n()
@@ -498,8 +793,10 @@ function SecurityComplianceView() {
     const criticalVulns = vulnerabilities.filter(v => v.severity === 'critical').length
     const openVulns = vulnerabilities.filter(v => v.status === 'open').length
     const aiAlerts = aiInsights.filter(i => i.severity === 'critical' || i.severity === 'warning').length
+    const onlineCameras = securityVideoFeeds.filter(f => f.status === 'online').length
+    const totalCameras = securityVideoFeeds.length
 
-    return { avgCompliance, criticalVulns, openVulns, aiAlerts }
+    return { avgCompliance, criticalVulns, openVulns, aiAlerts, onlineCameras, totalCameras }
   }, [])
 
   const tabs = [
@@ -508,7 +805,8 @@ function SecurityComplianceView() {
     { id: 'vulnerabilities', label: t('security.tabs.vulnerabilities'), icon: Bug },
     { id: 'aiInsights', label: t('security.tabs.aiInsights'), icon: Brain },
     { id: 'audit', label: t('security.tabs.audit'), icon: History },
-    { id: 'policies', label: t('security.tabs.policies'), icon: FileText }
+    { id: 'policies', label: t('security.tabs.policies'), icon: FileText },
+    { id: 'video', label: t('security.tabs.video'), icon: Video }
   ]
 
   return (
@@ -532,7 +830,7 @@ function SecurityComplianceView() {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-6 gap-4">
         <MetricCard
           label={t('security.overallScore')}
           value={`${summaryMetrics.avgCompliance}%`}
@@ -563,6 +861,12 @@ function SecurityComplianceView() {
           value={securityPolicies.filter(p => p.status === 'enforced').length}
           icon={ShieldCheck}
           color="green"
+        />
+        <MetricCard
+          label={t('security.video.cameras')}
+          value={`${summaryMetrics.onlineCameras}/${summaryMetrics.totalCameras}`}
+          icon={Camera}
+          color={summaryMetrics.onlineCameras === summaryMetrics.totalCameras ? 'green' : 'yellow'}
         />
       </div>
 
@@ -1016,6 +1320,175 @@ function SecurityComplianceView() {
                         {securityPolicies.reduce((acc, p) => acc + p.violations, 0)}
                       </p>
                     </div>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'video' && (
+          <motion.div
+            key="video"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            {/* Video Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <Card>
+                <CardBody>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                      <Camera className="w-6 h-6 text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">{t('security.video.online')}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {securityVideoFeeds.filter(f => f.status === 'online').length}
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+              <Card>
+                <CardBody>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                      <XCircle className="w-6 h-6 text-red-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">{t('security.video.offline')}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {securityVideoFeeds.filter(f => f.status === 'offline').length}
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+              <Card>
+                <CardBody>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                      <Circle className="w-6 h-6 text-red-400 fill-current animate-pulse" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">{t('security.video.recording')}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {securityVideoFeeds.filter(f => f.recording).length}
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+              <Card>
+                <CardBody>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-yellow-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">{t('security.video.totalAlerts')}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {securityVideoFeeds.reduce((acc, f) => acc + f.alerts, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+
+            {/* Live Camera Feeds */}
+            <Card>
+              <CardHeader
+                title={t('security.video.liveFeeds')}
+                icon={Video}
+                action={
+                  <div className="flex gap-2">
+                    <select className="px-3 py-1.5 rounded-lg bg-industrial-card border border-industrial-border text-sm text-white">
+                      <option>{t('security.video.allCameras')}</option>
+                      <option>{t('security.video.onlineOnly')}</option>
+                      <option>{t('security.video.withAlerts')}</option>
+                    </select>
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-industrial-accent text-white hover:bg-industrial-accent/80 transition-colors text-sm">
+                      <Maximize2 className="w-4 h-4" />
+                      {t('security.video.fullscreen')}
+                    </button>
+                  </div>
+                }
+              />
+              <CardBody>
+                <div className="grid grid-cols-3 gap-4">
+                  {securityVideoFeeds.map((feed) => (
+                    <VideoFeedCard key={feed.id} feed={feed} t={t} formatTime={formatTime} />
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Recent Events */}
+            <Card>
+              <CardHeader
+                title={t('security.video.recentEvents')}
+                icon={Activity}
+                action={
+                  <div className="flex gap-2">
+                    <select className="px-3 py-1.5 rounded-lg bg-industrial-card border border-industrial-border text-sm text-white">
+                      <option>{t('observability.last24h')}</option>
+                      <option>{t('observability.last7d')}</option>
+                      <option>{t('observability.last30d')}</option>
+                    </select>
+                    <button className="px-3 py-1.5 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 transition-colors text-sm">
+                      {t('common.export')}
+                    </button>
+                  </div>
+                }
+              />
+              <CardBody>
+                <div className="space-y-3">
+                  {videoEvents.map((event) => (
+                    <VideoEventCard key={event.id} event={event} t={t} formatTime={formatTime} />
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Video Storage Info */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card>
+                <CardBody>
+                  <div className="text-center p-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
+                      <Database className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <h4 className="font-semibold text-white mb-1">{t('security.video.storage')}</h4>
+                    <p className="text-2xl font-bold text-industrial-accent">2.4 TB</p>
+                    <p className="text-sm text-gray-400">{t('security.video.of')} 5 TB</p>
+                  </div>
+                </CardBody>
+              </Card>
+              <Card>
+                <CardBody>
+                  <div className="text-center p-4">
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-3">
+                      <Calendar className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <h4 className="font-semibold text-white mb-1">{t('security.video.retention')}</h4>
+                    <p className="text-2xl font-bold text-industrial-accent">30</p>
+                    <p className="text-sm text-gray-400">{t('security.video.days')}</p>
+                  </div>
+                </CardBody>
+              </Card>
+              <Card>
+                <CardBody>
+                  <div className="text-center p-4">
+                    <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mx-auto mb-3">
+                      <Activity className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <h4 className="font-semibold text-white mb-1">{t('security.video.bandwidth')}</h4>
+                    <p className="text-2xl font-bold text-industrial-accent">156</p>
+                    <p className="text-sm text-gray-400">Mbps</p>
                   </div>
                 </CardBody>
               </Card>
