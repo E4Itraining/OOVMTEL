@@ -25,7 +25,7 @@
       "id": 1,
       "options": {
         "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
-        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#1e1e2e 0%,#313244 100%);padding:12px;border-radius:8px;border:1px solid #45475a\">\n  <h1 style=\"color:#a6e3a1;margin:0;font-size:22px;font-weight:700;letter-spacing:2px\">SYSTEM HEALTH OVERVIEW</h1>\n  <p style=\"color:#6c7086;margin:4px 0 0 0;font-size:11px\">Infrastructure Status | Resource Utilization | Service Health | Performance Metrics</p>\n</div>",
+        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#1e293b 0%,#334155 100%);padding:12px;border-radius:8px;border:1px solid #475569\">\n  <h1 style=\"color:#4ade80;margin:0;font-size:22px;font-weight:700;letter-spacing:2px\">SYSTEM HEALTH OVERVIEW</h1>\n  <p style=\"color:#cbd5e1;margin:4px 0 0 0;font-size:11px\">Infrastructure Status | Resource Utilization | Service Health | Performance Metrics</p>\n</div>",
         "mode": "html"
       },
       "transparent": true,
@@ -45,9 +45,9 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [
-            { "options": { "0": { "color": "#f38ba8", "index": 1, "text": "DOWN" }, "1": { "color": "#a6e3a1", "index": 0, "text": "HEALTHY" } }, "type": "value" }
+            { "options": { "0": { "color": "#f87171", "index": 1, "text": "DOWN" }, "1": { "color": "#4ade80", "index": 0, "text": "HEALTHY" } }, "type": "value" }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#f38ba8", "value": null }, { "color": "#a6e3a1", "value": 1 }] }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#f87171", "value": null }, { "color": "#4ade80", "value": 1 }] }
         },
         "overrides": []
       },
@@ -96,9 +96,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#a6e3a1", "value": null },
-              { "color": "#f9e2af", "value": 70 },
-              { "color": "#f38ba8", "value": 85 }
+              { "color": "#4ade80", "value": null },
+              { "color": "#fde047", "value": 70 },
+              { "color": "#f87171", "value": 85 }
             ]
           },
           "unit": "percent"
@@ -139,9 +139,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#a6e3a1", "value": null },
-              { "color": "#f9e2af", "value": 75 },
-              { "color": "#f38ba8", "value": 90 }
+              { "color": "#4ade80", "value": null },
+              { "color": "#fde047", "value": 75 },
+              { "color": "#f87171", "value": 90 }
             ]
           },
           "unit": "percent"
@@ -182,9 +182,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#a6e3a1", "value": null },
-              { "color": "#f9e2af", "value": 80 },
-              { "color": "#f38ba8", "value": 95 }
+              { "color": "#4ade80", "value": null },
+              { "color": "#fde047", "value": 80 },
+              { "color": "#f87171", "value": 95 }
             ]
           },
           "unit": "percent"
@@ -225,9 +225,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#a6e3a1", "value": null },
-              { "color": "#f9e2af", "value": 60 },
-              { "color": "#f38ba8", "value": 80 }
+              { "color": "#4ade80", "value": null },
+              { "color": "#fde047", "value": 60 },
+              { "color": "#f87171", "value": 80 }
             ]
           },
           "unit": "percent"
@@ -294,7 +294,7 @@
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f38ba8", "value": 85 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 85 }] },
           "unit": "percent"
         },
         "overrides": []
@@ -346,7 +346,7 @@
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f38ba8", "value": 90 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 90 }] },
           "unit": "percent"
         },
         "overrides": []
@@ -398,7 +398,7 @@
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f38ba8", "value": 95 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 95 }] },
           "unit": "percent"
         },
         "overrides": []
@@ -435,7 +435,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#a6e3a1", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -469,7 +469,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#89b4fa", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#60a5fa", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -503,7 +503,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#f9e2af", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#fde047", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -537,7 +537,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#cba6f7", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#c084fc", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -571,7 +571,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#94e2d5", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#2dd4bf", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -605,7 +605,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#f5c2e7", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#f472b6", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -672,9 +672,9 @@
           "unit": "decbytes"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "VictoriaMetrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#a6e3a1", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "OpenSearch" }, "properties": [{ "id": "color", "value": { "fixedColor": "#89b4fa", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Kafka" }, "properties": [{ "id": "color", "value": { "fixedColor": "#cba6f7", "mode": "fixed" } }] }
+          { "matcher": { "id": "byName", "options": "VictoriaMetrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#4ade80", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "OpenSearch" }, "properties": [{ "id": "color", "value": { "fixedColor": "#60a5fa", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Kafka" }, "properties": [{ "id": "color", "value": { "fixedColor": "#c084fc", "mode": "fixed" } }] }
         ]
       },
       "gridPos": { "h": 7, "w": 12, "x": 0, "y": 27 },
@@ -717,10 +717,10 @@
           "unit": "decbytes"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "VictoriaMetrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#a6e3a1", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "OpenSearch" }, "properties": [{ "id": "color", "value": { "fixedColor": "#89b4fa", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Kafka" }, "properties": [{ "id": "color", "value": { "fixedColor": "#cba6f7", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "OpenObserve" }, "properties": [{ "id": "color", "value": { "fixedColor": "#94e2d5", "mode": "fixed" } }] }
+          { "matcher": { "id": "byName", "options": "VictoriaMetrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#4ade80", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "OpenSearch" }, "properties": [{ "id": "color", "value": { "fixedColor": "#60a5fa", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Kafka" }, "properties": [{ "id": "color", "value": { "fixedColor": "#c084fc", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "OpenObserve" }, "properties": [{ "id": "color", "value": { "fixedColor": "#2dd4bf", "mode": "fixed" } }] }
         ]
       },
       "gridPos": { "h": 7, "w": 6, "x": 12, "y": 27 },
@@ -768,7 +768,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#a6e3a1", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }] },
           "unit": "decbytes"
         },
         "overrides": []
@@ -802,7 +802,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#89b4fa", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#60a5fa", "value": null }] },
           "unit": "decbytes"
         },
         "overrides": []
@@ -836,7 +836,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#cba6f7", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#c084fc", "value": null }] },
           "unit": "decbytes"
         },
         "overrides": []
@@ -870,7 +870,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#f9e2af", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#fde047", "value": null }] },
           "unit": "decbytes"
         },
         "overrides": []
@@ -937,8 +937,8 @@
           "unit": "Bps"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Received" }, "properties": [{ "id": "color", "value": { "fixedColor": "#a6e3a1", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Transmitted" }, "properties": [{ "id": "color", "value": { "fixedColor": "#89b4fa", "mode": "fixed" } }] }
+          { "matcher": { "id": "byName", "options": "Received" }, "properties": [{ "id": "color", "value": { "fixedColor": "#4ade80", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Transmitted" }, "properties": [{ "id": "color", "value": { "fixedColor": "#60a5fa", "mode": "fixed" } }] }
         ]
       },
       "gridPos": { "h": 6, "w": 12, "x": 0, "y": 35 },
@@ -996,8 +996,8 @@
           "unit": "Bps"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Read" }, "properties": [{ "id": "color", "value": { "fixedColor": "#f9e2af", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Write" }, "properties": [{ "id": "color", "value": { "fixedColor": "#cba6f7", "mode": "fixed" } }] }
+          { "matcher": { "id": "byName", "options": "Read" }, "properties": [{ "id": "color", "value": { "fixedColor": "#fde047", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Write" }, "properties": [{ "id": "color", "value": { "fixedColor": "#c084fc", "mode": "fixed" } }] }
         ]
       },
       "gridPos": { "h": 6, "w": 12, "x": 12, "y": 35 },

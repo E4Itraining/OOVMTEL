@@ -25,7 +25,7 @@
       "id": 1,
       "options": {
         "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
-        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#0d1b2a 0%,#1b263b 100%);padding:12px;border-radius:8px;border:1px solid #415a77\">\n  <h1 style=\"color:#00b4d8;margin:0;font-size:22px;font-weight:700;letter-spacing:2px\">REAL-TIME STREAMING ANALYTICS</h1>\n  <p style=\"color:#778da9;margin:4px 0 0 0;font-size:11px\">Live Data Flow | Kafka Streams | OpenTelemetry Pipeline | Message Processing</p>\n</div>",
+        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#1e293b 0%,#334155 100%);padding:12px;border-radius:8px;border:1px solid #475569\">\n  <h1 style=\"color:#22d3ee;margin:0;font-size:22px;font-weight:700;letter-spacing:2px\">REAL-TIME STREAMING ANALYTICS</h1>\n  <p style=\"color:#cbd5e1;margin:4px 0 0 0;font-size:11px\">Live Data Flow | Kafka Streams | OpenTelemetry Pipeline | Message Processing</p>\n</div>",
         "mode": "html"
       },
       "transparent": true,
@@ -45,7 +45,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -79,7 +79,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#48cae4", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#67e8f9", "value": null }] },
           "unit": "decbytes"
         },
         "overrides": []
@@ -147,7 +147,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 1000 }, { "color": "#e94560", "value": 10000 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }, { "color": "#ffc107", "value": 1000 }, { "color": "#e94560", "value": 10000 }] },
           "unit": "short"
         },
         "overrides": []
@@ -181,7 +181,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 20 }, { "color": "#e94560", "value": 50 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }, { "color": "#ffc107", "value": 20 }, { "color": "#e94560", "value": 50 }] },
           "unit": "ms"
         },
         "overrides": []
@@ -215,7 +215,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 50 }, { "color": "#e94560", "value": 100 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }, { "color": "#ffc107", "value": 50 }, { "color": "#e94560", "value": 100 }] },
           "unit": "ms"
         },
         "overrides": []
@@ -282,8 +282,8 @@
           "unit": "short"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "scada-metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "mes-events" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "scada-metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#22d3ee", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "mes-events" }, "properties": [{ "id": "color", "value": { "fixedColor": "#67e8f9", "mode": "fixed" } }] },
           { "matcher": { "id": "byName", "options": "industrial-telemetry" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] },
           { "matcher": { "id": "byName", "options": "opcua-nodes" }, "properties": [{ "id": "color", "value": { "fixedColor": "#caf0f8", "mode": "fixed" } }] }
         ]
@@ -316,8 +316,8 @@
           "unit": "short"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "scada-metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "mes-events" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "scada-metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#22d3ee", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "mes-events" }, "properties": [{ "id": "color", "value": { "fixedColor": "#67e8f9", "mode": "fixed" } }] },
           { "matcher": { "id": "byName", "options": "industrial-telemetry" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] },
           { "matcher": { "id": "byName", "options": "plm-data" }, "properties": [{ "id": "color", "value": { "fixedColor": "#caf0f8", "mode": "fixed" } }] }
         ]
@@ -382,8 +382,8 @@
           "unit": "short"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Logs" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Metrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#22d3ee", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Logs" }, "properties": [{ "id": "color", "value": { "fixedColor": "#67e8f9", "mode": "fixed" } }] },
           { "matcher": { "id": "byName", "options": "Traces" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] }
         ]
       },
@@ -448,8 +448,8 @@
           "unit": "short"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "victoriametrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "opensearch" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "victoriametrics" }, "properties": [{ "id": "color", "value": { "fixedColor": "#22d3ee", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "opensearch" }, "properties": [{ "id": "color", "value": { "fixedColor": "#67e8f9", "mode": "fixed" } }] },
           { "matcher": { "id": "byName", "options": "openobserve" }, "properties": [{ "id": "color", "value": { "fixedColor": "#90e0ef", "mode": "fixed" } }] }
         ]
       },
@@ -506,7 +506,7 @@
             "thresholdsStyle": { "mode": "line" }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 5000 }, { "color": "#e94560", "value": 50000 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }, { "color": "#ffc107", "value": 5000 }, { "color": "#e94560", "value": 50000 }] },
           "unit": "short"
         },
         "overrides": []
@@ -556,12 +556,12 @@
             "thresholdsStyle": { "mode": "line" }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#ffc107", "value": 50 }, { "color": "#e94560", "value": 100 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }, { "color": "#ffc107", "value": 50 }, { "color": "#e94560", "value": 100 }] },
           "unit": "ms"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "P50" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00b4d8", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "P90" }, "properties": [{ "id": "color", "value": { "fixedColor": "#48cae4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "P50" }, "properties": [{ "id": "color", "value": { "fixedColor": "#22d3ee", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "P90" }, "properties": [{ "id": "color", "value": { "fixedColor": "#67e8f9", "mode": "fixed" } }] },
           { "matcher": { "id": "byName", "options": "P99" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ffc107", "mode": "fixed" } }] }
         ]
       },
@@ -630,7 +630,7 @@
             "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#e94560", "value": 1 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }, { "color": "#e94560", "value": 1 }] },
           "unit": "short"
         },
         "overrides": [
@@ -696,7 +696,7 @@
             "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }, { "color": "#e94560", "value": 1 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }, { "color": "#e94560", "value": 1 }] },
           "unit": "short"
         },
         "overrides": [
@@ -799,7 +799,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00b4d8", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#22d3ee", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -833,7 +833,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#48cae4", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#67e8f9", "value": null }] },
           "unit": "decbytes"
         },
         "overrides": []

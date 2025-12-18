@@ -45,7 +45,7 @@
       "id": 1,
       "options": {
         "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
-        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);padding:12px;border-radius:8px;border:1px solid #0f3460\">\n  <h1 style=\"color:#e94560;margin:0;font-size:24px;font-weight:700;letter-spacing:2px\">INDUSTRIAL CONTROL CENTER</h1>\n  <p style=\"color:#a0a0a0;margin:4px 0 0 0;font-size:12px\">Real-time OT/IT Infrastructure Monitoring | OOVMTEL Platform</p>\n</div>",
+        "content": "<div style=\"text-align:center;background:linear-gradient(135deg,#1e293b 0%,#334155 100%);padding:12px;border-radius:8px;border:1px solid #475569\">\n  <h1 style=\"color:#f87171;margin:0;font-size:24px;font-weight:700;letter-spacing:2px\">INDUSTRIAL CONTROL CENTER</h1>\n  <p style=\"color:#cbd5e1;margin:4px 0 0 0;font-size:12px\">Real-time OT/IT Infrastructure Monitoring | OOVMTEL Platform</p>\n</div>",
         "mode": "html"
       },
       "transparent": true,
@@ -70,9 +70,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#e94560", "value": null },
-              { "color": "#ffc107", "value": 70 },
-              { "color": "#00d4aa", "value": 85 }
+              { "color": "#f87171", "value": null },
+              { "color": "#fde047", "value": 70 },
+              { "color": "#4ade80", "value": 85 }
             ]
           },
           "unit": "percent"
@@ -113,9 +113,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#e94560", "value": null },
-              { "color": "#ffc107", "value": 92 },
-              { "color": "#00d4aa", "value": 98 }
+              { "color": "#f87171", "value": null },
+              { "color": "#fde047", "value": 92 },
+              { "color": "#4ade80", "value": 98 }
             ]
           },
           "unit": "percent"
@@ -156,9 +156,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#e94560", "value": null },
-              { "color": "#ffc107", "value": 85 },
-              { "color": "#00d4aa", "value": 95 }
+              { "color": "#f87171", "value": null },
+              { "color": "#fde047", "value": 85 },
+              { "color": "#4ade80", "value": 95 }
             ]
           },
           "unit": "percent"
@@ -199,9 +199,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#e94560", "value": null },
-              { "color": "#ffc107", "value": 95 },
-              { "color": "#00d4aa", "value": 99 }
+              { "color": "#f87171", "value": null },
+              { "color": "#fde047", "value": 95 },
+              { "color": "#4ade80", "value": 99 }
             ]
           },
           "unit": "percent"
@@ -240,9 +240,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#00d4aa", "value": null },
-              { "color": "#ffc107", "value": 3 },
-              { "color": "#e94560", "value": 10 }
+              { "color": "#4ade80", "value": null },
+              { "color": "#fde047", "value": 3 },
+              { "color": "#f87171", "value": 10 }
             ]
           },
           "unit": "short"
@@ -281,9 +281,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "#00d4aa", "value": null },
-              { "color": "#ffc107", "value": 10 },
-              { "color": "#e94560", "value": 50 }
+              { "color": "#4ade80", "value": null },
+              { "color": "#fde047", "value": 10 },
+              { "color": "#f87171", "value": 50 }
             ]
           },
           "unit": "short"
@@ -327,9 +327,9 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [
-            { "options": { "0": { "color": "#e94560", "index": 1, "text": "OFFLINE" }, "1": { "color": "#00d4aa", "index": 0, "text": "ONLINE" } }, "type": "value" }
+            { "options": { "0": { "color": "#f87171", "index": 1, "text": "OFFLINE" }, "1": { "color": "#4ade80", "index": 0, "text": "ONLINE" } }, "type": "value" }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#e94560", "value": null }, { "color": "#00d4aa", "value": 1 }] }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#f87171", "value": null }, { "color": "#4ade80", "value": 1 }] }
         },
         "overrides": []
       },
@@ -396,9 +396,9 @@
           "unit": "short"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Line-A" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00d4aa", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Line-B" }, "properties": [{ "id": "color", "value": { "fixedColor": "#536dfe", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Line-C" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ffc107", "mode": "fixed" } }] }
+          { "matcher": { "id": "byName", "options": "Line-A" }, "properties": [{ "id": "color", "value": { "fixedColor": "#4ade80", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Line-B" }, "properties": [{ "id": "color", "value": { "fixedColor": "#60a5fa", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Line-C" }, "properties": [{ "id": "color", "value": { "fixedColor": "#fde047", "mode": "fixed" } }] }
         ]
       },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
@@ -429,10 +429,10 @@
           "unit": "short"
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Product-Alpha" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00d4aa", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Product-Beta" }, "properties": [{ "id": "color", "value": { "fixedColor": "#536dfe", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Product-Gamma" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ffc107", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "Product-Delta" }, "properties": [{ "id": "color", "value": { "fixedColor": "#e94560", "mode": "fixed" } }] }
+          { "matcher": { "id": "byName", "options": "Product-Alpha" }, "properties": [{ "id": "color", "value": { "fixedColor": "#4ade80", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Product-Beta" }, "properties": [{ "id": "color", "value": { "fixedColor": "#60a5fa", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Product-Gamma" }, "properties": [{ "id": "color", "value": { "fixedColor": "#fde047", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Product-Delta" }, "properties": [{ "id": "color", "value": { "fixedColor": "#f87171", "mode": "fixed" } }] }
         ]
       },
       "gridPos": { "h": 8, "w": 6, "x": 12, "y": 13 },
@@ -462,7 +462,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00d4aa", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -496,7 +496,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#536dfe", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#60a5fa", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -530,7 +530,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00d4aa", "value": null }, { "color": "#ffc107", "value": 25 }, { "color": "#e94560", "value": 35 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }, { "color": "#fde047", "value": 25 }, { "color": "#f87171", "value": 35 }] },
           "unit": "s"
         },
         "overrides": []
@@ -564,7 +564,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00d4aa", "value": null }, { "color": "#ffc107", "value": 5 }, { "color": "#e94560", "value": 15 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }, { "color": "#fde047", "value": 5 }, { "color": "#f87171", "value": 15 }] },
           "unit": "short"
         },
         "overrides": []
@@ -629,7 +629,7 @@
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#e94560", "value": 85 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 85 }] },
           "unit": "celsius"
         },
         "overrides": []
@@ -681,7 +681,7 @@
           "mappings": [],
           "max": 15,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#e94560", "value": 10 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 10 }] },
           "unit": "pressurepsi"
         },
         "overrides": []
@@ -733,7 +733,7 @@
           "mappings": [],
           "max": 10,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#ffc107", "value": 4 }, { "color": "#e94560", "value": 6 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#fde047", "value": 4 }, { "color": "#f87171", "value": 6 }] },
           "unit": "velocitymm/s"
         },
         "overrides": []
@@ -770,7 +770,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00d4aa", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -804,7 +804,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#536dfe", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#60a5fa", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -838,7 +838,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#ffc107", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#fde047", "value": null }] },
           "unit": "short"
         },
         "overrides": []
@@ -872,7 +872,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00d4aa", "value": null }, { "color": "#ffc107", "value": 50 }, { "color": "#e94560", "value": 100 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }, { "color": "#fde047", "value": 50 }, { "color": "#f87171", "value": 100 }] },
           "unit": "ms"
         },
         "overrides": []
@@ -906,7 +906,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#00d4aa", "value": null }, { "color": "#ffc107", "value": 0.001 }, { "color": "#e94560", "value": 0.01 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#4ade80", "value": null }, { "color": "#fde047", "value": 0.001 }, { "color": "#f87171", "value": 0.01 }] },
           "unit": "percentunit"
         },
         "overrides": []
@@ -940,7 +940,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "#536dfe", "value": null }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#60a5fa", "value": null }] },
           "unit": "decbytes"
         },
         "overrides": []
@@ -1105,7 +1105,7 @@
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#e94560", "value": 80 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 80 }] },
           "unit": "percent"
         },
         "overrides": []
@@ -1157,7 +1157,7 @@
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#e94560", "value": 85 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 85 }] },
           "unit": "percent"
         },
         "overrides": []
@@ -1209,7 +1209,7 @@
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#e94560", "value": 90 }] },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "#f87171", "value": 90 }] },
           "unit": "percent"
         },
         "overrides": []
