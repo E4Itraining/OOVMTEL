@@ -5,12 +5,105 @@ const API_BASE = '/api'
 const WS_URL = `ws://${window.location.host}/ws`
 const POLLING_INTERVAL = 5000
 
+// Demo data to use when API is unavailable
+const DEMO_DATA = {
+  business: {
+    oee: 87.5,
+    availability: 92,
+    performance: 95,
+    quality: 99.2,
+    productionToday: 3247,
+    cycleTime: 45,
+    defectsToday: 12,
+    criticalAlarms: 2,
+    equipmentStatus: [
+      { name: 'Robot-01', status: 'running', efficiency: 94 },
+      { name: 'CNC-02', status: 'running', efficiency: 87 },
+      { name: 'Conveyor-03', status: 'warning', efficiency: 72 },
+      { name: 'Press-04', status: 'running', efficiency: 91 },
+      { name: 'Welder-05', status: 'idle', efficiency: 0 },
+      { name: 'Assembly-06', status: 'running', efficiency: 88 },
+    ],
+    productionByProduct: [
+      { name: 'Prod A', value: 1250, color: '#06b6d4' },
+      { name: 'Prod B', value: 890, color: '#a855f7' },
+      { name: 'Prod C', value: 650, color: '#22c55e' },
+      { name: 'Prod D', value: 420, color: '#f59e0b' },
+    ]
+  },
+  tech: {
+    metricsRate: 85000,
+    logsRate: 45000,
+    tracesRate: 12000,
+    latencyP95: 42,
+    errorRate: 0.05,
+    kafkaThroughput: 125000,
+    cpu: 45,
+    memory: 62,
+    disk: 38,
+    vmActiveSeries: 250000,
+    vmStorage: '2.4GB',
+    vmQueryLatency: 12,
+    osDocuments: 125000,
+    osHealth: 'green',
+    osNodes: 3,
+    kafkaTopics: 12,
+    kafkaPartitions: 96,
+    kafkaConsumerLag: 0
+  },
+  services: [
+    { name: 'VictoriaMetrics', status: 'up', latency: 5 },
+    { name: 'OTEL Collector', status: 'up', latency: 3 },
+    { name: 'OpenSearch', status: 'up', latency: 12 },
+    { name: 'OpenObserve', status: 'up', latency: 8 },
+    { name: 'Grafana', status: 'up', latency: 4 },
+    { name: 'Kafka', status: 'up', latency: 2 }
+  ],
+  events: [
+    { id: 1, type: 'production', message: 'Batch #1247 completed', timestamp: new Date().toISOString(), severity: 'info' },
+    { id: 2, type: 'quality', message: 'Quality check passed - Line 2', timestamp: new Date().toISOString(), severity: 'success' },
+    { id: 3, type: 'maintenance', message: 'Scheduled maintenance - Press-04', timestamp: new Date().toISOString(), severity: 'warning' },
+    { id: 4, type: 'alarm', message: 'Temperature threshold alert - Reactor-01', timestamp: new Date().toISOString(), severity: 'warning' }
+  ]
+}
+
 export function useRealTimeData() {
-  const { updateMetrics, setIsConnected, setError } = useDashboard()
+  const { updateMetrics, setIsConnected, setError, setIsLoading } = useDashboard()
   const wsRef = useRef(null)
   const pollingRef = useRef(null)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
+  const apiFailureCount = useRef(0)
+  const maxApiFailures = 3
+
+  const loadDemoData = useCallback(() => {
+    console.log('Loading demo data (API unavailable)')
+    // Add slight randomness to demo data to simulate real-time updates
+    const randomVariation = (value, variance = 0.05) => {
+      return value * (1 + (Math.random() - 0.5) * variance * 2)
+    }
+
+    const demoWithVariation = {
+      business: {
+        ...DEMO_DATA.business,
+        oee: Math.round(randomVariation(DEMO_DATA.business.oee, 0.02) * 10) / 10,
+        productionToday: Math.round(randomVariation(DEMO_DATA.business.productionToday, 0.03)),
+        cycleTime: Math.round(randomVariation(DEMO_DATA.business.cycleTime, 0.05)),
+      },
+      tech: {
+        ...DEMO_DATA.tech,
+        metricsRate: Math.round(randomVariation(DEMO_DATA.tech.metricsRate)),
+        logsRate: Math.round(randomVariation(DEMO_DATA.tech.logsRate)),
+        tracesRate: Math.round(randomVariation(DEMO_DATA.tech.tracesRate)),
+        cpu: Math.round(randomVariation(DEMO_DATA.tech.cpu, 0.1)),
+        memory: Math.round(randomVariation(DEMO_DATA.tech.memory, 0.1)),
+      },
+      services: DEMO_DATA.services,
+      events: DEMO_DATA.events
+    }
+
+    updateMetrics(demoWithVariation)
+  }, [updateMetrics])
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -37,12 +130,22 @@ export function useRealTimeData() {
         events: eventsData.events || eventsData || []
       })
 
+      apiFailureCount.current = 0
       setError(null)
     } catch (err) {
       console.error('Error fetching metrics:', err)
-      setError(err.message)
+      apiFailureCount.current++
+
+      // After multiple API failures, fall back to demo data
+      if (apiFailureCount.current >= maxApiFailures) {
+        loadDemoData()
+        setError('API unavailable - showing demo data')
+      } else {
+        setError(err.message)
+        setIsLoading(false)
+      }
     }
-  }, [updateMetrics, setError])
+  }, [updateMetrics, setError, setIsLoading, loadDemoData])
 
   const connectWebSocket = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return
@@ -110,9 +213,35 @@ export function useRealTimeData() {
   }, [fetchMetrics])
 
   useEffect(() => {
-    // Try WebSocket first, fall back to polling
-    fetchMetrics() // Initial data load
-    connectWebSocket()
+    // Try to fetch metrics first, then connect WebSocket
+    const initializeData = async () => {
+      try {
+        // Quick connectivity check with timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+
+        const response = await fetch(`${API_BASE}/metrics`, {
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+
+        if (response.ok) {
+          // API is available, proceed normally
+          await fetchMetrics()
+          connectWebSocket()
+        } else {
+          throw new Error('API not ready')
+        }
+      } catch (err) {
+        // API unavailable, load demo data immediately
+        console.log('API unavailable, loading demo data')
+        loadDemoData()
+        // Still try polling in background in case API comes up
+        startPolling()
+      }
+    }
+
+    initializeData()
 
     // Cleanup
     return () => {
@@ -125,9 +254,9 @@ export function useRealTimeData() {
         pollingRef.current = null
       }
     }
-  }, [connectWebSocket, fetchMetrics])
+  }, [connectWebSocket, fetchMetrics, loadDemoData, startPolling])
 
-  return { refetch: fetchMetrics }
+  return { refetch: fetchMetrics, loadDemoData }
 }
 
 export function useServiceDetails(serviceName) {
