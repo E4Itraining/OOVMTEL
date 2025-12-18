@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useMemo, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -136,7 +136,7 @@ function BusinessView({ metrics, navigate, t }) {
       </div>
 
       {/* Production & Equipment Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div id="analytics" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Production by Product */}
         <Card>
           <CardHeader title={t('metrics.business.productionByProduct')} icon={BarChart3} />
@@ -415,8 +415,22 @@ function TechView({ metrics, navigate, t }) {
 
 function GlobalView() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { userMode, metrics, isLoading } = useDashboard()
   const { t } = useI18n()
+
+  // Scroll to section based on URL hash
+  useEffect(() => {
+    if (location.hash) {
+      const elementId = location.hash.substring(1)
+      const element = document.getElementById(elementId)
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
+      }
+    }
+  }, [location.hash])
 
   if (isLoading) {
     return (

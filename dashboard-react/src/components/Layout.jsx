@@ -82,9 +82,9 @@ const getNavConfig = (t, userMode) => {
         icon: BarChart3,
         getLabel: () => t('nav.business.production'),
         submenu: [
-          { id: 'prod-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/business-kpi' },
-          { id: 'prod-kpis', icon: Target, getLabel: () => t('nav.business.kpis'), path: '/business-kpi' },
-          { id: 'prod-trends', icon: TrendingUp, getLabel: () => t('nav.business.trends'), path: '/business-kpi' }
+          { id: 'prod-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/business-kpi', hash: '#oee-section' },
+          { id: 'prod-kpis', icon: Target, getLabel: () => t('nav.business.kpis'), path: '/business-kpi', hash: '#production-metrics' },
+          { id: 'prod-trends', icon: TrendingUp, getLabel: () => t('nav.business.trends'), path: '/business-kpi', hash: '#oee-trend' }
         ]
       },
       {
@@ -92,8 +92,8 @@ const getNavConfig = (t, userMode) => {
         icon: Gauge,
         getLabel: () => t('nav.business.quality'),
         submenu: [
-          { id: 'quality-rate', icon: PieChart, getLabel: () => t('metrics.business.qualityRate'), path: '/business-kpi' },
-          { id: 'defects', icon: AlertTriangle, getLabel: () => t('metrics.business.defectsToday'), path: '/business-kpi' }
+          { id: 'quality-rate', icon: PieChart, getLabel: () => t('metrics.business.qualityRate'), path: '/business-kpi', hash: '#quality-section' },
+          { id: 'defects', icon: AlertTriangle, getLabel: () => t('metrics.business.defectsToday'), path: '/business-kpi', hash: '#production-metrics' }
         ]
       },
       {
@@ -101,8 +101,8 @@ const getNavConfig = (t, userMode) => {
         icon: Settings2,
         getLabel: () => t('nav.business.equipment'),
         submenu: [
-          { id: 'equipment-status', icon: Activity, getLabel: () => t('metrics.business.equipmentStatus'), path: '/business-kpi' },
-          { id: 'maintenance', icon: Wrench, getLabel: () => t('metrics.business.maintenance'), path: '/business-kpi' }
+          { id: 'equipment-status', icon: Activity, getLabel: () => t('metrics.business.equipmentStatus'), path: '/business-kpi', hash: '#equipment-status' },
+          { id: 'maintenance', icon: Wrench, getLabel: () => t('metrics.business.maintenance'), path: '/business-kpi', hash: '#maintenance-section' }
         ]
       },
       {
@@ -110,8 +110,8 @@ const getNavConfig = (t, userMode) => {
         icon: FileText,
         getLabel: () => t('nav.business.reports'),
         submenu: [
-          { id: 'analytics', icon: LineChart, getLabel: () => t('nav.business.analytics'), path: '/dashboard' },
-          { id: 'oee-trend', icon: TrendingUp, getLabel: () => t('metrics.business.oeeTrend'), path: '/business-kpi' }
+          { id: 'analytics', icon: LineChart, getLabel: () => t('nav.business.analytics'), path: '/dashboard', hash: '#analytics' },
+          { id: 'oee-trend', icon: TrendingUp, getLabel: () => t('metrics.business.oeeTrend'), path: '/business-kpi', hash: '#oee-trend' }
         ]
       }
     ],

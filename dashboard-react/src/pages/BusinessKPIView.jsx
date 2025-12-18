@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -155,7 +156,21 @@ function FinancialMetricCard({ metric }) {
 function BusinessKPIView() {
   const { t } = useI18n()
   const { metrics } = useDashboard()
+  const location = useLocation()
   const [selectedPeriod, setSelectedPeriod] = useState('today')
+
+  // Scroll to section based on URL hash
+  useEffect(() => {
+    if (location.hash) {
+      const elementId = location.hash.substring(1)
+      const element = document.getElementById(elementId)
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
+      }
+    }
+  }, [location.hash])
 
   // Calculate overall OEE
   const overallOEE = (OEE_COMPONENTS.reduce((acc, c) => acc * c.value, 1) / 1000000).toFixed(1)
@@ -203,7 +218,7 @@ function BusinessKPIView() {
       </div>
 
       {/* Main OEE Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div id="oee-section" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Overall OEE Gauge */}
         <Card className="lg:col-span-1">
           <CardHeader
@@ -245,7 +260,7 @@ function BusinessKPIView() {
       </div>
 
       {/* Production & Quality Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div id="production-metrics" className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <MetricCard
           label={t('metrics.business.productionToday')}
           value={metrics.business?.productionToday?.toLocaleString() || '12,000'}
@@ -291,7 +306,7 @@ function BusinessKPIView() {
       </div>
 
       {/* Financial Impact & Production by Product */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div id="quality-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Financial Impact */}
         <Card>
           <CardHeader
@@ -337,7 +352,7 @@ function BusinessKPIView() {
       </div>
 
       {/* OEE Trend Chart */}
-      <Card>
+      <Card id="oee-trend">
         <CardHeader
           title={t('businessKPI.oee.trend')}
           subtitle={t('businessKPI.oee.trendSubtitle')}
@@ -359,7 +374,7 @@ function BusinessKPIView() {
       {/* Equipment Status & Maintenance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Equipment Status */}
-        <Card>
+        <Card id="equipment-status">
           <CardHeader
             title={t('businessKPI.equipment.status')}
             subtitle={t('businessKPI.equipment.statusSubtitle')}
@@ -373,7 +388,7 @@ function BusinessKPIView() {
         </Card>
 
         {/* Maintenance Schedule */}
-        <Card>
+        <Card id="maintenance-section">
           <CardHeader
             title={t('businessKPI.maintenance.title')}
             subtitle={t('businessKPI.maintenance.subtitle')}
