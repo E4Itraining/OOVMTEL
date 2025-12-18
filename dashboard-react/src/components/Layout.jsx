@@ -45,16 +45,38 @@ const getNavConfig = (t, userMode) => {
   // Main navigation items (always visible)
   const mainNav = [
     {
-      id: 'home',
-      path: '/',
+      id: 'command-center',
+      path: '/command-center',
       icon: Home,
-      getLabel: () => t('nav.main.globalView'),
-      submenu: [
-        { id: 'overview', icon: Eye, getLabel: () => t('nav.home.overview'), hash: '#overview' },
-        { id: 'quickStats', icon: Zap, getLabel: () => t('nav.home.quickStats'), hash: '#stats' },
-        { id: 'recentActivity', icon: Clock, getLabel: () => t('nav.home.recentActivity'), hash: '#activity' },
-        { id: 'favorites', icon: Star, getLabel: () => t('nav.home.favorites'), hash: '#favorites' }
-      ]
+      getLabel: () => t('commandCenter.title')
+    },
+    {
+      id: 'dashboard',
+      path: '/dashboard',
+      icon: LayoutDashboard,
+      getLabel: () => t('nav.main.globalView')
+    }
+  ]
+
+  // Specialized views (for both modes)
+  const specializedViews = [
+    {
+      id: 'technical',
+      path: '/technical',
+      icon: Server,
+      getLabel: () => t('commandCenter.technicalView')
+    },
+    {
+      id: 'business-kpi',
+      path: '/business-kpi',
+      icon: BarChart3,
+      getLabel: () => t('commandCenter.businessView')
+    },
+    {
+      id: 'assistant',
+      path: '/assistant',
+      icon: MessageSquare,
+      getLabel: () => t('assistant.title')
     }
   ]
 
@@ -66,9 +88,9 @@ const getNavConfig = (t, userMode) => {
         icon: BarChart3,
         getLabel: () => t('nav.business.production'),
         submenu: [
-          { id: 'prod-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/', hash: '#production' },
-          { id: 'prod-kpis', icon: Target, getLabel: () => t('nav.business.kpis'), path: '/', hash: '#kpis' },
-          { id: 'prod-trends', icon: TrendingUp, getLabel: () => t('nav.business.trends'), path: '/', hash: '#trends' }
+          { id: 'prod-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/business-kpi' },
+          { id: 'prod-kpis', icon: Target, getLabel: () => t('nav.business.kpis'), path: '/business-kpi' },
+          { id: 'prod-trends', icon: TrendingUp, getLabel: () => t('nav.business.trends'), path: '/business-kpi' }
         ]
       },
       {
@@ -76,8 +98,8 @@ const getNavConfig = (t, userMode) => {
         icon: Gauge,
         getLabel: () => t('nav.business.quality'),
         submenu: [
-          { id: 'quality-rate', icon: PieChart, getLabel: () => t('metrics.business.qualityRate'), path: '/', hash: '#quality' },
-          { id: 'defects', icon: AlertTriangle, getLabel: () => t('metrics.business.defectsToday'), path: '/', hash: '#defects' }
+          { id: 'quality-rate', icon: PieChart, getLabel: () => t('metrics.business.qualityRate'), path: '/business-kpi' },
+          { id: 'defects', icon: AlertTriangle, getLabel: () => t('metrics.business.defectsToday'), path: '/business-kpi' }
         ]
       },
       {
@@ -85,17 +107,8 @@ const getNavConfig = (t, userMode) => {
         icon: Settings2,
         getLabel: () => t('nav.business.equipment'),
         submenu: [
-          { id: 'equipment-status', icon: Activity, getLabel: () => t('metrics.business.equipmentStatus'), path: '/', hash: '#equipment' },
-          { id: 'maintenance', icon: Wrench, getLabel: () => t('metrics.business.maintenance'), path: '/', hash: '#maintenance' }
-        ]
-      },
-      {
-        id: 'reports',
-        icon: FileText,
-        getLabel: () => t('nav.business.reports'),
-        submenu: [
-          { id: 'analytics', icon: LineChart, getLabel: () => t('nav.business.analytics'), path: '/', hash: '#analytics' },
-          { id: 'oee-trend', icon: TrendingUp, getLabel: () => t('metrics.business.oeeTrend'), path: '/', hash: '#oee-trend' }
+          { id: 'equipment-status', icon: Activity, getLabel: () => t('metrics.business.equipmentStatus'), path: '/business-kpi' },
+          { id: 'maintenance', icon: Wrench, getLabel: () => t('metrics.business.maintenance'), path: '/observability' }
         ]
       }
     ],
@@ -105,8 +118,8 @@ const getNavConfig = (t, userMode) => {
         icon: Activity,
         getLabel: () => t('nav.tech.metrics'),
         submenu: [
-          { id: 'metrics-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/', hash: '#metrics' },
-          { id: 'performance', icon: Gauge, getLabel: () => t('nav.tech.performance'), path: '/', hash: '#performance' }
+          { id: 'metrics-overview', icon: LayoutDashboard, getLabel: () => t('nav.home.overview'), path: '/technical' },
+          { id: 'performance', icon: Gauge, getLabel: () => t('nav.tech.performance'), path: '/technical' }
         ]
       },
       {
@@ -114,8 +127,8 @@ const getNavConfig = (t, userMode) => {
         icon: Server,
         getLabel: () => t('nav.tech.infrastructure'),
         submenu: [
-          { id: 'services', icon: Layers, getLabel: () => t('nav.tech.services'), path: '/', hash: '#services' },
-          { id: 'databases', icon: Database, getLabel: () => t('nav.tech.databases'), path: '/', hash: '#databases' }
+          { id: 'services', icon: Layers, getLabel: () => t('nav.tech.services'), path: '/technical' },
+          { id: 'databases', icon: Database, getLabel: () => t('nav.tech.databases'), path: '/technical' }
         ]
       },
       {
@@ -124,7 +137,7 @@ const getNavConfig = (t, userMode) => {
         getLabel: () => t('nav.tech.monitoring'),
         submenu: [
           { id: 'logs', icon: FileText, getLabel: () => t('nav.tech.logs'), path: '/opensearch' },
-          { id: 'alerts', icon: AlertTriangle, getLabel: () => t('nav.tech.alerts'), path: '/', hash: '#alerts' }
+          { id: 'alerts', icon: AlertTriangle, getLabel: () => t('nav.tech.alerts'), path: '/observability' }
         ]
       }
     ]
@@ -141,6 +154,7 @@ const getNavConfig = (t, userMode) => {
 
   return {
     mainNav,
+    specializedViews,
     profileMenus: profileMenus[userMode] || [],
     serviceNav
   }
@@ -349,6 +363,35 @@ function Layout() {
               location={location}
             />
           ))}
+
+          {/* Specialized Views */}
+          {sidebarOpen && (
+            <div className="pt-4 mt-4 border-t border-industrial-border/50">
+              <p className="px-3 text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Vues
+              </p>
+            </div>
+          )}
+
+          {navConfig.specializedViews.map((item) => {
+            const isActive = location.pathname === item.path
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+                  ${isActive
+                    ? 'bg-industrial-accent/20 text-industrial-accent'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && (
+                  <span className="font-medium text-sm">{item.getLabel()}</span>
+                )}
+              </button>
+            )
+          })}
 
           {/* Profile-specific Menu */}
           {sidebarOpen && navConfig.profileMenus.length > 0 && (

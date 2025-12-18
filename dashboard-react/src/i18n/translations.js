@@ -278,6 +278,114 @@ export const translations = {
       quickActions: 'Actions Rapides'
     },
 
+    // Welcome & Onboarding
+    welcome: {
+      badge: 'Plateforme Unifiée d\'Observabilité',
+      title: 'Bienvenue sur Synapsix',
+      subtitle: 'Votre centre de commande unifié pour l\'observabilité industrielle',
+      selectPersona: 'Choisissez votre profil',
+      selectPersonaDescription: 'Sélectionnez le profil qui correspond le mieux à votre rôle pour une expérience personnalisée',
+      skip: 'Passer',
+      getStarted: 'Commencer',
+      showGuide: 'Afficher le guide de démarrage'
+    },
+
+    // Personas
+    personas: {
+      operations_manager: {
+        title: 'Responsable des Opérations',
+        description: 'Surveillez la production, l\'OEE et les performances des équipements'
+      },
+      plant_director: {
+        title: 'Directeur d\'Usine',
+        description: 'Vue exécutive avec impact financier et KPIs stratégiques'
+      },
+      devops_engineer: {
+        title: 'Ingénieur DevOps',
+        description: 'Monitoring infrastructure, pipelines et services'
+      },
+      security_analyst: {
+        title: 'Analyste Sécurité',
+        description: 'Posture de sécurité, vulnérabilités et conformité'
+      },
+      compliance_officer: {
+        title: 'Responsable Conformité',
+        description: 'Audits, politiques et conformité réglementaire'
+      },
+      data_analyst: {
+        title: 'Analyste Data',
+        description: 'Qualité des données, pipelines et analyses avancées'
+      }
+    },
+
+    // Guide steps
+    guide: {
+      step1: {
+        title: 'Choisissez votre profil',
+        description: 'Sélectionnez le profil qui correspond à votre rôle'
+      },
+      step2: {
+        title: 'Explorez le Command Center',
+        description: 'Vue globale de tous vos systèmes'
+      },
+      step3: {
+        title: 'Naviguez vers les vues détaillées',
+        description: 'Technique, Sécurité, Business ou Conformité'
+      },
+      step4: {
+        title: 'Utilisez l\'assistant IA',
+        description: 'Posez des questions en langage naturel'
+      }
+    },
+
+    // Command Center
+    commandCenter: {
+      title: 'Command Center',
+      subtitle: 'Vue unifiée de tous vos systèmes',
+      overallHealth: 'Santé Globale',
+      systemHealth: 'Santé Système',
+      allSystemsOperational: 'Tous les systèmes opérationnels',
+      securityScore: 'Score Sécurité',
+      complianceScore: 'Score Conformité',
+      technicalView: 'Vue Technique',
+      technicalDescription: 'Infrastructure, services et pipelines',
+      securityView: 'Vue Sécurité',
+      securityDescription: 'Vulnérabilités, menaces et conformité',
+      complianceView: 'Vue Conformité',
+      complianceDescription: 'Audits, politiques et rapports',
+      businessView: 'Vue Business',
+      businessDescription: 'KPIs, OEE et impact financier',
+      recentAlerts: 'Alertes Récentes',
+      dataSources: 'Sources de Données',
+      dataFlow: 'Flux de Données',
+      askAI: 'Demander à l\'IA'
+    },
+
+    // Technical View
+    technicalView: {
+      title: 'Vue Technique',
+      subtitle: 'Infrastructure, services et pipelines de données',
+      dataSources: 'Sources de Données',
+      resourceUsage: 'Utilisation des Ressources',
+      services: 'Services',
+      pipelineThroughput: 'Débit du Pipeline'
+    },
+
+    // Business KPI View
+    businessKPI: {
+      title: 'KPIs Business',
+      subtitle: 'Performance de production et impact financier'
+    },
+
+    // AI Assistant
+    assistant: {
+      title: 'Assistant IA',
+      subtitle: 'Posez vos questions en langage naturel',
+      welcome: 'Comment puis-je vous aider ?',
+      welcomeDescription: 'Je peux analyser vos données, générer des rapports et vous aider à résoudre des problèmes',
+      placeholder: 'Posez une question sur vos données...'
+    },
+
     // Security & Compliance
     security: {
       title: 'Sécurité & Conformité',
@@ -637,6 +745,114 @@ export const translations = {
       quickActions: 'Quick Actions'
     },
 
+    // Welcome & Onboarding
+    welcome: {
+      badge: 'Unified Observability Platform',
+      title: 'Welcome to Synapsix',
+      subtitle: 'Your unified command center for industrial observability',
+      selectPersona: 'Choose your profile',
+      selectPersonaDescription: 'Select the profile that best matches your role for a personalized experience',
+      skip: 'Skip',
+      getStarted: 'Get Started',
+      showGuide: 'Show quick start guide'
+    },
+
+    // Personas
+    personas: {
+      operations_manager: {
+        title: 'Operations Manager',
+        description: 'Monitor production, OEE and equipment performance'
+      },
+      plant_director: {
+        title: 'Plant Director',
+        description: 'Executive view with financial impact and strategic KPIs'
+      },
+      devops_engineer: {
+        title: 'DevOps Engineer',
+        description: 'Infrastructure monitoring, pipelines and services'
+      },
+      security_analyst: {
+        title: 'Security Analyst',
+        description: 'Security posture, vulnerabilities and compliance'
+      },
+      compliance_officer: {
+        title: 'Compliance Officer',
+        description: 'Audits, policies and regulatory compliance'
+      },
+      data_analyst: {
+        title: 'Data Analyst',
+        description: 'Data quality, pipelines and advanced analytics'
+      }
+    },
+
+    // Guide steps
+    guide: {
+      step1: {
+        title: 'Choose your profile',
+        description: 'Select the profile that matches your role'
+      },
+      step2: {
+        title: 'Explore the Command Center',
+        description: 'Global view of all your systems'
+      },
+      step3: {
+        title: 'Navigate to detailed views',
+        description: 'Technical, Security, Business or Compliance'
+      },
+      step4: {
+        title: 'Use the AI assistant',
+        description: 'Ask questions in natural language'
+      }
+    },
+
+    // Command Center
+    commandCenter: {
+      title: 'Command Center',
+      subtitle: 'Unified view of all your systems',
+      overallHealth: 'Overall Health',
+      systemHealth: 'System Health',
+      allSystemsOperational: 'All systems operational',
+      securityScore: 'Security Score',
+      complianceScore: 'Compliance Score',
+      technicalView: 'Technical View',
+      technicalDescription: 'Infrastructure, services and pipelines',
+      securityView: 'Security View',
+      securityDescription: 'Vulnerabilities, threats and compliance',
+      complianceView: 'Compliance View',
+      complianceDescription: 'Audits, policies and reports',
+      businessView: 'Business View',
+      businessDescription: 'KPIs, OEE and financial impact',
+      recentAlerts: 'Recent Alerts',
+      dataSources: 'Data Sources',
+      dataFlow: 'Data Flow',
+      askAI: 'Ask AI'
+    },
+
+    // Technical View
+    technicalView: {
+      title: 'Technical View',
+      subtitle: 'Infrastructure, services and data pipelines',
+      dataSources: 'Data Sources',
+      resourceUsage: 'Resource Usage',
+      services: 'Services',
+      pipelineThroughput: 'Pipeline Throughput'
+    },
+
+    // Business KPI View
+    businessKPI: {
+      title: 'Business KPIs',
+      subtitle: 'Production performance and financial impact'
+    },
+
+    // AI Assistant
+    assistant: {
+      title: 'AI Assistant',
+      subtitle: 'Ask questions in natural language',
+      welcome: 'How can I help you?',
+      welcomeDescription: 'I can analyze your data, generate reports and help you troubleshoot issues',
+      placeholder: 'Ask a question about your data...'
+    },
+
     // Security & Compliance
     security: {
       title: 'Security & Compliance',
@@ -994,6 +1210,114 @@ export const translations = {
       manualResolved: 'Handmatig opgelost',
       // Actions
       quickActions: 'Snelle Acties'
+    },
+
+    // Welcome & Onboarding
+    welcome: {
+      badge: 'Geïntegreerd Observabiliteitsplatform',
+      title: 'Welkom bij Synapsix',
+      subtitle: 'Uw geïntegreerde commandocentrum voor industriële observabiliteit',
+      selectPersona: 'Kies uw profiel',
+      selectPersonaDescription: 'Selecteer het profiel dat het beste bij uw rol past voor een gepersonaliseerde ervaring',
+      skip: 'Overslaan',
+      getStarted: 'Aan de slag',
+      showGuide: 'Toon snelstartgids'
+    },
+
+    // Personas
+    personas: {
+      operations_manager: {
+        title: 'Operations Manager',
+        description: 'Monitor productie, OEE en apparatuurprestaties'
+      },
+      plant_director: {
+        title: 'Fabrieksdirecteur',
+        description: 'Executive weergave met financiële impact en strategische KPIs'
+      },
+      devops_engineer: {
+        title: 'DevOps Engineer',
+        description: 'Infrastructuurmonitoring, pipelines en services'
+      },
+      security_analyst: {
+        title: 'Beveiligingsanalist',
+        description: 'Beveiligingshouding, kwetsbaarheden en compliance'
+      },
+      compliance_officer: {
+        title: 'Compliance Officer',
+        description: 'Audits, beleid en regelgevende compliance'
+      },
+      data_analyst: {
+        title: 'Data Analist',
+        description: 'Datakwaliteit, pipelines en geavanceerde analyses'
+      }
+    },
+
+    // Guide steps
+    guide: {
+      step1: {
+        title: 'Kies uw profiel',
+        description: 'Selecteer het profiel dat bij uw rol past'
+      },
+      step2: {
+        title: 'Verken het Command Center',
+        description: 'Globaal overzicht van al uw systemen'
+      },
+      step3: {
+        title: 'Navigeer naar gedetailleerde weergaven',
+        description: 'Technisch, Beveiliging, Business of Compliance'
+      },
+      step4: {
+        title: 'Gebruik de AI-assistent',
+        description: 'Stel vragen in natuurlijke taal'
+      }
+    },
+
+    // Command Center
+    commandCenter: {
+      title: 'Command Center',
+      subtitle: 'Geïntegreerd overzicht van al uw systemen',
+      overallHealth: 'Totale Gezondheid',
+      systemHealth: 'Systeemgezondheid',
+      allSystemsOperational: 'Alle systemen operationeel',
+      securityScore: 'Beveiligingsscore',
+      complianceScore: 'Compliance Score',
+      technicalView: 'Technische Weergave',
+      technicalDescription: 'Infrastructuur, services en pipelines',
+      securityView: 'Beveiligingsweergave',
+      securityDescription: 'Kwetsbaarheden, bedreigingen en compliance',
+      complianceView: 'Compliance Weergave',
+      complianceDescription: 'Audits, beleid en rapporten',
+      businessView: 'Business Weergave',
+      businessDescription: 'KPIs, OEE en financiële impact',
+      recentAlerts: 'Recente Alerts',
+      dataSources: 'Databronnen',
+      dataFlow: 'Datastroom',
+      askAI: 'Vraag AI'
+    },
+
+    // Technical View
+    technicalView: {
+      title: 'Technische Weergave',
+      subtitle: 'Infrastructuur, services en datapipelines',
+      dataSources: 'Databronnen',
+      resourceUsage: 'Resourcegebruik',
+      services: 'Services',
+      pipelineThroughput: 'Pipeline Doorvoer'
+    },
+
+    // Business KPI View
+    businessKPI: {
+      title: 'Business KPIs',
+      subtitle: 'Productieprestaties en financiële impact'
+    },
+
+    // AI Assistant
+    assistant: {
+      title: 'AI Assistent',
+      subtitle: 'Stel vragen in natuurlijke taal',
+      welcome: 'Hoe kan ik u helpen?',
+      welcomeDescription: 'Ik kan uw data analyseren, rapporten genereren en u helpen problemen op te lossen',
+      placeholder: 'Stel een vraag over uw data...'
     },
 
     // Security & Compliance

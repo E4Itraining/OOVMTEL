@@ -56,6 +56,12 @@ export function DashboardProvider({ children }) {
   })
   const [viewLevel, setViewLevel] = useState(VIEW_LEVELS.GLOBAL)
   const [selectedService, setSelectedService] = useState(null)
+  const [selectedPersona, setSelectedPersona] = useState(() => {
+    return localStorage.getItem('oovmtel_selected_persona') || null
+  })
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
+    return localStorage.getItem('oovmtel_has_visited') === 'true'
+  })
   const [metrics, setMetrics] = useState(defaultMetrics)
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -95,6 +101,8 @@ export function DashboardProvider({ children }) {
     userMode,
     viewLevel,
     selectedService,
+    selectedPersona,
+    hasCompletedOnboarding,
     metrics,
     isConnected,
     isLoading,
@@ -108,7 +116,9 @@ export function DashboardProvider({ children }) {
     updateMetrics,
     setIsConnected,
     setIsLoading,
-    setError
+    setError,
+    setSelectedPersona,
+    setHasCompletedOnboarding
   }
 
   return (
