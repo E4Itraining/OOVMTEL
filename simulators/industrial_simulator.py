@@ -421,9 +421,12 @@ class OPCUASimulator:
 
 async def metrics_handler(request):
     """Handle Prometheus metrics endpoint"""
+    # Extract content-type without charset (aiohttp doesn't allow charset in content_type)
+    content_type = CONTENT_TYPE_LATEST.split(';')[0].strip()
     return web.Response(
         body=generate_latest(),
-        content_type=CONTENT_TYPE_LATEST
+        content_type=content_type,
+        charset='utf-8'
     )
 
 async def health_handler(request):
