@@ -68,7 +68,8 @@ export function I18nProvider({ children }) {
     const localeMap = {
       [LANGUAGES.FR]: 'fr-FR',
       [LANGUAGES.EN]: 'en-GB',
-      [LANGUAGES.NL]: 'nl-NL'
+      [LANGUAGES.NL]: 'nl-NL',
+      [LANGUAGES.DE]: 'de-DE'
     }
     return localeMap[language] || 'fr-FR'
   }, [language])

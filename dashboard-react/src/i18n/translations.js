@@ -1,15 +1,17 @@
-// Synapsix Dashboard - Multilingual translations (FR/EN/NL)
+// Synapsix Dashboard - Multilingual translations (FR/EN/NL/DE)
 
 export const LANGUAGES = {
   FR: 'fr',
   EN: 'en',
-  NL: 'nl'
+  NL: 'nl',
+  DE: 'de'
 }
 
 export const LANGUAGE_LABELS = {
   [LANGUAGES.FR]: 'Français',
   [LANGUAGES.EN]: 'English',
-  [LANGUAGES.NL]: 'Nederlands'
+  [LANGUAGES.NL]: 'Nederlands',
+  [LANGUAGES.DE]: 'Deutsch'
 }
 
 export const translations = {
@@ -1587,6 +1589,532 @@ export const translations = {
         enforced: 'Afgedwongen',
         partial: 'Gedeeltelijk',
         disabled: 'Uitgeschakeld'
+      }
+    }
+  },
+
+  // ===========================================
+  // GERMAN (DE)
+  // ===========================================
+  [LANGUAGES.DE]: {
+    // App branding
+    app: {
+      name: 'Synapsix',
+      tagline: 'Industrielle Observability',
+      description: 'Einheitliches industrielles Observability-Dashboard'
+    },
+
+    // Common actions
+    common: {
+      back: 'Zurück',
+      refresh: 'Aktualisieren',
+      save: 'Speichern',
+      cancel: 'Abbrechen',
+      close: 'Schließen',
+      search: 'Suchen',
+      filter: 'Filtern',
+      export: 'Exportieren',
+      settings: 'Einstellungen',
+      notifications: 'Benachrichtigungen',
+      loading: 'Laden...',
+      error: 'Fehler',
+      success: 'Erfolg',
+      warning: 'Warnung',
+      info: 'Information',
+      viewAll: 'Alle anzeigen',
+      viewMore: 'Mehr anzeigen',
+      viewLess: 'Weniger anzeigen'
+    },
+
+    // Connection status
+    connection: {
+      realtime: 'Echtzeit',
+      offline: 'Offline',
+      connected: 'Verbunden',
+      disconnected: 'Getrennt',
+      reconnecting: 'Verbindung wird wiederhergestellt...'
+    },
+
+    // User modes/profiles
+    profiles: {
+      title: 'Benutzerprofil',
+      business: {
+        name: 'Business',
+        label: 'Business-Pfad',
+        description: 'Geschäftsansicht und Produktionsindikatoren'
+      },
+      tech: {
+        name: 'Tech',
+        label: 'Technischer Pfad',
+        description: 'Technische Ansicht und Systemmetriken'
+      },
+      modeLabel: {
+        business: 'Business-Modus',
+        tech: 'Tech-Modus'
+      }
+    },
+
+    // Navigation - Main menu
+    nav: {
+      main: {
+        home: 'Startseite',
+        globalView: 'Globale Ansicht',
+        commandCenter: 'Kommandozentrale',
+        technicalView: 'Technische Ansicht',
+        businessKPI: 'Business-KPIs',
+        aiAssistant: 'KI-Assistent',
+        grafana: 'Grafana',
+        opensearch: 'OpenSearch',
+        kafka: 'Kafka',
+        observability: 'Observability',
+        security: 'Sicherheit & Compliance'
+      },
+      // Home page submenus
+      home: {
+        title: 'Dashboard',
+        overview: 'Übersicht',
+        quickStats: 'Schnellstatistiken',
+        recentActivity: 'Letzte Aktivität',
+        favorites: 'Favoriten'
+      },
+      // Business profile menu items
+      business: {
+        title: 'Business-Menü',
+        production: 'Produktion',
+        quality: 'Qualität',
+        performance: 'Leistung',
+        equipment: 'Ausrüstung',
+        alarms: 'Alarme',
+        reports: 'Berichte',
+        kpis: 'KPIs',
+        trends: 'Trends',
+        analytics: 'Analytik'
+      },
+      // Tech profile menu items
+      tech: {
+        title: 'Technisches Menü',
+        metrics: 'Metriken',
+        logs: 'Logs',
+        traces: 'Traces',
+        infrastructure: 'Infrastruktur',
+        services: 'Dienste',
+        databases: 'Datenbanken',
+        monitoring: 'Überwachung',
+        alerts: 'Warnungen',
+        performance: 'Leistung'
+      }
+    },
+
+    // Business metrics
+    metrics: {
+      business: {
+        oee: 'Gesamt-OEE',
+        oeeDescription: 'Gesamtanlageneffektivität',
+        availability: 'Verfügbarkeit',
+        performance: 'Leistung',
+        quality: 'Qualität',
+        qualityRate: 'Qualitätsrate',
+        productionToday: 'Produktion heute',
+        cycleTime: 'Zykluszeit',
+        defectsToday: 'Defekte heute',
+        criticalAlarms: 'Kritische Alarme',
+        equipmentStatus: 'Anlagenstatus',
+        productionByProduct: 'Produktion nach Produkt',
+        oeeTrend: 'OEE-Trend (24h)',
+        running: 'Läuft',
+        stopped: 'Gestoppt',
+        maintenance: 'Wartung',
+        error: 'Fehler'
+      },
+      tech: {
+        metricsRate: 'Metriken/s',
+        logsRate: 'Logs/s',
+        tracesRate: 'Traces/s',
+        latencyP95: 'Latenz P95',
+        errorRate: 'Fehlerrate',
+        kafkaThroughput: 'Kafka-Durchsatz',
+        cpu: 'CPU',
+        memory: 'Speicher',
+        disk: 'Festplatte',
+        activeSeries: 'Aktive Serien',
+        storage: 'Speicherplatz',
+        queryLatency: 'Abfragelatenz',
+        documents: 'Dokumente',
+        health: 'Zustand',
+        nodes: 'Knoten',
+        topics: 'Topics',
+        partitions: 'Partitionen',
+        consumerLag: 'Consumer-Lag'
+      }
+    },
+
+    // Service pages
+    services: {
+      grafana: {
+        title: 'Grafana',
+        description: 'Visualisierung und Dashboards',
+        dashboards: 'Dashboards',
+        explore: 'Erkunden',
+        alerting: 'Alerting'
+      },
+      opensearch: {
+        title: 'OpenSearch',
+        description: 'Log-Suche und -Analyse',
+        discover: 'Entdecken',
+        indices: 'Indizes',
+        queries: 'Abfragen'
+      },
+      kafka: {
+        title: 'Kafka',
+        description: 'Daten-Streaming',
+        topics: 'Topics',
+        consumers: 'Consumers',
+        producers: 'Producers'
+      },
+      victoriametrics: {
+        title: 'VictoriaMetrics',
+        description: 'Metrikenspeicherung'
+      }
+    },
+
+    // Time and date
+    time: {
+      lastUpdate: 'Letzte Aktualisierung',
+      now: 'Jetzt',
+      today: 'Heute',
+      yesterday: 'Gestern',
+      thisWeek: 'Diese Woche',
+      thisMonth: 'Dieser Monat',
+      custom: 'Benutzerdefiniert'
+    },
+
+    // Errors and messages
+    messages: {
+      noData: 'Keine Daten verfügbar',
+      loadingError: 'Ladefehler',
+      connectionLost: 'Verbindung verloren',
+      tryAgain: 'Erneut versuchen'
+    },
+
+    // Observability & Remediation
+    observability: {
+      title: 'Observability & Behebung',
+      description: 'SLO-Überwachung, Vorfallmanagement und Behebungsautomatisierung',
+      tabs: {
+        overview: 'Übersicht',
+        incidents: 'Vorfälle',
+        runbooks: 'Runbooks',
+        history: 'Verlauf'
+      },
+      // Metrics
+      sloCompliance: 'SLO-Compliance',
+      activeIncidents: 'Aktive Vorfälle',
+      mttr: 'Durchschn. MTTR',
+      mttd: 'Durchschn. MTTD',
+      automationRate: 'Automatisierungsgrad',
+      // SLO
+      sloStatus: 'SLO-Status',
+      current: 'Aktuell',
+      target: 'Ziel',
+      errorBudget: 'Fehlerbudget',
+      remaining: 'verbleibend',
+      // Incidents
+      allActiveIncidents: 'Alle aktiven Vorfälle',
+      noActiveIncidents: 'Keine aktiven Vorfälle',
+      allSystemsOperational: 'Alle Systeme arbeiten normal',
+      allSeverities: 'Alle Schweregrade',
+      critical: 'Kritisch',
+      warning: 'Warnung',
+      allServices: 'Alle Dienste',
+      viewRunbook: 'Runbook anzeigen',
+      remediationActions: 'Behebungsmaßnahmen',
+      runNextStep: 'Nächsten Schritt ausführen',
+      pauseRemediation: 'Pause',
+      escalate: 'Eskalieren',
+      // Runbooks
+      remediationRunbooks: 'Behebungs-Runbooks',
+      createRunbook: 'Runbook erstellen',
+      executions: 'Ausführungen',
+      avgMTTR: 'Durchschn. MTTR',
+      triggers: 'Auslöser',
+      steps: 'Schritte',
+      automated: 'Automatisiert',
+      manual: 'Manuell',
+      executeRunbook: 'Runbook ausführen',
+      // History
+      remediationHistory: 'Behebungsverlauf',
+      last24h: 'Letzte 24h',
+      last7d: 'Letzte 7 Tage',
+      last30d: 'Letzte 30 Tage',
+      runbook: 'Runbook',
+      service: 'Dienst',
+      trigger: 'Auslöser',
+      duration: 'Dauer',
+      status: 'Status',
+      progress: 'Fortschritt',
+      // Charts
+      mttrTrend: 'MTTR/MTTD-Trend',
+      incidentTrend: 'Vorfalltrend',
+      minutes: 'Minuten',
+      autoResolved: 'Automatisch behoben',
+      manualResolved: 'Manuell behoben',
+      // Actions
+      quickActions: 'Schnellaktionen'
+    },
+
+    // Welcome/Onboarding Page
+    welcome: {
+      title: 'Willkommen bei Synapsix',
+      subtitle: 'Industrielle Observability-Plattform',
+      tagline: 'KI-gestützt',
+      selectPersona: 'Wählen Sie Ihr Profil, um Ihre Erfahrung zu personalisieren',
+      continue: 'Weiter',
+      skip: 'Diesen Schritt überspringen',
+      hint: 'Sie können Ihr Profil jederzeit in den Einstellungen ändern'
+    },
+
+    // Personas
+    personas: {
+      operationsManager: {
+        title: 'Betriebsleiter',
+        description: 'Überwachung der Produktionslinien und Anlagenverwaltung',
+        feature1: 'OEE-Tracking in Echtzeit',
+        feature2: 'Kritische Anlagenwarnungen',
+        feature3: 'Wartungsplanung'
+      },
+      plantDirector: {
+        title: 'Werksleiter',
+        description: 'Strategische Vision und finanzielle KPIs',
+        feature1: 'Executive-Dashboards',
+        feature2: 'Finanzielle Auswirkungen der Produktion',
+        feature3: 'Trends und Prognosen'
+      },
+      devopsEngineer: {
+        title: 'DevOps-Ingenieur',
+        description: 'Infrastruktur und Datenpipelines',
+        feature1: 'Service-Zustand',
+        feature2: 'Pipeline-Überwachung',
+        feature3: 'Leistungsanalyse'
+      },
+      securityAnalyst: {
+        title: 'Sicherheitsanalyst',
+        description: 'Überwachung von Bedrohungen und Schwachstellen',
+        feature1: 'Sicherheitswarnungen',
+        feature2: 'Anomalieerkennung',
+        feature3: 'Zugriffsaudits'
+      },
+      complianceOfficer: {
+        title: 'Compliance-Beauftragter',
+        description: 'Regulatorische Compliance und Richtlinien',
+        feature1: 'Compliance-Status',
+        feature2: 'Audit-Berichte',
+        feature3: 'Richtlinienverwaltung'
+      },
+      dataAnalyst: {
+        title: 'Datenanalyst',
+        description: 'Analyse von Metriken und Logs',
+        feature1: 'Datenexploration',
+        feature2: 'Mustererkennung',
+        feature3: 'Export und Berichte'
+      }
+    },
+
+    // Command Center
+    commandCenter: {
+      title: 'Kommandozentrale',
+      subtitle: 'Übersicht über Systemzustand und Warnungen',
+      quickAccess: 'Schnellzugriff',
+      keyMetrics: 'Wichtige Metriken',
+      quickNav: {
+        technical: {
+          title: 'Technische Ansicht',
+          description: 'Infrastruktur, Dienste und Pipelines'
+        },
+        business: {
+          title: 'Business-KPIs',
+          description: 'OEE, Produktion und finanzielle Auswirkungen'
+        },
+        security: {
+          title: 'Sicherheit',
+          description: 'Schwachstellen und Compliance'
+        },
+        observability: {
+          title: 'Observability',
+          description: 'Vorfälle und Behebung'
+        }
+      },
+      systemHealth: {
+        title: 'Systemzustand',
+        subtitle: 'Backend-Dienste-Status',
+        overall: 'Gesamtbewertung',
+        servicesHealthy: 'Dienste funktionsfähig',
+        backendServices: 'Backend-Dienste'
+      },
+      alerts: {
+        title: 'Warnungen',
+        active: 'aktiv',
+        noAlerts: 'Keine aktiven Warnungen'
+      },
+      aiAssistant: {
+        title: 'KI-Assistent',
+        description: 'Stellen Sie Fragen in natürlicher Sprache'
+      }
+    },
+
+    // Technical View
+    technicalView: {
+      title: 'Technische Ansicht',
+      subtitle: 'Infrastruktur, Backend-Dienste und Datenpipelines',
+      pipeline: {
+        title: 'Datenpipeline',
+        subtitle: 'Erfassung bis Speicherung'
+      },
+      backends: {
+        title: 'Backend-Dienste'
+      },
+      throughput: {
+        title: 'Durchsatz',
+        subtitle: 'Metriken, Logs und Traces pro Stunde'
+      }
+    },
+
+    // Business KPI View
+    businessKPI: {
+      title: 'Business-KPIs',
+      subtitle: 'Produktionsleistung, Qualität und finanzielle Auswirkungen',
+      period: {
+        today: 'Heute',
+        week: 'Woche',
+        month: 'Monat'
+      },
+      oee: {
+        title: 'Gesamt-OEE',
+        subtitle: 'Gesamtanlageneffektivität',
+        components: 'OEE-Komponenten',
+        componentsSubtitle: 'Verfügbarkeit × Leistung × Qualität',
+        trend: 'OEE-Trend',
+        trendSubtitle: 'Entwicklung der letzten 24 Stunden'
+      },
+      financial: {
+        title: 'Finanzielle Auswirkungen',
+        subtitle: 'Umsatz und Produktionskosten'
+      },
+      production: {
+        byProduct: 'Produktion nach Produkt',
+        distribution: 'Produktionsverteilung'
+      },
+      equipment: {
+        status: 'Anlagenstatus',
+        statusSubtitle: 'Produktionslinien'
+      },
+      maintenance: {
+        title: 'Wartung',
+        subtitle: 'Planung und Verlauf'
+      }
+    },
+
+    // AI Assistant
+    aiAssistant: {
+      title: 'KI-Assistent',
+      subtitle: 'Stellen Sie Fragen in natürlicher Sprache',
+      online: 'Online',
+      welcome: 'Wie kann ich Ihnen helfen?',
+      welcomeDescription: 'Ich kann Ihre Daten analysieren, Berichte erstellen und Ihre Fragen zu Produktion, Infrastruktur und Sicherheit beantworten.',
+      suggestions: 'Vorschläge',
+      quickActions: 'Schnellaktionen',
+      placeholder: 'Stellen Sie Ihre Frage...'
+    },
+
+    // Security & Compliance
+    security: {
+      title: 'Sicherheit & Compliance',
+      description: 'Risikomanagement, Compliance-Audits und KI-Erkenntnisse',
+      tabs: {
+        overview: 'Übersicht',
+        compliance: 'Compliance',
+        vulnerabilities: 'Schwachstellen',
+        aiInsights: 'KI-Erkenntnisse',
+        audit: 'Audit',
+        policies: 'Richtlinien'
+      },
+      // Metrics
+      overallScore: 'Gesamtbewertung',
+      criticalVulns: 'Kritische Schwachstellen',
+      openVulns: 'Offene Schwachstellen',
+      aiAlerts: 'KI-Warnungen',
+      activePolicies: 'Aktive Richtlinien',
+      // Compliance
+      complianceOverview: 'Compliance-Übersicht',
+      complianceFrameworks: 'Compliance-Frameworks',
+      compliant: 'Konform',
+      partial: 'Teilweise',
+      nonCompliant: 'Nicht konform',
+      controls: 'Kontrollen',
+      passed: 'Bestanden',
+      failed: 'Fehlgeschlagen',
+      nextAudit: 'Nächstes Audit',
+      lastAudit: 'Letztes Audit',
+      auditTimeline: 'Audit-Zeitplan',
+      generateReport: 'Bericht erstellen',
+      // Vulnerabilities
+      allVulnerabilities: 'Alle Schwachstellen',
+      recentVulnerabilities: 'Aktuelle Schwachstellen',
+      vulnDistribution: 'Schwachstellenverteilung',
+      allSeverities: 'Alle Schweregrade',
+      critical: 'Kritisch',
+      high: 'Hoch',
+      medium: 'Mittel',
+      low: 'Niedrig',
+      allStatuses: 'Alle Status',
+      statusOpen: 'Offen',
+      statusInProgress: 'In Bearbeitung',
+      statusPatched: 'Behoben',
+      viewDetails: 'Details anzeigen',
+      // Security
+      securityTrend: 'Sicherheitstrend',
+      securityScore: 'Sicherheitsbewertung',
+      threatsDetected: 'Erkannte Bedrohungen',
+      threatsBlocked: 'Blockierte Bedrohungen',
+      exportReport: 'Bericht exportieren',
+      runScan: 'Scan starten',
+      // AI Insights
+      latestAIInsights: 'Neueste KI-Erkenntnisse',
+      aiSecurityInsights: 'KI-Sicherheitserkenntnisse',
+      poweredByAI: 'KI-gestützt',
+      confidence: 'Konfidenz',
+      aiType: {
+        anomaly: 'Anomalie',
+        prediction: 'Vorhersage',
+        optimization: 'Optimierung'
+      },
+      aiCapabilities: {
+        anomalyDetection: 'Anomalieerkennung',
+        anomalyDesc: 'Echtzeit-Erkennung verdächtigen Verhaltens',
+        predictive: 'Prädiktive Analyse',
+        predictiveDesc: 'Antizipation zukünftiger Risiken und Bedrohungen',
+        optimization: 'Optimierung',
+        optimizationDesc: 'Empfehlungen zur Verbesserung der Sicherheit'
+      },
+      // Audit
+      auditTrail: 'Audit-Trail',
+      auditId: 'ID',
+      action: 'Aktion',
+      user: 'Benutzer',
+      resource: 'Ressource',
+      ipAddress: 'IP-Adresse',
+      timestamp: 'Zeitstempel',
+      // Policies
+      securityPolicies: 'Sicherheitsrichtlinien',
+      managePolicies: 'Richtlinien verwalten',
+      compliance: 'Compliance',
+      violations: 'Verstöße',
+      avgCompliance: 'Durchschnittliche Compliance',
+      enforced: 'Durchgesetzt',
+      totalViolations: 'Gesamtverstöße',
+      policyStatus: {
+        enforced: 'Durchgesetzt',
+        partial: 'Teilweise',
+        disabled: 'Deaktiviert'
       }
     }
   }

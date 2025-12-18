@@ -18,6 +18,7 @@ import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { Card, CardHeader, CardBody, MetricCard } from '../components/ui/Card'
 import { TimeSeriesChart, BarChartComponent, DonutChart } from '../components/ui/Charts'
 import { StatusBadge } from '../components/ui/Status'
+import { useI18n } from '../i18n'
 
 const OPENSEARCH_URL = 'http://localhost:5601'
 
@@ -39,6 +40,7 @@ const recentLogs = [
 
 function OpenSearchView() {
   const { userMode, metrics } = useDashboard()
+  const { t } = useI18n()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState('all')
 
@@ -83,9 +85,9 @@ function OpenSearchView() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               <Search className="w-6 h-6 text-white" />
             </div>
-            OpenSearch
+            {t('services.opensearch.title')}
           </h1>
-          <p className="text-gray-400 mt-1">Analyse des logs et recherche full-text</p>
+          <p className="text-gray-400 mt-1">{t('services.opensearch.description')}</p>
         </div>
         <a
           href={OPENSEARCH_URL}
@@ -94,7 +96,7 @@ function OpenSearchView() {
           className="btn btn-primary"
         >
           <ExternalLink className="w-4 h-4" />
-          Ouvrir Dashboards
+          {t('services.opensearch.discover')}
         </a>
       </div>
 
