@@ -29,7 +29,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -58,7 +58,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "avg(inference_latency_milliseconds)",
           "legendFormat": "Avg Latency",
           "refId": "A"
@@ -68,7 +68,7 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -95,7 +95,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "sum(rate(inference_requests_total[5m]))",
           "legendFormat": "Requests/sec",
           "refId": "A"
@@ -105,7 +105,7 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -134,7 +134,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "sum(rate(inference_errors_total[5m])) / sum(rate(inference_requests_total[5m]))",
           "legendFormat": "Error Rate",
           "refId": "A"
@@ -144,7 +144,7 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -182,19 +182,19 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "histogram_quantile(0.50, rate(inference_latency_milliseconds_bucket[5m]))",
           "legendFormat": "p50 - {{model}}",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "histogram_quantile(0.95, rate(inference_latency_milliseconds_bucket[5m]))",
           "legendFormat": "p95 - {{model}}",
           "refId": "B"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "histogram_quantile(0.99, rate(inference_latency_milliseconds_bucket[5m]))",
           "legendFormat": "p99 - {{model}}",
           "refId": "C"
@@ -212,7 +212,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -257,7 +257,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "model_confidence_score",
           "legendFormat": "{{model}} - {{version}}",
           "refId": "A"
@@ -267,7 +267,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -312,13 +312,13 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "drift_score",
           "legendFormat": "{{model}} - Data Drift",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "concept_drift_score",
           "legendFormat": "{{model}} - Concept Drift",
           "refId": "B"
@@ -336,7 +336,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -361,7 +361,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "sum(increase(token_usage_input_total[24h]))",
           "legendFormat": "Input Tokens",
           "refId": "A"
@@ -371,7 +371,7 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -396,7 +396,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "sum(increase(token_usage_output_total[24h]))",
           "legendFormat": "Output Tokens",
           "refId": "A"
@@ -406,7 +406,7 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -435,7 +435,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "sum(increase(llm_cost_usd_total[24h]))",
           "legendFormat": "LLM Cost",
           "refId": "A"
@@ -445,7 +445,7 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -483,13 +483,13 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "sum by (model) (increase(token_usage_input_total[1h]))",
           "legendFormat": "{{model}} - Input",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "sum by (model) (increase(token_usage_output_total[1h]))",
           "legendFormat": "{{model}} - Output",
           "refId": "B"
@@ -507,7 +507,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -552,7 +552,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "gpu_utilization_percent",
           "legendFormat": "GPU {{gpu_id}} - Utilization",
           "refId": "A"
@@ -562,7 +562,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -607,7 +607,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "gpu_memory_used_bytes / gpu_memory_total_bytes * 100",
           "legendFormat": "GPU {{gpu_id}} - Memory",
           "refId": "A"
@@ -625,7 +625,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -663,13 +663,13 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "batch_size",
           "legendFormat": "{{model}} - Batch Size",
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "batch_queue_length",
           "legendFormat": "{{model}} - Queue Length",
           "refId": "B"
@@ -679,7 +679,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+      "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -717,7 +717,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
           "expr": "histogram_quantile(0.99, rate(batch_processing_latency_milliseconds_bucket[5m]))",
           "legendFormat": "{{model}} - p99 Batch Latency",
           "refId": "A"
@@ -735,7 +735,7 @@
     "list": [
       {
         "current": { "selected": false, "text": "All", "value": "$__all" },
-        "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+        "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
         "definition": "label_values(inference_latency_milliseconds, model)",
         "hide": 0,
         "includeAll": true,
