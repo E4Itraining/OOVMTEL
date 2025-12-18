@@ -457,7 +457,8 @@ export const translations = {
         vulnerabilities: 'Vulnérabilités',
         aiInsights: 'Insights IA',
         audit: 'Audit',
-        policies: 'Politiques'
+        policies: 'Politiques',
+        video: 'Vidéosurveillance'
       },
       // Metrics
       overallScore: 'Score Global',
@@ -537,6 +538,28 @@ export const translations = {
         enforced: 'Appliquée',
         partial: 'Partielle',
         disabled: 'Désactivée'
+      },
+      // Video Surveillance
+      video: {
+        cameras: 'Caméras',
+        online: 'En ligne',
+        offline: 'Hors ligne',
+        recording: 'Enregistrement',
+        lastMotion: 'Dernier mouvement',
+        alerts: 'alertes',
+        totalAlerts: 'Alertes Totales',
+        liveFeeds: 'Flux en Direct',
+        allCameras: 'Toutes les caméras',
+        onlineOnly: 'En ligne uniquement',
+        withAlerts: 'Avec alertes',
+        fullscreen: 'Plein écran',
+        recentEvents: 'Événements Récents',
+        viewRecording: 'Voir enregistrement',
+        storage: 'Stockage',
+        of: 'sur',
+        retention: 'Rétention',
+        days: 'jours',
+        bandwidth: 'Bande passante'
       }
     }
   },
@@ -983,7 +1006,8 @@ export const translations = {
         vulnerabilities: 'Vulnerabilities',
         aiInsights: 'AI Insights',
         audit: 'Audit',
-        policies: 'Policies'
+        policies: 'Policies',
+        video: 'Video Surveillance'
       },
       // Metrics
       overallScore: 'Overall Score',
@@ -1063,6 +1087,28 @@ export const translations = {
         enforced: 'Enforced',
         partial: 'Partial',
         disabled: 'Disabled'
+      },
+      // Video Surveillance
+      video: {
+        cameras: 'Cameras',
+        online: 'Online',
+        offline: 'Offline',
+        recording: 'Recording',
+        lastMotion: 'Last motion',
+        alerts: 'alerts',
+        totalAlerts: 'Total Alerts',
+        liveFeeds: 'Live Feeds',
+        allCameras: 'All cameras',
+        onlineOnly: 'Online only',
+        withAlerts: 'With alerts',
+        fullscreen: 'Fullscreen',
+        recentEvents: 'Recent Events',
+        viewRecording: 'View Recording',
+        storage: 'Storage',
+        of: 'of',
+        retention: 'Retention',
+        days: 'days',
+        bandwidth: 'Bandwidth'
       }
     }
   },
@@ -1509,7 +1555,8 @@ export const translations = {
         vulnerabilities: 'Kwetsbaarheden',
         aiInsights: 'AI Inzichten',
         audit: 'Audit',
-        policies: 'Beleid'
+        policies: 'Beleid',
+        video: 'Videobewaking'
       },
       // Metrics
       overallScore: 'Totaalscore',
@@ -1589,6 +1636,28 @@ export const translations = {
         enforced: 'Afgedwongen',
         partial: 'Gedeeltelijk',
         disabled: 'Uitgeschakeld'
+      },
+      // Video Surveillance
+      video: {
+        cameras: 'Camera\'s',
+        online: 'Online',
+        offline: 'Offline',
+        recording: 'Opname',
+        lastMotion: 'Laatste beweging',
+        alerts: 'waarschuwingen',
+        totalAlerts: 'Totaal Waarschuwingen',
+        liveFeeds: 'Live Feeds',
+        allCameras: 'Alle camera\'s',
+        onlineOnly: 'Alleen online',
+        withAlerts: 'Met waarschuwingen',
+        fullscreen: 'Volledig scherm',
+        recentEvents: 'Recente Gebeurtenissen',
+        viewRecording: 'Bekijk Opname',
+        storage: 'Opslag',
+        of: 'van',
+        retention: 'Bewaartijd',
+        days: 'dagen',
+        bandwidth: 'Bandbreedte'
       }
     }
   },
@@ -2035,7 +2104,8 @@ export const translations = {
         vulnerabilities: 'Schwachstellen',
         aiInsights: 'KI-Erkenntnisse',
         audit: 'Audit',
-        policies: 'Richtlinien'
+        policies: 'Richtlinien',
+        video: 'Videoüberwachung'
       },
       // Metrics
       overallScore: 'Gesamtbewertung',
@@ -2115,6 +2185,28 @@ export const translations = {
         enforced: 'Durchgesetzt',
         partial: 'Teilweise',
         disabled: 'Deaktiviert'
+      },
+      // Video Surveillance
+      video: {
+        cameras: 'Kameras',
+        online: 'Online',
+        offline: 'Offline',
+        recording: 'Aufnahme',
+        lastMotion: 'Letzte Bewegung',
+        alerts: 'Warnungen',
+        totalAlerts: 'Gesamtwarnungen',
+        liveFeeds: 'Live-Feeds',
+        allCameras: 'Alle Kameras',
+        onlineOnly: 'Nur online',
+        withAlerts: 'Mit Warnungen',
+        fullscreen: 'Vollbild',
+        recentEvents: 'Aktuelle Ereignisse',
+        viewRecording: 'Aufnahme ansehen',
+        storage: 'Speicher',
+        of: 'von',
+        retention: 'Aufbewahrung',
+        days: 'Tage',
+        bandwidth: 'Bandbreite'
       }
     }
   }
