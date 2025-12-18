@@ -323,7 +323,7 @@
       },
       "id": 10,
       "panels": [],
-      "title": "Ingestion Latency",
+      "title": "Exporter Performance",
       "type": "row"
     },
     {
@@ -372,11 +372,11 @@
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 100 },
-              { "color": "red", "value": 500 }
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 80 }
             ]
           },
-          "unit": "ms"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -397,18 +397,24 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
-          "expr": "histogram_quantile(0.99, rate(otelcol_exporter_send_latency_bucket[5m]))",
-          "legendFormat": "{{exporter}} p99",
+          "expr": "otelcol_exporter_queue_size{job=\"otel-collector\"}",
+          "legendFormat": "{{exporter}} - Queue Size",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
-          "expr": "histogram_quantile(0.50, rate(otelcol_exporter_send_latency_bucket[5m]))",
-          "legendFormat": "{{exporter}} p50",
+          "expr": "otelcol_exporter_queue_capacity{job=\"otel-collector\"}",
+          "legendFormat": "{{exporter}} - Queue Capacity",
           "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "100 * otelcol_exporter_queue_size{job=\"otel-collector\"} / otelcol_exporter_queue_capacity{job=\"otel-collector\"}",
+          "legendFormat": "{{exporter}} - Queue Utilization %",
+          "refId": "C"
         }
       ],
-      "title": "Exporter Latency by Destination",
+      "title": "Exporter Queue Backpressure",
       "type": "timeseries"
     },
     {
@@ -663,15 +669,21 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
-          "expr": "go_memstats_alloc_bytes{job=\"otel-collector\"}",
-          "legendFormat": "{{job}} - Allocated",
+          "expr": "otelcol_process_memory_rss{job=\"otel-collector\"}",
+          "legendFormat": "RSS Memory",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
-          "expr": "go_memstats_sys_bytes{job=\"otel-collector\"}",
-          "legendFormat": "{{job}} - System",
+          "expr": "otelcol_process_runtime_heap_alloc_bytes{job=\"otel-collector\"}",
+          "legendFormat": "Heap Allocated",
           "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "otelcol_process_runtime_total_sys_memory_bytes{job=\"otel-collector\"}",
+          "legendFormat": "Total System Memory",
+          "refId": "C"
         }
       ],
       "title": "OTel Collector Memory Usage",
@@ -864,21 +876,27 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
-          "expr": "increase(otelcol_exporter_send_failed_metric_points[5m])",
+          "expr": "sum by (exporter) (increase(otelcol_exporter_send_failed_metric_points{job=\"otel-collector\"}[5m]))",
           "legendFormat": "Metrics - {{exporter}}",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
-          "expr": "increase(otelcol_exporter_send_failed_log_records[5m])",
+          "expr": "sum by (exporter) (increase(otelcol_exporter_send_failed_log_records{job=\"otel-collector\"}[5m]))",
           "legendFormat": "Logs - {{exporter}}",
           "refId": "B"
         },
         {
           "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
-          "expr": "increase(otelcol_exporter_send_failed_spans[5m])",
+          "expr": "sum by (exporter) (increase(otelcol_exporter_send_failed_spans{job=\"otel-collector\"}[5m]))",
           "legendFormat": "Spans - {{exporter}}",
           "refId": "C"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "VictoriaMetrics" },
+          "expr": "sum(rate(otelcol_exporter_sent_metric_points{job=\"otel-collector\"}[5m])) by (exporter) * 0",
+          "legendFormat": "{{exporter}} - Baseline",
+          "refId": "D"
         }
       ],
       "title": "Export Failures by Destination",
