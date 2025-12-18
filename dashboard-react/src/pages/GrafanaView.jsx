@@ -32,7 +32,7 @@ const dashboards = [
     lastUpdated: '2 min ago'
   },
   {
-    id: 'unified-business-tech-view',
+    id: 'unified-business-tech',
     name: 'Unified Business/Tech View',
     description: 'Vue unifiée des métriques business et techniques',
     category: 'both',
@@ -50,7 +50,7 @@ const dashboards = [
     lastUpdated: '1 min ago'
   },
   {
-    id: 'pipeline-health',
+    id: 'oovmtel-pipeline-health',
     name: 'Pipeline Health',
     description: 'OTEL collector, Kafka throughput et data flow',
     category: 'tech',
@@ -68,13 +68,22 @@ const dashboards = [
     lastUpdated: '1 min ago'
   },
   {
-    id: 'ai-observability',
+    id: 'oovmtel-ai-observability',
     name: 'AI Observability',
     description: 'Anomaly detection et maintenance prédictive',
     category: 'tech',
     panels: 9,
     views: 290,
     lastUpdated: '10 min ago'
+  },
+  {
+    id: 'welcome-hub',
+    name: 'Welcome Hub',
+    description: 'Page d\'accueil avec guide de démarrage rapide',
+    category: 'both',
+    panels: 4,
+    views: 1500,
+    lastUpdated: '1 min ago'
   }
 ]
 
@@ -137,7 +146,7 @@ function GrafanaView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
           label="Dashboards"
-          value="6"
+          value="7"
           icon={Layout}
           color="cyan"
         />
