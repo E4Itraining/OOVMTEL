@@ -50,17 +50,19 @@ scrape_configs:
   # ==========================================================================
   # Kafka Cluster IT
   # ==========================================================================
-  - job_name: 'kafka-it'
-    scrape_interval: 30s
-    static_configs:
-      - targets:
-          - 'kafka-it:9092'
-          - 'kafka-it-2:9092'
-          - 'kafka-it-3:9092'
-        labels:
-          service: kafka
-          zone: it
-    # Note: Requires JMX exporter sidecar for full metrics
+  # DISABLED: Kafka port 9092 is a binary protocol port, not HTTP.
+  # Scraping this port causes InvalidReceiveException errors in Kafka.
+  # To enable Kafka metrics, add JMX Exporter sidecar and scrape port 7071.
+  # - job_name: 'kafka-it'
+  #   scrape_interval: 30s
+  #   static_configs:
+  #     - targets:
+  #         - 'kafka-it:7071'
+  #         - 'kafka-it-2:7071'
+  #         - 'kafka-it-3:7071'
+  #       labels:
+  #         service: kafka
+  #         zone: it
 
   # ==========================================================================
   # OpenSearch
