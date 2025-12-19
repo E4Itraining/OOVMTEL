@@ -27,6 +27,28 @@ from .alerting import (
     Alert, AlertRule, AlertSeverity
 )
 
+# P2-P3 Modules - Advanced Features
+from .visualization3d import (
+    Visualization3DEngine, SceneBuilder, HeatmapGenerator,
+    Scene3D, Equipment3D, HeatmapData
+)
+from .voice import (
+    VoiceEngine, SpeechRecognizer, VoiceCommandHandler,
+    VoiceCommand, VoiceSession, SpeechResult
+)
+from .kpi_builder import (
+    KPIBuilderEngine, KPICalculator, BenchmarkManager,
+    KPIDefinition, KPIResult, KPICategory, Benchmark
+)
+from .lineage import (
+    DataLineageEngine, GraphManager, ImpactAnalyzer,
+    LineageNode, LineageEdge, NodeType, EdgeType
+)
+from .ml_models import (
+    MLModelsEngine, ModelManager, InferenceEngine,
+    PretrainedModel, HealthScore, EquipmentType, ModelType
+)
+
 __all__ = [
     # NLP Module
     'NLPEngine',
@@ -76,4 +98,42 @@ __all__ = [
     'Alert',
     'AlertRule',
     'AlertSeverity',
+    # Visualization 3D Module (P2)
+    'Visualization3DEngine',
+    'SceneBuilder',
+    'HeatmapGenerator',
+    'Scene3D',
+    'Equipment3D',
+    'HeatmapData',
+    # Voice Module (P2)
+    'VoiceEngine',
+    'SpeechRecognizer',
+    'VoiceCommandHandler',
+    'VoiceCommand',
+    'VoiceSession',
+    'SpeechResult',
+    # KPI Builder Module (P2)
+    'KPIBuilderEngine',
+    'KPICalculator',
+    'BenchmarkManager',
+    'KPIDefinition',
+    'KPIResult',
+    'KPICategory',
+    'Benchmark',
+    # Data Lineage Module (P3)
+    'DataLineageEngine',
+    'GraphManager',
+    'ImpactAnalyzer',
+    'LineageNode',
+    'LineageEdge',
+    'NodeType',
+    'EdgeType',
+    # ML Models Module (P3)
+    'MLModelsEngine',
+    'ModelManager',
+    'InferenceEngine',
+    'PretrainedModel',
+    'HealthScore',
+    'EquipmentType',
+    'ModelType',
 ]
