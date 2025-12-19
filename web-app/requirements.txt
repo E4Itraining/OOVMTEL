@@ -39,5 +39,21 @@ python-dotenv==1.0.0
 # For subprocess in remediation module
 # subprocess - standard library
 
+# =============================================
+# LLM Integration Dependencies
+# =============================================
+# Note: The LLM module uses httpx (already included above) for API calls.
+# This approach avoids adding heavy SDK dependencies while providing
+# full functionality for Mistral, Claude, and other providers.
+
+# Optional: Official Mistral SDK (uncomment if preferred over httpx)
+# mistralai>=1.0.0
+
+# Optional: Official Anthropic SDK for Claude (uncomment for Claude support)
+# anthropic>=0.39.0
+
+# Optional: OpenAI SDK (uncomment for OpenAI support)
+# openai>=1.0.0
+
 # Note: All game-changer modules use only standard library
 # and existing dependencies (pydantic, httpx, asyncio)
