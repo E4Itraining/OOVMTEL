@@ -1,4 +1,4 @@
-# OOVMTEL - Industrial Observability Platform
+# SYNAPSIX - Industrial Observability Platform
 
 **O**penObserve + **V**ictoria**M**etrics + Open**TEL**emetry + OpenSearch + Kafka
 
