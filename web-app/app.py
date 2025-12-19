@@ -48,6 +48,18 @@ except ImportError as e:
     MODULES_AVAILABLE = False
     logging.warning(f"Advanced modules not available: {e}")
 
+# Import LLM module
+try:
+    from modules.llm import (
+        LLMSettings, get_llm_settings,
+        MistralProvider, IndustrialPrompts
+    )
+    from modules.llm.nlp_integration import LLMEnhancedNLP, get_llm_nlp
+    LLM_MODULE_AVAILABLE = True
+except ImportError as e:
+    LLM_MODULE_AVAILABLE = False
+    logging.warning(f"LLM module not available: {e}")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -157,10 +169,11 @@ predictive_engine: Optional[Any] = None
 remediation_engine: Optional[Any] = None
 edge_manager: Optional[Any] = None
 hpc_engine: Optional[Any] = None
+llm_nlp: Optional[Any] = None  # LLM-enhanced NLP
 
 @app.on_event("startup")
 async def startup_event():
-    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine
+    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine, llm_nlp
 
     http_client = httpx.AsyncClient(timeout=10.0)
 
@@ -187,6 +200,19 @@ async def startup_event():
             logger.info("Game-changer modules initialized successfully (including HPC)")
         except Exception as e:
             logger.error(f"Failed to initialize modules: {e}")
+
+    # Initialize LLM-enhanced NLP
+    if LLM_MODULE_AVAILABLE:
+        try:
+            llm_nlp = LLMEnhancedNLP()
+            initialized = await llm_nlp.initialize()
+            if initialized:
+                logger.info("LLM-enhanced NLP initialized successfully")
+            else:
+                logger.info("LLM not configured - using rule-based NLP fallback")
+        except Exception as e:
+            logger.warning(f"LLM initialization failed: {e}")
+            llm_nlp = None
 
     logger.info("OOVMTEL Unified View API started")
     # Start background task for metrics refresh
@@ -993,8 +1019,155 @@ async def modules_status():
             "description": "High Performance Computing for simulations and ML",
             "clusters_count": len(hpc_engine.list_clusters()) if hpc_engine else 0,
             "capabilities": ["gpu_acceleration", "distributed_training", "what_if_simulations", "parallel_processing"] if hpc_engine else []
+        },
+        "llm": {
+            "enabled": llm_nlp is not None and llm_nlp.is_llm_available if llm_nlp else False,
+            "module_available": LLM_MODULE_AVAILABLE,
+            "description": "LLM-enhanced NLP for natural language understanding",
+            "provider": get_llm_settings().active_provider.value if LLM_MODULE_AVAILABLE else None,
+            "fallback_enabled": get_llm_settings().fallback_to_rules if LLM_MODULE_AVAILABLE else True
         }
     }
+
+# =========================================
+# LLM - Large Language Model Endpoints
+# =========================================
+
+@app.get("/api/llm/status")
+async def llm_status():
+    """Get LLM module status and configuration."""
+    if not LLM_MODULE_AVAILABLE:
+        return {
+            "available": False,
+            "reason": "LLM module not installed"
+        }
+
+    settings = get_llm_settings()
+    return {
+        "available": True,
+        "enabled": settings.llm_enabled,
+        "configured": settings.is_configured(),
+        "provider": settings.active_provider.value,
+        "model": settings.mistral.model if settings.active_provider.value == "mistral" else None,
+        "fallback_enabled": settings.fallback_to_rules,
+        "llm_active": llm_nlp.is_llm_available if llm_nlp else False
+    }
+
+@app.get("/api/llm/health")
+async def llm_health():
+    """Health check for LLM provider."""
+    if not LLM_MODULE_AVAILABLE or not llm_nlp:
+        return {
+            "status": "unavailable",
+            "reason": "LLM module not available"
+        }
+
+    try:
+        health = await llm_nlp.health_check()
+        return health
+    except Exception as e:
+        logger.error(f"LLM health check error: {e}")
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
+@app.get("/api/llm/models")
+async def list_llm_models():
+    """List available LLM models."""
+    if not LLM_MODULE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM module not available")
+
+    settings = get_llm_settings()
+    return {
+        "active_provider": settings.active_provider.value,
+        "mistral_models": settings.mistral.AVAILABLE_MODELS,
+        "current_model": settings.mistral.model
+    }
+
+class LLMChatRequest(BaseModel):
+    """Request model for LLM-enhanced chat."""
+    query: str
+    language: str = "fr"
+    session_id: Optional[str] = None
+    use_llm: bool = True  # Set to False to force rule-based response
+
+@app.post("/api/llm/chat")
+async def llm_chat(request: LLMChatRequest):
+    """
+    LLM-enhanced chat endpoint.
+
+    Uses Mistral or other configured LLM for natural language understanding
+    and response generation. Falls back to rule-based NLP if LLM unavailable.
+    """
+    if not MODULES_AVAILABLE or not nlp_engine:
+        raise HTTPException(status_code=503, detail="NLP module not available")
+
+    try:
+        # Get current metrics for context
+        metrics = generate_simulated_metrics() if config.USE_SIMULATED_DATA else await fetch_real_metrics()
+
+        # First, use rule-based NLP for intent and entity extraction
+        conv_query = ConversationalQuery(
+            query=request.query,
+            language=request.language,
+            session_id=request.session_id
+        )
+        nlp_response = await nlp_engine.process_query(conv_query, metrics)
+
+        # If LLM is available and requested, enhance the response
+        llm_enhanced = False
+        llm_response_data = None
+
+        if request.use_llm and LLM_MODULE_AVAILABLE and llm_nlp and llm_nlp.is_llm_available:
+            try:
+                # Extract entities as dict
+                entities_dict = {
+                    "equipment": nlp_response.entities.equipment,
+                    "metrics": nlp_response.entities.metrics,
+                    "time_range": str(nlp_response.entities.time_range) if nlp_response.entities.time_range else None
+                }
+
+                llm_response_data = await llm_nlp.generate_response(
+                    query=request.query,
+                    intent=nlp_response.intent.value,
+                    entities=entities_dict,
+                    metrics_context=metrics,
+                    language=request.language,
+                    session_id=request.session_id
+                )
+                llm_enhanced = llm_response_data.get("llm_enhanced", False)
+            except Exception as e:
+                logger.warning(f"LLM enhancement failed: {e}")
+
+        # Build response
+        if llm_enhanced and llm_response_data:
+            return {
+                "answer": llm_response_data["content"],
+                "intent": nlp_response.intent.value,
+                "confidence": nlp_response.confidence,
+                "visualizations": [v.model_dump() for v in nlp_response.visualizations],
+                "suggestions": nlp_response.suggestions,
+                "processing_time_ms": nlp_response.processing_time_ms,
+                "llm_enhanced": True,
+                "llm_model": llm_response_data.get("model"),
+                "llm_tokens": llm_response_data.get("tokens_used", 0),
+                "llm_latency_ms": llm_response_data.get("latency_ms", 0)
+            }
+        else:
+            return {
+                "answer": nlp_response.answer,
+                "intent": nlp_response.intent.value,
+                "confidence": nlp_response.confidence,
+                "visualizations": [v.model_dump() for v in nlp_response.visualizations],
+                "suggestions": nlp_response.suggestions,
+                "processing_time_ms": nlp_response.processing_time_ms,
+                "llm_enhanced": False
+            }
+
+    except Exception as e:
+        logger.error(f"LLM chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # =========================================
 # HPC - High Performance Computing Endpoints
