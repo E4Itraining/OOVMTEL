@@ -992,6 +992,123 @@ Docker Volumes:
 
 ---
 
+## Security & Compliance Module
+
+The platform includes comprehensive security monitoring and regulatory compliance tracking.
+
+### Video Surveillance Integration
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    VIDEO SURVEILLANCE                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │  Camera 1   │  │  Camera 2   │  │  Camera 3   │              │
+│  │  Entrance   │  │  Server Rm  │  │  Warehouse  │              │
+│  │  ● ONLINE   │  │  ● ONLINE   │  │  ● OFFLINE  │              │
+│  │  🔴 REC     │  │  🔴 REC     │  │             │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │  Camera 4   │  │  Camera 5   │  │  Camera 6   │              │
+│  │  Parking    │  │  Loading    │  │  Office     │              │
+│  │  ● ONLINE   │  │  ● ONLINE   │  │  ● ONLINE   │              │
+│  │  🔴 REC     │  │  🔴 REC     │  │  🔴 REC     │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│                                                                  │
+│  Metrics: Online 5/6 | Recording 5 | Storage 2.4TB | 30d Ret.   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Features:
+- Live camera feed monitoring (6 cameras)
+- Recording status indicators
+- Security event timeline (motion detection, access events)
+- Storage and retention metrics
+- Multi-location support
+
+### EU Regulations Compliance
+
+#### AI Act Compliance
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      EU AI ACT COMPLIANCE                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Risk Classification:                                            │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Unacceptable │  High Risk  │   Limited   │   Minimal    │   │
+│  │   ❌ None    │  ✓ 2 sys    │  ✓ 3 sys    │  ✓ 5 sys     │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  Requirements Progress:                           Score: 78%     │
+│  ├─ Risk Management System              ████████████░░ 95%      │
+│  ├─ Data Governance                     █████████░░░░░ 72%      │
+│  ├─ Technical Documentation             ████████░░░░░░ 65%      │
+│  ├─ Transparency Obligations            ████████████████ 100%   │
+│  ├─ Human Oversight                     ██████████░░░░ 80%      │
+│  ├─ Accuracy & Robustness              ████████░░░░░░ 68%      │
+│  ├─ Automatic Logging                   ████████████░░ 92%      │
+│  └─ Conformity Assessment              █████░░░░░░░░░ 45%      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### NIS 2 Directive Compliance
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    NIS 2 DIRECTIVE COMPLIANCE                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Entity Type: Essential Services          Score: 87%             │
+│                                                                  │
+│  Cybersecurity Requirements:                                     │
+│  ├─ Risk Analysis & Security Policies     ████████████░░ 90%    │
+│  ├─ Incident Handling                     █████████████░ 95%    │
+│  ├─ Business Continuity                   ██████████░░░░ 78%    │
+│  ├─ Supply Chain Security                 █████████░░░░░ 72%    │
+│  ├─ Network Security                      ████████████░░ 88%    │
+│  ├─ Vulnerability Handling                █████████░░░░░ 70%    │
+│  ├─ Cybersecurity Hygiene                 ████████████░░ 92%    │
+│  ├─ Cryptography Policies                 ███████████░░░ 85%    │
+│  ├─ Access Control                        █████████████░ 95%    │
+│  └─ Multi-Factor Authentication           ████████████████ 100% │
+│                                                                  │
+│  Incident Reporting: ANSSI 24h notification enabled              │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Compliance Frameworks Overview
+
+| Framework | Score | Status | Controls |
+|-----------|-------|--------|----------|
+| ISO 27001 | 94% | ✅ Compliant | 114/122 passed |
+| SOC 2 Type II | 98% | ✅ Compliant | 78/81 passed |
+| GDPR | 91% | ⚠️ Partial | 45/52 passed |
+| NIS 2 | 87% | ⚠️ Partial | 52/62 passed |
+| AI Act | 78% | ⚠️ Partial | 38/52 passed |
+
+---
+
+## Grafana Dashboards
+
+Pre-configured dashboards available at http://localhost:3000:
+
+| Dashboard | UID | Description |
+|-----------|-----|-------------|
+| **Welcome Hub** | welcome-hub | Default home dashboard with platform overview |
+| **AI Observability** | ai-observability | ML model monitoring, inference metrics |
+| **Industrial Control Center** | industrial-control-center | SCADA/MES/PLM unified view |
+| **Real-Time Streaming** | realtime-streaming | Kafka throughput, data pipelines |
+| **System Health Overview** | system-health-overview | Infrastructure health metrics |
+
+---
+
 ## Références
 
 - [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
@@ -1001,3 +1118,5 @@ Docker Volumes:
 - [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
 - [IEC 62443 Standard](https://www.iec.ch/cyber-security)
 - [Grafana Documentation](https://grafana.com/docs/)
+- [EU AI Act](https://artificialintelligenceact.eu/)
+- [NIS 2 Directive](https://digital-strategy.ec.europa.eu/en/policies/nis2-directive)

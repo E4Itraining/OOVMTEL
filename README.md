@@ -200,6 +200,16 @@ The platform includes a comprehensive **Unified Business-Tech View** that provid
 - Storage metrics (VictoriaMetrics, OpenSearch, Kafka)
 - OTEL Collector throughput monitoring
 
+**Security & Compliance:**
+- Multi-framework compliance tracking (ISO 27001, SOC 2, GDPR, NIS 2, AI Act)
+- Video surveillance integration with live camera feeds
+- Security events timeline with severity levels
+- Vulnerability scanning and threat detection
+
+**EU Regulations Compliance:**
+- **AI Act** - Risk classification, AI systems inventory, compliance requirements tracking
+- **NIS 2** - Entity type classification, cybersecurity requirements, incident reporting
+
 **Unified Insights:**
 - Cross-domain correlation between business and tech events
 - Real-time event timeline combining both domains
@@ -235,11 +245,18 @@ flowchart TB
     BACKEND <--> DATA
 ```
 
-### Grafana Dashboard
+### Grafana Dashboards
 
-A pre-configured Grafana dashboard is also available at **http://localhost:3000** under:
-- **Folder:** Industrial
-- **Dashboard:** Unified Business-Tech View
+Pre-configured Grafana dashboards are available at **http://localhost:3000**:
+
+| Dashboard | Description |
+|-----------|-------------|
+| **Welcome Hub** | Default home dashboard with platform overview and quick navigation |
+| **AI Observability** | ML model monitoring, inference metrics, AI pipeline health |
+| **Industrial Control Center** | SCADA/MES/PLM unified monitoring |
+| **Real-Time Streaming** | Kafka throughput, data pipeline metrics |
+| **System Health Overview** | Infrastructure health and resource utilization |
+| **Unified Business-Tech View** | Combined business KPIs and technical metrics |
 
 ## Injection de Données
 
@@ -395,11 +412,11 @@ processors:
 
 ### Dashboards Grafana Recommandés
 
-1. **Industrial Overview** - Vue globale IT/OT
-2. **SCADA Real-Time** - Monitoring temps réel
-3. **MES Production** - KPIs production
-4. **OEE Dashboard** - Efficacité équipements
-5. **Kafka Throughput** - Débit des topics
+1. **Welcome Hub** - Dashboard d'accueil avec navigation rapide (défaut)
+2. **AI Observability** - Monitoring ML et inférence IA
+3. **Industrial Control Center** - Vue unifiée SCADA/MES/PLM
+4. **Real-Time Streaming** - Débit Kafka et pipelines
+5. **System Health Overview** - Santé infrastructure
 
 ## Troubleshooting
 
