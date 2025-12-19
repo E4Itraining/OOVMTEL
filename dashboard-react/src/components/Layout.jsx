@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -34,11 +34,18 @@ import {
   Star,
   Layers,
   Shield,
-  Lock
+  Lock,
+  Command
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
 import { useI18n, LANGUAGES } from '../i18n'
+import Breadcrumbs from './Breadcrumbs'
+import GlobalSearch from './GlobalSearch'
+import NotificationCenter from './NotificationCenter'
+import FavoritesSystem, { FavoriteButton } from './FavoritesSystem'
+import ExportSystem from './ExportSystem'
+import OnboardingTour, { StartTourButton } from './OnboardingTour'
 
 // Dynamic navigation configuration based on profile
 const getNavConfig = (t, userMode) => {
@@ -315,6 +322,20 @@ function Layout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [expandedMenus, setExpandedMenus] = useState({})
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+
+  // Keyboard shortcut for search (Cmd/Ctrl + K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const isDetailView = location.pathname.startsWith('/details')
   const navConfig = getNavConfig(t, userMode)
@@ -476,6 +497,17 @@ function Layout() {
                 <span>{t('common.back')}</span>
               </button>
             )}
+            {/* Search Button */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-industrial-card/50 border border-industrial-border hover:border-industrial-accent/50 transition-all"
+            >
+              <Search className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-500 hidden md:inline">Rechercher...</span>
+              <kbd className="hidden md:flex items-center gap-0.5 px-1.5 py-0.5 bg-industrial-darker rounded text-xs text-gray-500">
+                <Command className="w-3 h-3" />K
+              </kbd>
+            </button>
             <div className="flex items-center gap-2">
               {isConnected ? (
                 <Wifi className="w-4 h-4 text-green-500" />
@@ -493,7 +525,19 @@ function Layout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Tour Button */}
+            <StartTourButton compact />
+
+            {/* Export Button */}
+            <ExportSystem />
+
+            {/* Favorites */}
+            <FavoritesSystem />
+
+            {/* Favorite Current Page */}
+            <FavoriteButton />
+
             {/* Language Switcher */}
             <LanguageSwitcher />
 
@@ -504,14 +548,27 @@ function Layout() {
             >
               <RefreshCw className="w-5 h-5" />
             </button>
-            <button className="btn btn-ghost p-2 relative" title={t('common.notifications')}>
-              <Bell className="w-5 h-5" />
-              {metrics.business?.criticalAlarms > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center">
-                  {metrics.business.criticalAlarms}
-                </span>
-              )}
-            </button>
+
+            {/* Notifications */}
+            <div className="relative">
+              <button
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className="btn btn-ghost p-2 relative"
+                title={t('common.notifications')}
+              >
+                <Bell className="w-5 h-5" />
+                {metrics.business?.criticalAlarms > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center">
+                    {metrics.business.criticalAlarms}
+                  </span>
+                )}
+              </button>
+              <NotificationCenter
+                isOpen={isNotificationsOpen}
+                onClose={() => setIsNotificationsOpen(false)}
+              />
+            </div>
+
             <div className="w-px h-6 bg-industrial-border" />
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-industrial-card border border-industrial-border">
               {userMode === USER_MODES.TECH ? (
@@ -526,8 +583,14 @@ function Layout() {
           </div>
         </header>
 
+        {/* Global Search Modal */}
+        <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
         {/* Page Content */}
         <main className="p-6">
+          {/* Breadcrumbs */}
+          <Breadcrumbs />
+
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -541,6 +604,9 @@ function Layout() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Onboarding Tour Overlay */}
+      <OnboardingTour />
     </div>
   )
 }
