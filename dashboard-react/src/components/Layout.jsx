@@ -34,11 +34,22 @@ import {
   Star,
   Layers,
   Shield,
-  Lock
+  Lock,
+  LogOut,
+  User,
+  Command
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
+import { useAuth } from '../context/AuthContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
 import { useI18n, LANGUAGES } from '../i18n'
+import { useTheme, ThemeToggle } from '../context/ThemeContext'
+import GlobalSearch, { useGlobalSearch } from './GlobalSearch'
+import Breadcrumbs from './Breadcrumbs'
+import NotificationCenter from './NotificationCenter'
+import OnboardingTour, { OnboardingChecklist, useOnboardingTour } from './OnboardingTour'
+import { FavoriteButton, ShortcutsBar } from './FavoritesSystem'
+import { useAnalytics } from '../hooks/useAnalytics'
 
 // Dynamic navigation configuration based on profile
 const getNavConfig = (t, userMode) => {
@@ -310,11 +321,18 @@ function Layout() {
     isConnected,
     metrics
   } = useDashboard()
+  const { user, logout } = useAuth()
   const { refetch } = useRealTimeData()
   const { t, formatTime } = useI18n()
+  const { isDark } = useTheme()
+  const globalSearch = useGlobalSearch()
+  const onboardingTour = useOnboardingTour()
+  const analytics = useAnalytics()
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [expandedMenus, setExpandedMenus] = useState({})
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
   const isDetailView = location.pathname.startsWith('/details')
   const navConfig = getNavConfig(t, userMode)
@@ -324,6 +342,12 @@ function Layout() {
       ...prev,
       [menuId]: !prev[menuId]
     }))
+  }
+
+  const handleLogout = () => {
+    analytics.track('logout')
+    logout()
+    navigate('/login')
   }
 
   return (
@@ -467,61 +491,128 @@ function Layout() {
         {/* Top Header */}
         <header className="h-16 bg-industrial-dark/80 backdrop-blur-lg border-b border-industrial-border sticky top-0 z-30 flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            {isDetailView && (
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                <span>{t('common.back')}</span>
-              </button>
-            )}
-            <div className="flex items-center gap-2">
+            {/* Breadcrumbs */}
+            <Breadcrumbs />
+
+            {/* Connection status */}
+            <div className="flex items-center gap-2 ml-4">
               {isConnected ? (
                 <Wifi className="w-4 h-4 text-green-500" />
               ) : (
                 <WifiOff className="w-4 h-4 text-red-500" />
               )}
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-400 hidden md:inline">
                 {isConnected ? t('connection.realtime') : t('connection.offline')}
               </span>
-              {metrics.lastUpdate && (
-                <span className="text-xs text-gray-500">
-                  {formatTime(metrics.lastUpdate)}
-                </span>
-              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Global Search Button */}
+            <button
+              onClick={globalSearch.open}
+              data-tour="search"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-industrial-card/50 border border-industrial-border hover:border-cyan-500/50 transition-all text-sm text-gray-400 hover:text-white"
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden md:inline">{t('search.placeholder') || 'Search...'}</span>
+              <kbd className="hidden md:flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-industrial-border/50 text-xs">
+                <Command className="w-3 h-3" />K
+              </kbd>
+            </button>
+
+            {/* Shortcuts Bar */}
+            <ShortcutsBar className="hidden lg:flex" />
+
             {/* Language Switcher */}
             <LanguageSwitcher />
 
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            {/* Refresh */}
             <button
               onClick={refetch}
-              className="btn btn-ghost p-2"
+              className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
               title={t('common.refresh')}
             >
               <RefreshCw className="w-5 h-5" />
             </button>
-            <button className="btn btn-ghost p-2 relative" title={t('common.notifications')}>
+
+            {/* Notifications */}
+            <button
+              onClick={() => setShowNotifications(true)}
+              data-tour="notifications"
+              className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
+              title={t('common.notifications')}
+            >
               <Bell className="w-5 h-5" />
               {metrics.business?.criticalAlarms > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center text-white">
                   {metrics.business.criticalAlarms}
                 </span>
               )}
             </button>
+
             <div className="w-px h-6 bg-industrial-border" />
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-industrial-card border border-industrial-border">
-              {userMode === USER_MODES.TECH ? (
-                <Wrench className="w-4 h-4 text-cyan-400" />
-              ) : (
-                <Briefcase className="w-4 h-4 text-purple-400" />
-              )}
-              <span className="text-sm font-medium">
-                {userMode === USER_MODES.TECH ? t('profiles.modeLabel.tech') : t('profiles.modeLabel.business')}
-              </span>
+
+            {/* User Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-industrial-card border border-industrial-border hover:border-cyan-500/50 transition-all"
+              >
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="" className="w-6 h-6 rounded-full" />
+                ) : (
+                  <User className="w-4 h-4 text-gray-400" />
+                )}
+                <span className="text-sm font-medium text-white hidden md:inline">
+                  {user?.name || 'User'}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {showUserMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 top-full mt-2 w-56 bg-industrial-card border border-industrial-border rounded-xl shadow-xl z-50 overflow-hidden"
+                    >
+                      <div className="p-3 border-b border-industrial-border">
+                        <p className="text-sm font-medium text-white">{user?.name}</p>
+                        <p className="text-xs text-gray-500">{user?.email}</p>
+                        <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded bg-cyan-500/20 text-cyan-400">
+                          {user?.role}
+                        </span>
+                      </div>
+                      <div className="p-2">
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            onboardingTour.startTour()
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/5 transition-colors text-sm"
+                        >
+                          <Star className="w-4 h-4" />
+                          {t('user.startTour') || 'Start Tour'}
+                        </button>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors text-sm"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          {t('user.logout') || 'Sign out'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
@@ -541,6 +632,28 @@ function Layout() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Global Search Modal */}
+      <GlobalSearch isOpen={globalSearch.isOpen} onClose={globalSearch.close} />
+
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        onNavigate={(url) => navigate(url)}
+      />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        isOpen={onboardingTour.isOpen}
+        onClose={onboardingTour.closeTour}
+        onComplete={onboardingTour.onComplete}
+      />
+
+      {/* Onboarding Checklist */}
+      {onboardingTour.showChecklist && (
+        <OnboardingChecklist onDismiss={onboardingTour.dismissChecklist} />
+      )}
     </div>
   )
 }
