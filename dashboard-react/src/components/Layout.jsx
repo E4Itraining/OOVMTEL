@@ -37,7 +37,8 @@ import {
   Lock,
   Command,
   Lightbulb,
-  Sparkles
+  Sparkles,
+  UserCircle2
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
@@ -535,6 +536,16 @@ function Layout() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Persona Switcher Button */}
+            <button
+              onClick={() => navigate('/welcome')}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-industrial-card/50 border border-industrial-border hover:border-industrial-accent/50 transition-all"
+              title={t('nav.changePersona') || 'Changer de profil'}
+            >
+              <UserCircle2 className="w-4 h-4 text-industrial-accent" />
+              <span className="text-sm text-gray-400 hidden md:inline">{t('nav.persona') || 'Profil'}</span>
+            </button>
+
             {/* Tour Button */}
             <StartTourButton compact />
 

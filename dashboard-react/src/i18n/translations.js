@@ -78,6 +78,8 @@ export const translations = {
 
     // Navigation - Main menu
     nav: {
+      persona: 'Profil',
+      changePersona: 'Changer de profil',
       main: {
         home: 'Accueil',
         globalView: 'Vue Globale',
@@ -777,6 +779,8 @@ export const translations = {
 
     // Navigation - Main menu
     nav: {
+      persona: 'Profile',
+      changePersona: 'Change profile',
       main: {
         home: 'Home',
         globalView: 'Global View',
