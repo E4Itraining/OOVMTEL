@@ -88,6 +88,19 @@ const serviceConfigs = {
       { key: 'queueSize', label: 'Queue Size', value: '128', unit: '', trend: 'stable', trendValue: '' },
     ]
   },
+  'otel': {
+    name: 'OTEL Collector',
+    icon: Zap,
+    color: 'from-purple-500 to-pink-600',
+    url: 'http://localhost:8888',
+    description: 'OpenTelemetry data collection and processing',
+    metrics: [
+      { key: 'metricsRate', label: 'Metrics/s', value: '125,000', unit: '/s', trend: 'up', trendValue: '+5%' },
+      { key: 'logsRate', label: 'Logs/s', value: '8,500', unit: '/s', trend: 'up', trendValue: '+3%' },
+      { key: 'tracesRate', label: 'Traces/s', value: '2,500', unit: '/s', trend: 'stable', trendValue: '' },
+      { key: 'pipelines', label: 'Pipelines', value: '4', unit: '', trend: 'stable', trendValue: '' },
+    ]
+  },
   'grafana': {
     name: 'Grafana',
     icon: Activity,
