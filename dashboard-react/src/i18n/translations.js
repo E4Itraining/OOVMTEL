@@ -296,87 +296,110 @@ export const translations = {
       hint: 'Vous pouvez changer de profil à tout moment dans les paramètres'
     },
 
-    // Personas - Extended French enterprise roles
+    // Personas - Industrial context (Business / Tech / Sécurité / Juridique / GreenOps)
     personas: {
-      // Strategic Leadership
+      // ═══════════════════════════════════════════════════════════════════════════
+      // BUSINESS - Vision métier et stratégique
+      // ═══════════════════════════════════════════════════════════════════════════
       dirigeant: {
-        title: 'Dirigeant / DG',
-        description: 'Vision stratégique, gouvernance et pilotage global de l\'entreprise',
+        title: 'Dirigeant / CEO',
+        description: 'Vision stratégique 360°, gouvernance et pilotage global de l\'entreprise',
         feature1: 'Tableaux de bord exécutifs',
-        feature2: 'Analyse d\'impact business',
+        feature2: 'ROI et impact business',
         feature3: 'Indicateurs de risques stratégiques'
       },
+      cfo: {
+        title: 'Directeur Financier / CFO',
+        description: 'Pilotage financier, ROI des investissements IT et optimisation des coûts',
+        feature1: 'Analyse coûts IT / OPEX / CAPEX',
+        feature2: 'ROI des projets digitaux',
+        feature3: 'Budget et prévisions'
+      },
+      directeurProduction: {
+        title: 'Directeur Production / COO',
+        description: 'Supervision des opérations, performance industrielle et excellence opérationnelle',
+        feature1: 'OEE et rendement machines',
+        feature2: 'Alertes équipements critiques',
+        feature3: 'Planification maintenance'
+      },
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // TECH - Technique et data
+      // ═══════════════════════════════════════════════════════════════════════════
       dsi: {
-        title: 'DSI',
-        description: 'Direction des Systèmes d\'Information et transformation digitale',
-        feature1: 'Gouvernance IT et budget',
+        title: 'DSI / CTO',
+        description: 'Direction des Systèmes d\'Information, transformation digitale et innovation',
+        feature1: 'Gouvernance IT et architecture',
         feature2: 'Performance infrastructure',
         feature3: 'Roadmap technologique'
       },
-      // Security & Compliance
+      dataMlops: {
+        title: 'Data Engineer / MLOps',
+        description: 'Pipelines de données, modèles ML et qualité des données industrielles',
+        feature1: 'Qualité et drift données',
+        feature2: 'Performance modèles ML',
+        feature3: 'Monitoring pipelines'
+      },
+      devopsSre: {
+        title: 'DevOps / SRE',
+        description: 'Fiabilité, disponibilité et automatisation de l\'infrastructure',
+        feature1: 'SLOs et fiabilité',
+        feature2: 'Gestion des incidents',
+        feature3: 'Observabilité full-stack'
+      },
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // SÉCURITÉ - Cybersécurité
+      // ═══════════════════════════════════════════════════════════════════════════
       rssi: {
-        title: 'RSSI',
+        title: 'RSSI / CISO',
         description: 'Responsable de la Sécurité des Systèmes d\'Information',
         feature1: 'Posture de sécurité',
         feature2: 'Gestion des vulnérabilités',
         feature3: 'Conformité NIS 2 / ISO 27001'
       },
-      rsi: {
-        title: 'RSI',
-        description: 'Responsable des Systèmes d\'Information et opérations IT',
-        feature1: 'Disponibilité des services',
-        feature2: 'Gestion des incidents',
-        feature3: 'Maintenance et support'
+      analyteSoc: {
+        title: 'Analyste SOC',
+        description: 'Surveillance des menaces, détection et réponse aux incidents de sécurité',
+        feature1: 'Alertes et incidents sécurité',
+        feature2: 'Analyse forensique',
+        feature3: 'Threat intelligence'
       },
-      dpoJuriste: {
-        title: 'DPO / Juriste',
-        description: 'Protection des données personnelles et conformité réglementaire',
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // JURIDIQUE - Conformité et régulations
+      // ═══════════════════════════════════════════════════════════════════════════
+      dpo: {
+        title: 'DPO',
+        description: 'Data Protection Officer - Protection des données personnelles et vie privée',
         feature1: 'Conformité RGPD',
-        feature2: 'AI Act & régulations EU',
-        feature3: 'Audit et traçabilité'
+        feature2: 'Registre des traitements',
+        feature3: 'Droits des personnes'
       },
-      // Operational roles
-      operationsManager: {
-        title: 'Responsable Opérations',
-        description: 'Supervision des lignes de production et gestion des équipements',
-        feature1: 'Suivi OEE en temps réel',
-        feature2: 'Alertes équipements critiques',
-        feature3: 'Planification maintenance'
-      },
-      plantDirector: {
-        title: 'Directeur d\'Usine',
-        description: 'Vision stratégique et KPIs financiers',
-        feature1: 'Tableaux de bord exécutifs',
-        feature2: 'Impact financier production',
-        feature3: 'Tendances et prévisions'
-      },
-      devopsEngineer: {
-        title: 'Ingénieur DevOps',
-        description: 'Infrastructure et pipelines de données',
-        feature1: 'Santé des services',
-        feature2: 'Monitoring des pipelines',
-        feature3: 'Analyse des performances'
-      },
-      securityAnalyst: {
-        title: 'Analyste Sécurité',
-        description: 'Surveillance des menaces et vulnérabilités',
-        feature1: 'Alertes de sécurité',
-        feature2: 'Détection d\'anomalies',
-        feature3: 'Audit des accès'
-      },
-      complianceOfficer: {
+      responsableConformite: {
         title: 'Responsable Conformité',
-        description: 'Conformité réglementaire et politiques',
-        feature1: 'Statut conformité',
-        feature2: 'Rapports d\'audit',
-        feature3: 'Gestion des politiques'
+        description: 'Conformité réglementaire EU : NIS2, AI Act, DORA et normes sectorielles',
+        feature1: 'AI Act & régulations EU',
+        feature2: 'Audits et certifications',
+        feature3: 'Gestion des risques juridiques'
       },
-      dataAnalyst: {
-        title: 'Analyste Données',
-        description: 'Analyse des métriques et logs',
-        feature1: 'Exploration des données',
-        feature2: 'Détection de patterns',
-        feature3: 'Export et rapports'
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // GREENOPS - Durabilité et environnement
+      // ═══════════════════════════════════════════════════════════════════════════
+      responsableRse: {
+        title: 'Responsable RSE / Sustainability',
+        description: 'Responsabilité Sociétale, impact environnemental et reporting ESG/CSRD',
+        feature1: 'Empreinte carbone',
+        feature2: 'KPIs durabilité',
+        feature3: 'Reporting CSRD / ESG'
+      },
+      greenItManager: {
+        title: 'Green IT Manager',
+        description: 'Efficience énergétique IT, PUE datacenter et numérique responsable',
+        feature1: 'PUE et consommation énergétique',
+        feature2: 'Cloud carbon footprint',
+        feature3: 'Optimisation ressources'
       }
     },
 
@@ -972,24 +995,61 @@ export const translations = {
       hint: 'You can change your profile anytime in settings'
     },
 
-    // Personas - Extended enterprise roles
+    // Personas - Industrial context (Business / Tech / Security / Legal / GreenOps)
     personas: {
-      // Strategic Leadership
+      // ═══════════════════════════════════════════════════════════════════════════
+      // BUSINESS - Business vision and strategy
+      // ═══════════════════════════════════════════════════════════════════════════
       dirigeant: {
         title: 'Executive / CEO',
-        description: 'Strategic vision, governance and global company management',
+        description: '360° strategic vision, governance and global company management',
         feature1: 'Executive dashboards',
-        feature2: 'Business impact analysis',
+        feature2: 'ROI and business impact',
         feature3: 'Strategic risk indicators'
       },
+      cfo: {
+        title: 'CFO',
+        description: 'Financial management, IT investment ROI and cost optimization',
+        feature1: 'IT costs / OPEX / CAPEX analysis',
+        feature2: 'Digital projects ROI',
+        feature3: 'Budget and forecasts'
+      },
+      directeurProduction: {
+        title: 'Production Director / COO',
+        description: 'Operations supervision, industrial performance and operational excellence',
+        feature1: 'OEE and machine performance',
+        feature2: 'Critical equipment alerts',
+        feature3: 'Maintenance planning'
+      },
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // TECH - Technical and data
+      // ═══════════════════════════════════════════════════════════════════════════
       dsi: {
-        title: 'CIO',
-        description: 'Information Systems Direction and digital transformation',
-        feature1: 'IT governance and budget',
+        title: 'CIO / CTO',
+        description: 'Information Systems Direction, digital transformation and innovation',
+        feature1: 'IT governance and architecture',
         feature2: 'Infrastructure performance',
         feature3: 'Technology roadmap'
       },
-      // Security & Compliance
+      dataMlops: {
+        title: 'Data Engineer / MLOps',
+        description: 'Data pipelines, ML models and industrial data quality',
+        feature1: 'Data quality and drift',
+        feature2: 'ML model performance',
+        feature3: 'Pipeline monitoring'
+      },
+      devopsSre: {
+        title: 'DevOps / SRE',
+        description: 'Reliability, availability and infrastructure automation',
+        feature1: 'SLOs and reliability',
+        feature2: 'Incident management',
+        feature3: 'Full-stack observability'
+      },
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // SECURITY - Cybersecurity
+      // ═══════════════════════════════════════════════════════════════════════════
       rssi: {
         title: 'CISO',
         description: 'Chief Information Security Officer',
@@ -997,62 +1057,48 @@ export const translations = {
         feature2: 'Vulnerability management',
         feature3: 'NIS 2 / ISO 27001 compliance'
       },
-      rsi: {
-        title: 'IT Manager',
-        description: 'Information Systems Manager and IT operations',
-        feature1: 'Service availability',
-        feature2: 'Incident management',
-        feature3: 'Maintenance and support'
+      analyteSoc: {
+        title: 'SOC Analyst',
+        description: 'Threat monitoring, detection and security incident response',
+        feature1: 'Security alerts and incidents',
+        feature2: 'Forensic analysis',
+        feature3: 'Threat intelligence'
       },
-      dpoJuriste: {
-        title: 'DPO / Legal',
-        description: 'Personal data protection and regulatory compliance',
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // LEGAL - Compliance and regulations
+      // ═══════════════════════════════════════════════════════════════════════════
+      dpo: {
+        title: 'DPO',
+        description: 'Data Protection Officer - Personal data protection and privacy',
         feature1: 'GDPR compliance',
-        feature2: 'AI Act & EU regulations',
-        feature3: 'Audit and traceability'
+        feature2: 'Processing registry',
+        feature3: 'Data subject rights'
       },
-      // Operational roles
-      operationsManager: {
-        title: 'Operations Manager',
-        description: 'Production line supervision and equipment management',
-        feature1: 'Real-time OEE tracking',
-        feature2: 'Critical equipment alerts',
-        feature3: 'Maintenance planning'
-      },
-      plantDirector: {
-        title: 'Plant Director',
-        description: 'Strategic vision and financial KPIs',
-        feature1: 'Executive dashboards',
-        feature2: 'Production financial impact',
-        feature3: 'Trends and forecasts'
-      },
-      devopsEngineer: {
-        title: 'DevOps Engineer',
-        description: 'Infrastructure and data pipelines',
-        feature1: 'Service health',
-        feature2: 'Pipeline monitoring',
-        feature3: 'Performance analysis'
-      },
-      securityAnalyst: {
-        title: 'Security Analyst',
-        description: 'Threat and vulnerability monitoring',
-        feature1: 'Security alerts',
-        feature2: 'Anomaly detection',
-        feature3: 'Access auditing'
-      },
-      complianceOfficer: {
+      responsableConformite: {
         title: 'Compliance Officer',
-        description: 'Regulatory compliance and policies',
-        feature1: 'Compliance status',
-        feature2: 'Audit reports',
-        feature3: 'Policy management'
+        description: 'EU regulatory compliance: NIS2, AI Act, DORA and industry standards',
+        feature1: 'AI Act & EU regulations',
+        feature2: 'Audits and certifications',
+        feature3: 'Legal risk management'
       },
-      dataAnalyst: {
-        title: 'Data Analyst',
-        description: 'Metrics and log analysis',
-        feature1: 'Data exploration',
-        feature2: 'Pattern detection',
-        feature3: 'Export and reports'
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // GREENOPS - Sustainability and environment
+      // ═══════════════════════════════════════════════════════════════════════════
+      responsableRse: {
+        title: 'CSR / Sustainability Manager',
+        description: 'Corporate Social Responsibility, environmental impact and ESG/CSRD reporting',
+        feature1: 'Carbon footprint',
+        feature2: 'Sustainability KPIs',
+        feature3: 'CSRD / ESG reporting'
+      },
+      greenItManager: {
+        title: 'Green IT Manager',
+        description: 'IT energy efficiency, datacenter PUE and responsible digital',
+        feature1: 'PUE and energy consumption',
+        feature2: 'Cloud carbon footprint',
+        feature3: 'Resource optimization'
       }
     },
 

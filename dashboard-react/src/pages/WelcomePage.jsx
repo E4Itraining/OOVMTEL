@@ -21,23 +21,41 @@ import {
   TrendingUp,
   Eye,
   Layers,
-  CheckCircle2
+  CheckCircle2,
+  Leaf,
+  Zap,
+  CircuitBoard,
+  Database,
+  Gavel,
+  Factory,
+  PiggyBank,
+  TreePine,
+  Recycle,
+  Gauge,
+  AlertTriangle,
+  ClipboardCheck
 } from 'lucide-react'
 import { useI18n } from '../i18n'
 
-// Define the extended personas for French enterprise roles
+// Define industrial personas organized by domain
 export const PERSONAS = {
-  // Executive/Strategic personas
+  // BUSINESS - Vision métier et stratégique
   DIRIGEANT: 'dirigeant',
+  CFO: 'cfo',
+  DIRECTEUR_PRODUCTION: 'directeur_production',
+  // TECH - Technique et data
   DSI: 'dsi',
-  // Security/Compliance personas
+  DATA_MLOPS: 'data_mlops',
+  DEVOPS_SRE: 'devops_sre',
+  // SÉCURITÉ - Cybersécurité
   RSSI: 'rssi',
-  RSI: 'rsi',
-  DPO_JURISTE: 'dpo_juriste',
-  // Operational personas (kept from original)
-  OPERATIONS_MANAGER: 'operations_manager',
-  DEVOPS_ENGINEER: 'devops_engineer',
-  DATA_ANALYST: 'data_analyst'
+  ANALYSTE_SOC: 'analyste_soc',
+  // JURIDIQUE - Conformité et régulations
+  DPO: 'dpo',
+  RESPONSABLE_CONFORMITE: 'responsable_conformite',
+  // GREENOPS - Durabilité et environnement
+  RESPONSABLE_RSE: 'responsable_rse',
+  GREEN_IT_MANAGER: 'green_it_manager'
 }
 
 // Persona journey stages
@@ -50,6 +68,9 @@ export const JOURNEY_STAGES = {
 
 // Define persona-specific journeys
 export const PERSONA_JOURNEYS = {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUSINESS - Vision métier et stratégique
+  // ═══════════════════════════════════════════════════════════════════════════
   [PERSONAS.DIRIGEANT]: {
     name: 'Parcours Dirigeant',
     stages: [
@@ -61,6 +82,32 @@ export const PERSONA_JOURNEYS = {
     defaultRoute: '/command-center',
     focusAreas: ['strategy', 'roi', 'risk', 'performance', 'governance']
   },
+  [PERSONAS.CFO]: {
+    name: 'Parcours CFO',
+    stages: [
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Vue Financière', route: '/command-center', icon: PiggyBank },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Coûts & ROI', route: '/business-kpi', icon: TrendingUp },
+      { id: JOURNEY_STAGES.ACTION, label: 'Impact Financier', route: '/impact-analysis', icon: Target },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Budgets IT', route: '/business-kpi#costs', icon: BarChart3 }
+    ],
+    defaultRoute: '/command-center',
+    focusAreas: ['costs', 'roi', 'budget', 'financial-impact', 'capex-opex']
+  },
+  [PERSONAS.DIRECTEUR_PRODUCTION]: {
+    name: 'Parcours Production',
+    stages: [
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Centre de Commande', route: '/command-center', icon: Factory },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'OEE & Performance', route: '/business-kpi', icon: Gauge },
+      { id: JOURNEY_STAGES.ACTION, label: 'Optimisations', route: '/impact-analysis', icon: Target },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Équipements', route: '/business-kpi#equipment', icon: Activity }
+    ],
+    defaultRoute: '/command-center',
+    focusAreas: ['production', 'oee', 'equipment', 'quality', 'maintenance']
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TECH - Technique et data
+  // ═══════════════════════════════════════════════════════════════════════════
   [PERSONAS.DSI]: {
     name: 'Parcours DSI',
     stages: [
@@ -72,76 +119,112 @@ export const PERSONA_JOURNEYS = {
     defaultRoute: '/technical',
     focusAreas: ['infrastructure', 'digital-transformation', 'budget', 'services', 'innovation']
   },
+  [PERSONAS.DATA_MLOPS]: {
+    name: 'Parcours Data & MLOps',
+    stages: [
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Pipelines Data', route: '/kafka', icon: Database },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Qualité Données', route: '/grafana', icon: BarChart3 },
+      { id: JOURNEY_STAGES.ACTION, label: 'Modèles ML', route: '/observability', icon: CircuitBoard },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Drift & Performance', route: '/opensearch', icon: Activity }
+    ],
+    defaultRoute: '/kafka',
+    focusAreas: ['data-quality', 'ml-models', 'drift', 'pipelines', 'feature-engineering']
+  },
+  [PERSONAS.DEVOPS_SRE]: {
+    name: 'Parcours DevOps / SRE',
+    stages: [
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Infrastructure', route: '/technical', icon: Server },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'SLOs & Fiabilité', route: '/observability', icon: Gauge },
+      { id: JOURNEY_STAGES.ACTION, label: 'Incidents', route: '/observability#runbooks', icon: AlertTriangle },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Logs & Traces', route: '/opensearch', icon: Eye }
+    ],
+    defaultRoute: '/technical',
+    focusAreas: ['slos', 'reliability', 'incidents', 'automation', 'monitoring']
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SÉCURITÉ - Cybersécurité
+  // ═══════════════════════════════════════════════════════════════════════════
   [PERSONAS.RSSI]: {
     name: 'Parcours RSSI',
     stages: [
       { id: JOURNEY_STAGES.DISCOVERY, label: 'Posture Sécurité', route: '/security', icon: Shield },
       { id: JOURNEY_STAGES.ASSESSMENT, label: 'Vulnérabilités', route: '/security#vulnerabilities', icon: Lock },
-      { id: JOURNEY_STAGES.ACTION, label: 'Impact & Préconisations', route: '/impact-analysis', icon: Target },
+      { id: JOURNEY_STAGES.ACTION, label: 'Remédiation', route: '/impact-analysis', icon: Target },
       { id: JOURNEY_STAGES.MONITORING, label: 'Conformité', route: '/security#compliance', icon: FileCheck }
     ],
     defaultRoute: '/security',
     focusAreas: ['cybersecurity', 'threats', 'compliance', 'incidents', 'audit']
   },
-  [PERSONAS.RSI]: {
-    name: 'Parcours RSI',
+  [PERSONAS.ANALYSTE_SOC]: {
+    name: 'Parcours Analyste SOC',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Systèmes', route: '/technical', icon: Cpu },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Observabilité', route: '/observability', icon: Eye },
-      { id: JOURNEY_STAGES.ACTION, label: 'Remédiation', route: '/observability#runbooks', icon: Target },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Monitoring', route: '/grafana', icon: Activity }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Alertes Sécurité', route: '/security', icon: AlertTriangle },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Analyse Menaces', route: '/security#threats', icon: Shield },
+      { id: JOURNEY_STAGES.ACTION, label: 'Investigation', route: '/opensearch', icon: Eye },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Logs Sécurité', route: '/grafana', icon: Activity }
     ],
-    defaultRoute: '/technical',
-    focusAreas: ['systems', 'operations', 'maintenance', 'support', 'monitoring']
+    defaultRoute: '/security',
+    focusAreas: ['threats', 'incidents', 'forensics', 'detection', 'response']
   },
-  [PERSONAS.DPO_JURISTE]: {
-    name: 'Parcours DPO/Juriste',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // JURIDIQUE - Conformité et régulations
+  // ═══════════════════════════════════════════════════════════════════════════
+  [PERSONAS.DPO]: {
+    name: 'Parcours DPO',
     stages: [
       { id: JOURNEY_STAGES.DISCOVERY, label: 'Conformité RGPD', route: '/security#compliance', icon: FileCheck },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Régulations EU', route: '/security#euRegulations', icon: Scale },
-      { id: JOURNEY_STAGES.ACTION, label: 'Impact & Préconisations', route: '/impact-analysis', icon: Target },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Traitements Données', route: '/security#privacy', icon: Database },
+      { id: JOURNEY_STAGES.ACTION, label: 'Plan d\'Actions', route: '/impact-analysis', icon: Target },
       { id: JOURNEY_STAGES.MONITORING, label: 'Audit Trail', route: '/security#audit', icon: Eye }
     ],
     defaultRoute: '/security',
-    focusAreas: ['rgpd', 'nis2', 'ai-act', 'privacy', 'legal', 'compliance']
+    focusAreas: ['rgpd', 'privacy', 'consent', 'data-processing', 'rights']
   },
-  [PERSONAS.OPERATIONS_MANAGER]: {
-    name: 'Parcours Opérations',
+  [PERSONAS.RESPONSABLE_CONFORMITE]: {
+    name: 'Parcours Conformité',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Centre de Commande', route: '/command-center', icon: Layers },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'KPIs Production', route: '/business-kpi', icon: BarChart3 },
-      { id: JOURNEY_STAGES.ACTION, label: 'Impact & Préconisations', route: '/impact-analysis', icon: Target },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Équipements', route: '/business-kpi#equipment', icon: Activity }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Vue Réglementaire', route: '/security#compliance', icon: Scale },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Régulations EU', route: '/security#euRegulations', icon: Gavel },
+      { id: JOURNEY_STAGES.ACTION, label: 'Actions Correctives', route: '/impact-analysis', icon: Target },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Suivi Audits', route: '/security#audit', icon: ClipboardCheck }
+    ],
+    defaultRoute: '/security',
+    focusAreas: ['nis2', 'ai-act', 'dora', 'iso27001', 'audit']
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GREENOPS - Durabilité et environnement
+  // ═══════════════════════════════════════════════════════════════════════════
+  [PERSONAS.RESPONSABLE_RSE]: {
+    name: 'Parcours RSE',
+    stages: [
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Impact Carbone', route: '/command-center', icon: TreePine },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'KPIs Durabilité', route: '/business-kpi', icon: Leaf },
+      { id: JOURNEY_STAGES.ACTION, label: 'Plan Transition', route: '/impact-analysis', icon: Target },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Reporting ESG', route: '/business-kpi#sustainability', icon: BarChart3 }
     ],
     defaultRoute: '/command-center',
-    focusAreas: ['production', 'oee', 'equipment', 'quality', 'maintenance']
+    focusAreas: ['carbon-footprint', 'sustainability', 'esg', 'csrd', 'energy']
   },
-  [PERSONAS.DEVOPS_ENGINEER]: {
-    name: 'Parcours DevOps',
+  [PERSONAS.GREEN_IT_MANAGER]: {
+    name: 'Parcours Green IT',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Infrastructure', route: '/technical', icon: Server },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Pipelines', route: '/kafka', icon: Network },
-      { id: JOURNEY_STAGES.ACTION, label: 'Observabilité', route: '/observability', icon: Eye },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Logs & Traces', route: '/opensearch', icon: Activity }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Énergie IT', route: '/technical', icon: Zap },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Efficience', route: '/grafana', icon: Gauge },
+      { id: JOURNEY_STAGES.ACTION, label: 'Optimisations', route: '/impact-analysis', icon: Recycle },
+      { id: JOURNEY_STAGES.MONITORING, label: 'PUE & Conso', route: '/observability', icon: Activity }
     ],
     defaultRoute: '/technical',
-    focusAreas: ['infrastructure', 'pipelines', 'services', 'automation', 'monitoring']
-  },
-  [PERSONAS.DATA_ANALYST]: {
-    name: 'Parcours Data Analyst',
-    stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Vue Données', route: '/dashboard', icon: BarChart3 },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Métriques', route: '/grafana', icon: Activity },
-      { id: JOURNEY_STAGES.ACTION, label: 'Impact & Préconisations', route: '/impact-analysis', icon: Target },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Exploration', route: '/opensearch', icon: Eye }
-    ],
-    defaultRoute: '/dashboard',
-    focusAreas: ['metrics', 'logs', 'traces', 'analytics', 'patterns']
+    focusAreas: ['pue', 'energy-efficiency', 'e-waste', 'cloud-carbon', 'optimization']
   }
 }
 
 const getPersonaConfig = (t) => [
-  // Strategic Leadership
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUSINESS - Vision métier et stratégique
+  // ═══════════════════════════════════════════════════════════════════════════
   {
     id: PERSONAS.DIRIGEANT,
     icon: Building2,
@@ -149,7 +232,8 @@ const getPersonaConfig = (t) => [
     bgColor: 'bg-indigo-500/10',
     borderColor: 'border-indigo-500/30',
     textColor: 'text-indigo-400',
-    category: 'strategic',
+    category: 'business',
+    categoryLabel: 'BUSINESS',
     title: t('personas.dirigeant.title'),
     description: t('personas.dirigeant.description'),
     features: [
@@ -161,13 +245,56 @@ const getPersonaConfig = (t) => [
     focusAreas: ['strategy', 'roi', 'governance']
   },
   {
+    id: PERSONAS.CFO,
+    icon: PiggyBank,
+    color: 'from-violet-500 to-purple-600',
+    bgColor: 'bg-violet-500/10',
+    borderColor: 'border-violet-500/30',
+    textColor: 'text-violet-400',
+    category: 'business',
+    categoryLabel: 'BUSINESS',
+    title: t('personas.cfo.title'),
+    description: t('personas.cfo.description'),
+    features: [
+      t('personas.cfo.feature1'),
+      t('personas.cfo.feature2'),
+      t('personas.cfo.feature3')
+    ],
+    defaultRoute: '/command-center',
+    focusAreas: ['costs', 'roi', 'budget']
+  },
+  {
+    id: PERSONAS.DIRECTEUR_PRODUCTION,
+    icon: Factory,
+    color: 'from-fuchsia-500 to-pink-600',
+    bgColor: 'bg-fuchsia-500/10',
+    borderColor: 'border-fuchsia-500/30',
+    textColor: 'text-fuchsia-400',
+    category: 'business',
+    categoryLabel: 'BUSINESS',
+    title: t('personas.directeurProduction.title'),
+    description: t('personas.directeurProduction.description'),
+    features: [
+      t('personas.directeurProduction.feature1'),
+      t('personas.directeurProduction.feature2'),
+      t('personas.directeurProduction.feature3')
+    ],
+    defaultRoute: '/command-center',
+    focusAreas: ['production', 'oee', 'equipment']
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TECH - Technique et data
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
     id: PERSONAS.DSI,
     icon: Cpu,
     color: 'from-blue-500 to-cyan-600',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
     textColor: 'text-blue-400',
-    category: 'strategic',
+    category: 'tech',
+    categoryLabel: 'TECH',
     title: t('personas.dsi.title'),
     description: t('personas.dsi.description'),
     features: [
@@ -178,7 +305,48 @@ const getPersonaConfig = (t) => [
     defaultRoute: '/technical',
     focusAreas: ['infrastructure', 'digital', 'innovation']
   },
-  // Security & Compliance
+  {
+    id: PERSONAS.DATA_MLOPS,
+    icon: CircuitBoard,
+    color: 'from-sky-500 to-blue-600',
+    bgColor: 'bg-sky-500/10',
+    borderColor: 'border-sky-500/30',
+    textColor: 'text-sky-400',
+    category: 'tech',
+    categoryLabel: 'TECH',
+    title: t('personas.dataMlops.title'),
+    description: t('personas.dataMlops.description'),
+    features: [
+      t('personas.dataMlops.feature1'),
+      t('personas.dataMlops.feature2'),
+      t('personas.dataMlops.feature3')
+    ],
+    defaultRoute: '/kafka',
+    focusAreas: ['data-quality', 'ml-models', 'pipelines']
+  },
+  {
+    id: PERSONAS.DEVOPS_SRE,
+    icon: Server,
+    color: 'from-cyan-500 to-teal-600',
+    bgColor: 'bg-cyan-500/10',
+    borderColor: 'border-cyan-500/30',
+    textColor: 'text-cyan-400',
+    category: 'tech',
+    categoryLabel: 'TECH',
+    title: t('personas.devopsSre.title'),
+    description: t('personas.devopsSre.description'),
+    features: [
+      t('personas.devopsSre.feature1'),
+      t('personas.devopsSre.feature2'),
+      t('personas.devopsSre.feature3')
+    ],
+    defaultRoute: '/technical',
+    focusAreas: ['slos', 'reliability', 'automation']
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SÉCURITÉ - Cybersécurité
+  // ═══════════════════════════════════════════════════════════════════════════
   {
     id: PERSONAS.RSSI,
     icon: Shield,
@@ -187,6 +355,7 @@ const getPersonaConfig = (t) => [
     borderColor: 'border-red-500/30',
     textColor: 'text-red-400',
     category: 'security',
+    categoryLabel: 'SÉCURITÉ',
     title: t('personas.rssi.title'),
     description: t('personas.rssi.description'),
     features: [
@@ -198,95 +367,107 @@ const getPersonaConfig = (t) => [
     focusAreas: ['security', 'threats', 'compliance']
   },
   {
-    id: PERSONAS.RSI,
-    icon: Server,
-    color: 'from-cyan-500 to-teal-600',
-    bgColor: 'bg-cyan-500/10',
-    borderColor: 'border-cyan-500/30',
-    textColor: 'text-cyan-400',
-    category: 'operational',
-    title: t('personas.rsi.title'),
-    description: t('personas.rsi.description'),
+    id: PERSONAS.ANALYSTE_SOC,
+    icon: AlertTriangle,
+    color: 'from-orange-500 to-amber-600',
+    bgColor: 'bg-orange-500/10',
+    borderColor: 'border-orange-500/30',
+    textColor: 'text-orange-400',
+    category: 'security',
+    categoryLabel: 'SÉCURITÉ',
+    title: t('personas.analyteSoc.title'),
+    description: t('personas.analyteSoc.description'),
     features: [
-      t('personas.rsi.feature1'),
-      t('personas.rsi.feature2'),
-      t('personas.rsi.feature3')
+      t('personas.analyteSoc.feature1'),
+      t('personas.analyteSoc.feature2'),
+      t('personas.analyteSoc.feature3')
     ],
-    defaultRoute: '/technical',
-    focusAreas: ['systems', 'operations', 'support']
+    defaultRoute: '/security',
+    focusAreas: ['threats', 'incidents', 'forensics']
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // JURIDIQUE - Conformité et régulations
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    id: PERSONAS.DPO,
+    icon: FileCheck,
+    color: 'from-amber-500 to-yellow-600',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+    textColor: 'text-amber-400',
+    category: 'legal',
+    categoryLabel: 'JURIDIQUE',
+    title: t('personas.dpo.title'),
+    description: t('personas.dpo.description'),
+    features: [
+      t('personas.dpo.feature1'),
+      t('personas.dpo.feature2'),
+      t('personas.dpo.feature3')
+    ],
+    defaultRoute: '/security',
+    focusAreas: ['rgpd', 'privacy', 'data-processing']
   },
   {
-    id: PERSONAS.DPO_JURISTE,
+    id: PERSONAS.RESPONSABLE_CONFORMITE,
     icon: Scale,
+    color: 'from-yellow-500 to-orange-600',
+    bgColor: 'bg-yellow-500/10',
+    borderColor: 'border-yellow-500/30',
+    textColor: 'text-yellow-400',
+    category: 'legal',
+    categoryLabel: 'JURIDIQUE',
+    title: t('personas.responsableConformite.title'),
+    description: t('personas.responsableConformite.description'),
+    features: [
+      t('personas.responsableConformite.feature1'),
+      t('personas.responsableConformite.feature2'),
+      t('personas.responsableConformite.feature3')
+    ],
+    defaultRoute: '/security',
+    focusAreas: ['nis2', 'ai-act', 'audit']
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GREENOPS - Durabilité et environnement
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    id: PERSONAS.RESPONSABLE_RSE,
+    icon: TreePine,
     color: 'from-emerald-500 to-green-600',
     bgColor: 'bg-emerald-500/10',
     borderColor: 'border-emerald-500/30',
     textColor: 'text-emerald-400',
-    category: 'security',
-    title: t('personas.dpoJuriste.title'),
-    description: t('personas.dpoJuriste.description'),
+    category: 'greenops',
+    categoryLabel: 'GREENOPS',
+    title: t('personas.responsableRse.title'),
+    description: t('personas.responsableRse.description'),
     features: [
-      t('personas.dpoJuriste.feature1'),
-      t('personas.dpoJuriste.feature2'),
-      t('personas.dpoJuriste.feature3')
-    ],
-    defaultRoute: '/security',
-    focusAreas: ['rgpd', 'compliance', 'legal']
-  },
-  // Operational
-  {
-    id: PERSONAS.OPERATIONS_MANAGER,
-    icon: Briefcase,
-    color: 'from-purple-500 to-pink-600',
-    bgColor: 'bg-purple-500/10',
-    borderColor: 'border-purple-500/30',
-    textColor: 'text-purple-400',
-    category: 'operational',
-    title: t('personas.operationsManager.title'),
-    description: t('personas.operationsManager.description'),
-    features: [
-      t('personas.operationsManager.feature1'),
-      t('personas.operationsManager.feature2'),
-      t('personas.operationsManager.feature3')
+      t('personas.responsableRse.feature1'),
+      t('personas.responsableRse.feature2'),
+      t('personas.responsableRse.feature3')
     ],
     defaultRoute: '/command-center',
-    focusAreas: ['production', 'oee', 'equipment']
+    focusAreas: ['carbon-footprint', 'sustainability', 'esg']
   },
   {
-    id: PERSONAS.DEVOPS_ENGINEER,
-    icon: Network,
-    color: 'from-amber-500 to-orange-600',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/30',
-    textColor: 'text-amber-400',
-    category: 'operational',
-    title: t('personas.devopsEngineer.title'),
-    description: t('personas.devopsEngineer.description'),
+    id: PERSONAS.GREEN_IT_MANAGER,
+    icon: Leaf,
+    color: 'from-green-500 to-teal-600',
+    bgColor: 'bg-green-500/10',
+    borderColor: 'border-green-500/30',
+    textColor: 'text-green-400',
+    category: 'greenops',
+    categoryLabel: 'GREENOPS',
+    title: t('personas.greenItManager.title'),
+    description: t('personas.greenItManager.description'),
     features: [
-      t('personas.devopsEngineer.feature1'),
-      t('personas.devopsEngineer.feature2'),
-      t('personas.devopsEngineer.feature3')
+      t('personas.greenItManager.feature1'),
+      t('personas.greenItManager.feature2'),
+      t('personas.greenItManager.feature3')
     ],
     defaultRoute: '/technical',
-    focusAreas: ['infrastructure', 'pipelines', 'automation']
-  },
-  {
-    id: PERSONAS.DATA_ANALYST,
-    icon: BarChart3,
-    color: 'from-rose-500 to-red-600',
-    bgColor: 'bg-rose-500/10',
-    borderColor: 'border-rose-500/30',
-    textColor: 'text-rose-400',
-    category: 'operational',
-    title: t('personas.dataAnalyst.title'),
-    description: t('personas.dataAnalyst.description'),
-    features: [
-      t('personas.dataAnalyst.feature1'),
-      t('personas.dataAnalyst.feature2'),
-      t('personas.dataAnalyst.feature3')
-    ],
-    defaultRoute: '/observability',
-    focusAreas: ['metrics', 'logs', 'traces']
+    focusAreas: ['pue', 'energy-efficiency', 'cloud-carbon']
   }
 ]
 
@@ -305,18 +486,24 @@ function PersonaCard({ persona, isSelected, onSelect }) {
       whileTap={{ scale: 0.98 }}
       layout
     >
-      {isSelected && (
-        <motion.div
-          className="absolute top-3 right-3"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 500 }}
-        >
-          <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${persona.color} flex items-center justify-center`}>
-            <CheckCircle2 className="w-4 h-4 text-white" />
-          </div>
-        </motion.div>
-      )}
+      {/* Category badge */}
+      <div className="absolute top-3 right-3">
+        {isSelected ? (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500 }}
+          >
+            <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${persona.color} flex items-center justify-center`}>
+              <CheckCircle2 className="w-4 h-4 text-white" />
+            </div>
+          </motion.div>
+        ) : (
+          <span className="text-[10px] font-semibold text-gray-500 bg-industrial-darker/50 px-2 py-1 rounded-md border border-industrial-border">
+            {persona.categoryLabel}
+          </span>
+        )}
+      </div>
 
       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${persona.color} flex items-center justify-center mb-3 shadow-lg`}>
         <Icon className="w-6 h-6 text-white" />
@@ -398,10 +585,12 @@ function WelcomePage() {
   const personas = getPersonaConfig(t)
 
   const categories = [
-    { id: 'all', label: 'Tous les profils', icon: Users },
-    { id: 'strategic', label: 'Direction', icon: Building2 },
-    { id: 'security', label: 'Sécurité & Conformité', icon: Shield },
-    { id: 'operational', label: 'Opérationnel', icon: Briefcase }
+    { id: 'all', label: 'Tous', icon: Users },
+    { id: 'business', label: 'Business', icon: Building2 },
+    { id: 'tech', label: 'Tech', icon: Cpu },
+    { id: 'security', label: 'Sécurité', icon: Shield },
+    { id: 'legal', label: 'Juridique', icon: Scale },
+    { id: 'greenops', label: 'GreenOps', icon: Leaf }
   ]
 
   const filteredPersonas = activeCategory === 'all'
