@@ -1,0 +1,32 @@
+{
+  "name": "oovmtel",
+  "version": "1.0.0",
+  "description": "OOVMTEL - Unified Business-Tech View for Industrial Observability",
+  "private": true,
+  "workspaces": [
+    "dashboard-react"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=dashboard-react",
+    "build": "npm run build --workspace=dashboard-react",
+    "preview": "npm run preview --workspace=dashboard-react",
+    "lint": "npm run lint --workspace=dashboard-react",
+    "install:dashboard": "npm install --workspace=dashboard-react",
+    "install:backend": "pip install -r web-app/requirements.txt",
+    "backend": "cd web-app && python app.py",
+    "start": "concurrently \"npm run dev\" \"npm run backend\"",
+    "clean": "rm -rf node_modules dashboard-react/node_modules"
+  },
+  "keywords": [
+    "industrial",
+    "observability",
+    "dashboard",
+    "monitoring",
+    "analytics",
+    "fastapi",
+    "react"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
