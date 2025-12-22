@@ -38,7 +38,8 @@ import {
   Command,
   Lightbulb,
   Sparkles,
-  UserCircle2
+  UserCircle2,
+  GitBranch
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
@@ -87,6 +88,13 @@ const getNavConfig = (t, userMode) => {
       path: '/impact-analysis',
       icon: Target,
       getLabel: () => t('nav.main.impactAnalysis') || 'Impact & Préconisations',
+      submenu: []
+    },
+    {
+      id: 'impact-chain',
+      path: '/impact-chain',
+      icon: GitBranch,
+      getLabel: () => t('nav.main.impactChain') || 'Chaîne d\'Impact IT/OT',
       submenu: []
     }
   ]
