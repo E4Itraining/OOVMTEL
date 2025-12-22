@@ -565,5 +565,4 @@ function WelcomePage() {
   )
 }
 
-export { PERSONAS, PERSONA_JOURNEYS, JOURNEY_STAGES }
 export default WelcomePage
