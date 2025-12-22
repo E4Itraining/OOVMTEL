@@ -22,7 +22,15 @@ export function RadialGauge({ value, max = 100, size = 128, strokeWidth = 10, la
     return colorMap.red
   }
 
-  const activeColor = color === 'auto' ? getColorByValue() : colorMap[color]
+  // Handle hex colors directly if not in colorMap
+  const getActiveColor = () => {
+    if (color === 'auto') return getColorByValue()
+    if (colorMap[color]) return colorMap[color]
+    // If color is a hex value or not in colorMap, create a color object from it
+    return { stroke: color, shadow: `${color}4D` } // 4D is ~30% opacity in hex
+  }
+
+  const activeColor = getActiveColor()
 
   return (
     <div className="relative inline-flex flex-col items-center justify-center">
