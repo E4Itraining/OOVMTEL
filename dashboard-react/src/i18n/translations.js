@@ -85,6 +85,7 @@ export const translations = {
         technicalView: 'Vue Technique',
         businessKPI: 'KPIs Métier',
         aiAssistant: 'Assistant IA',
+        impactAnalysis: 'Impact & Préconisations',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
@@ -295,8 +296,46 @@ export const translations = {
       hint: 'Vous pouvez changer de profil à tout moment dans les paramètres'
     },
 
-    // Personas
+    // Personas - Extended French enterprise roles
     personas: {
+      // Strategic Leadership
+      dirigeant: {
+        title: 'Dirigeant / DG',
+        description: 'Vision stratégique, gouvernance et pilotage global de l\'entreprise',
+        feature1: 'Tableaux de bord exécutifs',
+        feature2: 'Analyse d\'impact business',
+        feature3: 'Indicateurs de risques stratégiques'
+      },
+      dsi: {
+        title: 'DSI',
+        description: 'Direction des Systèmes d\'Information et transformation digitale',
+        feature1: 'Gouvernance IT et budget',
+        feature2: 'Performance infrastructure',
+        feature3: 'Roadmap technologique'
+      },
+      // Security & Compliance
+      rssi: {
+        title: 'RSSI',
+        description: 'Responsable de la Sécurité des Systèmes d\'Information',
+        feature1: 'Posture de sécurité',
+        feature2: 'Gestion des vulnérabilités',
+        feature3: 'Conformité NIS 2 / ISO 27001'
+      },
+      rsi: {
+        title: 'RSI',
+        description: 'Responsable des Systèmes d\'Information et opérations IT',
+        feature1: 'Disponibilité des services',
+        feature2: 'Gestion des incidents',
+        feature3: 'Maintenance et support'
+      },
+      dpoJuriste: {
+        title: 'DPO / Juriste',
+        description: 'Protection des données personnelles et conformité réglementaire',
+        feature1: 'Conformité RGPD',
+        feature2: 'AI Act & régulations EU',
+        feature3: 'Audit et traçabilité'
+      },
+      // Operational roles
       operationsManager: {
         title: 'Responsable Opérations',
         description: 'Supervision des lignes de production et gestion des équipements',
@@ -339,6 +378,40 @@ export const translations = {
         feature2: 'Détection de patterns',
         feature3: 'Export et rapports'
       }
+    },
+
+    // Impact Analysis
+    impactAnalysis: {
+      title: 'Impact & Préconisations',
+      subtitle: 'Analyse des impacts et recommandations IA personnalisées',
+      summary: {
+        totalImpacts: 'Impacts identifiés',
+        criticalItems: 'Éléments critiques',
+        estimatedSavings: 'Économies potentielles',
+        riskReduction: 'Réduction des risques',
+        actionItems: 'Actions recommandées'
+      },
+      categories: {
+        financial: 'Financier',
+        operational: 'Opérationnel',
+        security: 'Sécurité',
+        compliance: 'Conformité',
+        performance: 'Performance'
+      },
+      priority: {
+        critical: 'Critique',
+        high: 'Haute',
+        medium: 'Moyenne',
+        low: 'Basse'
+      },
+      aiInsight: 'Analyse IA',
+      recommendations: 'Préconisations',
+      affectedSystems: 'Systèmes impactés',
+      timeToImplement: 'Délai de mise en œuvre',
+      roi: 'Retour sur investissement',
+      createAction: 'Créer une action',
+      viewDetails: 'Voir les détails',
+      exportReport: 'Exporter le rapport'
     },
 
     // Command Center
@@ -688,6 +761,7 @@ export const translations = {
         technicalView: 'Technical View',
         businessKPI: 'Business KPIs',
         aiAssistant: 'AI Assistant',
+        impactAnalysis: 'Impact & Recommendations',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
@@ -898,8 +972,46 @@ export const translations = {
       hint: 'You can change your profile anytime in settings'
     },
 
-    // Personas
+    // Personas - Extended enterprise roles
     personas: {
+      // Strategic Leadership
+      dirigeant: {
+        title: 'Executive / CEO',
+        description: 'Strategic vision, governance and global company management',
+        feature1: 'Executive dashboards',
+        feature2: 'Business impact analysis',
+        feature3: 'Strategic risk indicators'
+      },
+      dsi: {
+        title: 'CIO',
+        description: 'Information Systems Direction and digital transformation',
+        feature1: 'IT governance and budget',
+        feature2: 'Infrastructure performance',
+        feature3: 'Technology roadmap'
+      },
+      // Security & Compliance
+      rssi: {
+        title: 'CISO',
+        description: 'Chief Information Security Officer',
+        feature1: 'Security posture',
+        feature2: 'Vulnerability management',
+        feature3: 'NIS 2 / ISO 27001 compliance'
+      },
+      rsi: {
+        title: 'IT Manager',
+        description: 'Information Systems Manager and IT operations',
+        feature1: 'Service availability',
+        feature2: 'Incident management',
+        feature3: 'Maintenance and support'
+      },
+      dpoJuriste: {
+        title: 'DPO / Legal',
+        description: 'Personal data protection and regulatory compliance',
+        feature1: 'GDPR compliance',
+        feature2: 'AI Act & EU regulations',
+        feature3: 'Audit and traceability'
+      },
+      // Operational roles
       operationsManager: {
         title: 'Operations Manager',
         description: 'Production line supervision and equipment management',
@@ -942,6 +1054,40 @@ export const translations = {
         feature2: 'Pattern detection',
         feature3: 'Export and reports'
       }
+    },
+
+    // Impact Analysis
+    impactAnalysis: {
+      title: 'Impact & Recommendations',
+      subtitle: 'Impact analysis and personalized AI recommendations',
+      summary: {
+        totalImpacts: 'Identified impacts',
+        criticalItems: 'Critical items',
+        estimatedSavings: 'Potential savings',
+        riskReduction: 'Risk reduction',
+        actionItems: 'Recommended actions'
+      },
+      categories: {
+        financial: 'Financial',
+        operational: 'Operational',
+        security: 'Security',
+        compliance: 'Compliance',
+        performance: 'Performance'
+      },
+      priority: {
+        critical: 'Critical',
+        high: 'High',
+        medium: 'Medium',
+        low: 'Low'
+      },
+      aiInsight: 'AI Analysis',
+      recommendations: 'Recommendations',
+      affectedSystems: 'Affected systems',
+      timeToImplement: 'Time to implement',
+      roi: 'Return on investment',
+      createAction: 'Create action',
+      viewDetails: 'View details',
+      exportReport: 'Export report'
     },
 
     // Command Center
