@@ -20,6 +20,7 @@ import KafkaView from './pages/KafkaView'
 import ObservabilityRemediationView from './pages/ObservabilityRemediationView'
 import SecurityComplianceView from './pages/SecurityComplianceView'
 import ImpactAnalysisView from './pages/ImpactAnalysisView'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Component to check if user should be redirected to welcome page
 function PersonaGuard({ children }) {
@@ -60,7 +61,7 @@ function App() {
                       <Route path="opensearch" element={<OpenSearchView />} />
                       <Route path="kafka" element={<KafkaView />} />
                       <Route path="observability" element={<ObservabilityRemediationView />} />
-                      <Route path="security" element={<SecurityComplianceView />} />
+                      <Route path="security" element={<ErrorBoundary><SecurityComplianceView /></ErrorBoundary>} />
                       <Route path="impact-analysis" element={<ImpactAnalysisView />} />
                     </Route>
                   </Routes>
