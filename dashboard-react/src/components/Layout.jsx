@@ -35,7 +35,9 @@ import {
   Layers,
   Shield,
   Lock,
-  Command
+  Command,
+  Lightbulb,
+  Sparkles
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
@@ -77,6 +79,13 @@ const getNavConfig = (t, userMode) => {
       path: '/ai-assistant',
       icon: MessageSquare,
       getLabel: () => t('nav.main.aiAssistant'),
+      submenu: []
+    },
+    {
+      id: 'impact-analysis',
+      path: '/impact-analysis',
+      icon: Target,
+      getLabel: () => t('nav.main.impactAnalysis') || 'Impact & Préconisations',
       submenu: []
     }
   ]

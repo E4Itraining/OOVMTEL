@@ -19,6 +19,7 @@ import OpenSearchView from './pages/OpenSearchView'
 import KafkaView from './pages/KafkaView'
 import ObservabilityRemediationView from './pages/ObservabilityRemediationView'
 import SecurityComplianceView from './pages/SecurityComplianceView'
+import ImpactAnalysisView from './pages/ImpactAnalysisView'
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
                     <Route path="kafka" element={<KafkaView />} />
                     <Route path="observability" element={<ObservabilityRemediationView />} />
                     <Route path="security" element={<SecurityComplianceView />} />
+                    <Route path="impact-analysis" element={<ImpactAnalysisView />} />
                   </Route>
                 </Routes>
               </BrowserRouter>
