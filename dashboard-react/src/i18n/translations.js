@@ -170,6 +170,83 @@ export const translations = {
         topics: 'Topics',
         partitions: 'Partitions',
         consumerLag: 'Lag consommateurs'
+      },
+      // Métriques OT (Operational Technology)
+      ot: {
+        title: 'Zone OT (Operational Technology)',
+        health: 'Santé Zone OT',
+        globalHealth: 'Santé Globale OT',
+        // Systèmes
+        systems: {
+          scada: {
+            name: 'SCADA',
+            fullName: 'Supervisory Control and Data Acquisition',
+            connectedDevices: 'Équipements connectés',
+            dataPoints: 'Points de données/s',
+            alarms: 'Alarmes actives'
+          },
+          mes: {
+            name: 'MES',
+            fullName: 'Manufacturing Execution System',
+            activeOrders: 'Ordres actifs',
+            completed: 'Complétés aujourd\'hui',
+            pending: 'En attente',
+            efficiency: 'Efficacité'
+          },
+          plm: {
+            name: 'PLM',
+            fullName: 'Product Lifecycle Management',
+            activeProducts: 'Produits actifs',
+            revisions: 'Révisions en attente',
+            qualityHolds: 'Blocages qualité'
+          },
+          opcua: {
+            name: 'OPC-UA',
+            fullName: 'OPC Unified Architecture',
+            servers: 'Serveurs connectés',
+            subscriptions: 'Abonnements actifs',
+            tags: 'Tags surveillés',
+            latency: 'Latence'
+          }
+        },
+        // Métriques industrielles
+        industrial: {
+          title: 'Métriques Industrielles',
+          mtbf: 'MTBF',
+          mtbfFull: 'Temps moyen entre pannes',
+          mttr: 'MTTR',
+          mttrFull: 'Temps moyen de réparation',
+          trs: 'TRS Détaillé',
+          trsFull: 'Taux de Rendement Synthétique',
+          disponibilite: 'Disponibilité',
+          performance: 'Performance',
+          qualite: 'Qualité'
+        },
+        // Zones de production
+        zones: {
+          title: 'Zones de Production',
+          lines: 'lignes',
+          oee: 'OEE'
+        },
+        // Chaîne logique-métier
+        dependencyChain: {
+          title: 'Chaîne Logique-Métier',
+          impactCritical: 'Impact Critique',
+          impactMedium: 'Impact Modéré',
+          impactLow: 'Impact Faible'
+        },
+        // Impacts
+        impacts: {
+          title: 'Impacts Actifs sur Production',
+          severity: 'Sévérité',
+          critical: 'Critique',
+          warning: 'Modéré',
+          affectedLines: 'Lignes affectées',
+          lostProduction: 'Production perdue',
+          estimatedCost: 'Coût estimé',
+          duration: 'Durée',
+          rootCause: 'Cause racine'
+        }
       }
     },
 
@@ -871,6 +948,83 @@ export const translations = {
         topics: 'Topics',
         partitions: 'Partitions',
         consumerLag: 'Consumer Lag'
+      },
+      // OT (Operational Technology) Metrics
+      ot: {
+        title: 'OT Zone (Operational Technology)',
+        health: 'OT Zone Health',
+        globalHealth: 'OT Global Health',
+        // Systems
+        systems: {
+          scada: {
+            name: 'SCADA',
+            fullName: 'Supervisory Control and Data Acquisition',
+            connectedDevices: 'Connected devices',
+            dataPoints: 'Data points/s',
+            alarms: 'Active alarms'
+          },
+          mes: {
+            name: 'MES',
+            fullName: 'Manufacturing Execution System',
+            activeOrders: 'Active orders',
+            completed: 'Completed today',
+            pending: 'Pending',
+            efficiency: 'Efficiency'
+          },
+          plm: {
+            name: 'PLM',
+            fullName: 'Product Lifecycle Management',
+            activeProducts: 'Active products',
+            revisions: 'Pending revisions',
+            qualityHolds: 'Quality holds'
+          },
+          opcua: {
+            name: 'OPC-UA',
+            fullName: 'OPC Unified Architecture',
+            servers: 'Connected servers',
+            subscriptions: 'Active subscriptions',
+            tags: 'Monitored tags',
+            latency: 'Latency'
+          }
+        },
+        // Industrial metrics
+        industrial: {
+          title: 'Industrial Metrics',
+          mtbf: 'MTBF',
+          mtbfFull: 'Mean Time Between Failures',
+          mttr: 'MTTR',
+          mttrFull: 'Mean Time To Repair',
+          trs: 'OEE Detailed',
+          trsFull: 'Overall Equipment Effectiveness',
+          disponibilite: 'Availability',
+          performance: 'Performance',
+          qualite: 'Quality'
+        },
+        // Production zones
+        zones: {
+          title: 'Production Zones',
+          lines: 'lines',
+          oee: 'OEE'
+        },
+        // Business logic chain
+        dependencyChain: {
+          title: 'Business Logic Chain',
+          impactCritical: 'Critical Impact',
+          impactMedium: 'Medium Impact',
+          impactLow: 'Low Impact'
+        },
+        // Impacts
+        impacts: {
+          title: 'Active Production Impacts',
+          severity: 'Severity',
+          critical: 'Critical',
+          warning: 'Moderate',
+          affectedLines: 'Affected lines',
+          lostProduction: 'Lost production',
+          estimatedCost: 'Estimated cost',
+          duration: 'Duration',
+          rootCause: 'Root cause'
+        }
       }
     },
 

@@ -26,6 +26,14 @@ import { Card, CardHeader, CardBody, MetricCard, ServiceCard, LinkCard } from '.
 import { RadialGauge, SemiCircleGauge, LinearGauge } from '../components/ui/Gauge'
 import { TimeSeriesChart, DonutChart } from '../components/ui/Charts'
 import { StatusBadge, HealthIndicator, LoadingSpinner } from '../components/ui/Status'
+import {
+  OTHealthIndicator,
+  OTSystemCard,
+  IndustrialMetrics,
+  ProductionZoneView,
+  DependencyChainView,
+  ActiveImpactsView
+} from '../components/ui/OTHealth'
 
 // Generate mock time series data
 const generateTimeSeriesData = (points = 20, baseValue = 50, variance = 20) => {
@@ -242,7 +250,102 @@ function BusinessView({ metrics, navigate, t }) {
   )
 }
 
+// Données OT simulées (à remplacer par des données réelles via API)
+const generateOTData = () => ({
+  globalHealth: 82,
+  scada: {
+    status: 'healthy',
+    connectedDevices: 47,
+    activeAlarms: 2,
+    dataPointsPerSec: 1250,
+    lastSync: new Date()
+  },
+  mes: {
+    status: 'healthy',
+    activeOrders: 12,
+    completedToday: 156,
+    pendingOrders: 8,
+    efficiency: 87
+  },
+  plm: {
+    status: 'warning',
+    activeProducts: 234,
+    revisionsPending: 5,
+    qualityHolds: 2
+  },
+  opcua: {
+    status: 'healthy',
+    connectedServers: 8,
+    activeSubscriptions: 156,
+    tagsMonitored: 2450,
+    latencyMs: 23
+  },
+  mtbf: 847,
+  mttr: 2.3,
+  trs: {
+    disponibilite: 92,
+    performance: 89,
+    qualite: 98.5,
+    global: 80.7
+  },
+  zones: [
+    { id: 'zone-a', name: 'Zone A - Assemblage', status: 'running', oee: 87, lines: 3, activeAlarms: 0 },
+    { id: 'zone-b', name: 'Zone B - Usinage', status: 'running', oee: 82, lines: 4, activeAlarms: 1 },
+    { id: 'zone-c', name: 'Zone C - Finition', status: 'warning', oee: 71, lines: 2, activeAlarms: 2 },
+    { id: 'zone-d', name: 'Zone D - Stockage', status: 'running', oee: 95, lines: 1, activeAlarms: 0 }
+  ],
+  dependencyChain: [
+    {
+      id: 'chain-1',
+      name: 'Ligne Principale',
+      steps: [
+        { id: 's1', name: 'Réception MP', status: 'ok', type: 'input' },
+        { id: 's2', name: 'Usinage CNC', status: 'ok', type: 'process' },
+        { id: 's3', name: 'Assemblage', status: 'warning', type: 'process' },
+        { id: 's4', name: 'Contrôle Qualité', status: 'ok', type: 'check' },
+        { id: 's5', name: 'Emballage', status: 'ok', type: 'output' }
+      ],
+      impactLevel: 'medium'
+    },
+    {
+      id: 'chain-2',
+      name: 'Ligne Secondaire',
+      steps: [
+        { id: 's1', name: 'Stock Composants', status: 'ok', type: 'input' },
+        { id: 's2', name: 'Soudure', status: 'error', type: 'process' },
+        { id: 's3', name: 'Test Électrique', status: 'blocked', type: 'check' },
+        { id: 's4', name: 'Expédition', status: 'blocked', type: 'output' }
+      ],
+      impactLevel: 'critical'
+    }
+  ],
+  activeImpacts: [
+    {
+      id: 'imp-1',
+      title: 'Arrêt Ligne Soudure',
+      severity: 'critical',
+      affectedLines: ['Ligne B', 'Ligne C'],
+      lostProduction: 145,
+      estimatedCost: 12500,
+      duration: '2h 15min',
+      rootCause: 'Défaillance robot soudure RS-02'
+    },
+    {
+      id: 'imp-2',
+      title: 'Ralentissement Zone Assemblage',
+      severity: 'warning',
+      affectedLines: ['Ligne A'],
+      lostProduction: 32,
+      estimatedCost: 2800,
+      duration: '45min',
+      rootCause: 'Approvisionnement composants retardé'
+    }
+  ]
+})
+
 function TechView({ metrics, navigate, t }) {
+  const otData = useMemo(() => generateOTData(), [])
+
   const services = useMemo(() => [
     { name: t('services.victoriametrics.title'), status: 'healthy', icon: Database, metrics: [
       { label: t('metrics.tech.activeSeries'), value: metrics.tech?.vmActiveSeries?.toLocaleString() || '125K' },
@@ -385,6 +488,59 @@ function TechView({ metrics, navigate, t }) {
         <CardHeader title="System Health Overview" icon={Server} />
         <CardBody>
           <HealthIndicator services={services} />
+        </CardBody>
+      </Card>
+
+      {/* ============================================= */}
+      {/* SECTION OT - OBSERVABILITÉ INDUSTRIELLE      */}
+      {/* ============================================= */}
+
+      {/* Santé Zone OT */}
+      <Card>
+        <CardHeader title="Santé Zone OT (Operational Technology)" icon={Factory} />
+        <CardBody>
+          <OTHealthIndicator otData={otData} />
+        </CardBody>
+      </Card>
+
+      {/* Systèmes OT */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <OTSystemCard system="scada" data={otData?.scada} onClick={() => navigate('/details/scada')} />
+        <OTSystemCard system="mes" data={otData?.mes} onClick={() => navigate('/details/mes')} />
+        <OTSystemCard system="plm" data={otData?.plm} onClick={() => navigate('/details/plm')} />
+        <OTSystemCard system="opcua" data={otData?.opcua} onClick={() => navigate('/details/opcua')} />
+      </div>
+
+      {/* Métriques Industrielles & Zones */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardBody>
+            <IndustrialMetrics
+              mtbf={otData?.mtbf}
+              mttr={otData?.mttr}
+              trs={otData?.trs}
+            />
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody>
+            <ProductionZoneView zones={otData?.zones} />
+          </CardBody>
+        </Card>
+      </div>
+
+      {/* Chaîne Logique-Métier */}
+      <Card>
+        <CardBody>
+          <DependencyChainView chain={otData?.dependencyChain} />
+        </CardBody>
+      </Card>
+
+      {/* Impacts Actifs */}
+      <Card>
+        <CardBody>
+          <ActiveImpactsView impacts={otData?.activeImpacts} />
         </CardBody>
       </Card>
 
