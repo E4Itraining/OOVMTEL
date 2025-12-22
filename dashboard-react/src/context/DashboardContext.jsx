@@ -93,7 +93,40 @@ const defaultMetrics = {
     // Chaîne logique-métier (dépendances)
     dependencyChain: [],
     // Impacts actifs
-    activeImpacts: []
+    activeImpacts: [],
+    // Cascades d'impact en cours
+    activeCascades: []
+  },
+  // Graphe de dépendances IT/OT
+  itotGraph: {
+    // Nœuds du graphe (systèmes IT et OT)
+    nodes: [],
+    // Connexions entre nœuds
+    edges: [],
+    // Impacts actifs avec propagation
+    impacts: [],
+    // Métriques du graphe
+    stats: {
+      totalNodes: 0,
+      itNodes: 0,
+      otNodes: 0,
+      connections: 0,
+      healthRate: 100,
+      activeImpacts: 0,
+      criticalImpacts: 0,
+      totalLoss: 0
+    }
+  },
+  // Corrélations IT/OT
+  correlations: {
+    // Alertes corrélées IT/OT
+    correlatedAlerts: [],
+    // Patterns détectés
+    detectedPatterns: [],
+    // Score de corrélation global
+    correlationScore: 0,
+    // Dernière analyse
+    lastAnalysis: null
   },
   services: [],
   events: [],
