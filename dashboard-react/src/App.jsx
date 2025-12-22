@@ -20,6 +20,12 @@ import KafkaView from './pages/KafkaView'
 import ObservabilityRemediationView from './pages/ObservabilityRemediationView'
 import SecurityComplianceView from './pages/SecurityComplianceView'
 import ImpactAnalysisView from './pages/ImpactAnalysisView'
+import DPODashboardView from './pages/DPODashboardView'
+import ComplianceDashboardView from './pages/ComplianceDashboardView'
+import RSEDashboardView from './pages/RSEDashboardView'
+import GreenITDashboardView from './pages/GreenITDashboardView'
+import SOCDashboardView from './pages/SOCDashboardView'
+import MLOpsDashboardView from './pages/MLOpsDashboardView'
 
 // Component to check if user should be redirected to welcome page
 function PersonaGuard({ children }) {
@@ -62,6 +68,13 @@ function App() {
                       <Route path="observability" element={<ObservabilityRemediationView />} />
                       <Route path="security" element={<SecurityComplianceView />} />
                       <Route path="impact-analysis" element={<ImpactAnalysisView />} />
+                      {/* Role-specific dashboards */}
+                      <Route path="dpo-dashboard" element={<DPODashboardView />} />
+                      <Route path="compliance-dashboard" element={<ComplianceDashboardView />} />
+                      <Route path="rse-dashboard" element={<RSEDashboardView />} />
+                      <Route path="greenit-dashboard" element={<GreenITDashboardView />} />
+                      <Route path="soc-dashboard" element={<SOCDashboardView />} />
+                      <Route path="mlops-dashboard" element={<MLOpsDashboardView />} />
                     </Route>
                   </Routes>
                 </PersonaGuard>
