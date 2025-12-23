@@ -4,8 +4,8 @@ import { useDashboard } from '../context/DashboardContext'
 const API_BASE = '/api'
 const WS_URL = `ws://${window.location.host}/ws`
 const POLLING_INTERVAL = 5000
-// Always offline mode - use demo data without attempting API connections
-const OFFLINE_MODE = true
+// Set to true to force demo data without API connections
+const OFFLINE_MODE = false
 
 // Demo data to use when API is unavailable
 const DEMO_DATA = {
