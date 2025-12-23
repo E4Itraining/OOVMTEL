@@ -9,6 +9,8 @@ import { render } from '@testing-library/react'
 import { BrowserRouter, MemoryRouter } from 'react-router-dom'
 import { I18nProvider } from '../i18n/I18nContext'
 import { DashboardProvider } from '../context/DashboardContext'
+import { OnboardingProvider } from '../components/OnboardingTour'
+import { FavoritesProvider } from '../components/FavoritesSystem'
 
 /**
  * All-in-one provider wrapper for testing
@@ -18,7 +20,11 @@ function AllProviders({ children, initialRoute = '/' }) {
     <MemoryRouter initialEntries={[initialRoute]}>
       <I18nProvider>
         <DashboardProvider>
-          {children}
+          <OnboardingProvider>
+            <FavoritesProvider>
+              {children}
+            </FavoritesProvider>
+          </OnboardingProvider>
         </DashboardProvider>
       </I18nProvider>
     </MemoryRouter>

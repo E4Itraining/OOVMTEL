@@ -135,7 +135,10 @@ describe('I18n Available Languages', () => {
                       result.current.locales
 
     if (languages) {
-      expect(Array.isArray(languages)).toBe(true)
+      // Languages can be an array or an object (like LANGUAGES enum)
+      const isValidLanguages = Array.isArray(languages) ||
+        (typeof languages === 'object' && Object.keys(languages).length > 0)
+      expect(isValidLanguages).toBe(true)
     }
   })
 
@@ -146,7 +149,9 @@ describe('I18n Available Languages', () => {
                       result.current.availableLanguages
 
     if (languages) {
-      expect(languages.some(l =>
+      // Handle both array and object formats
+      const langValues = Array.isArray(languages) ? languages : Object.values(languages)
+      expect(langValues.some(l =>
         l === 'fr' || l.code === 'fr' || l.id === 'fr'
       )).toBe(true)
     }
@@ -159,7 +164,9 @@ describe('I18n Available Languages', () => {
                       result.current.availableLanguages
 
     if (languages) {
-      expect(languages.some(l =>
+      // Handle both array and object formats
+      const langValues = Array.isArray(languages) ? languages : Object.values(languages)
+      expect(langValues.some(l =>
         l === 'en' || l.code === 'en' || l.id === 'en'
       )).toBe(true)
     }
