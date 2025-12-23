@@ -4,130 +4,171 @@
 
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '../../test/utils'
-import { StatusBadge, StatusDot, HealthBar, TrendIndicator } from './Status'
+import { StatusBadge, StatusDot, HealthIndicator, LoadingSpinner, Skeleton } from './Status'
 
 describe('StatusBadge Component', () => {
   it('renders with default status', () => {
-    render(<StatusBadge status="ok">Online</StatusBadge>)
+    render(<StatusBadge status="ok" />)
+    expect(screen.getByText('OK')).toBeInTheDocument()
+  })
+
+  it('renders with custom label', () => {
+    render(<StatusBadge status="ok" label="Online" />)
     expect(screen.getByText('Online')).toBeInTheDocument()
   })
 
-  it('applies correct color for success status', () => {
-    render(<StatusBadge status="success">Success</StatusBadge>)
-    const badge = screen.getByText('Success')
+  it('applies correct color for healthy status', () => {
+    render(<StatusBadge status="healthy" />)
+    const badge = screen.getByText('Healthy')
     expect(badge).toBeInTheDocument()
   })
 
   it('applies correct color for warning status', () => {
-    render(<StatusBadge status="warning">Warning</StatusBadge>)
+    render(<StatusBadge status="warning" />)
     const badge = screen.getByText('Warning')
     expect(badge).toBeInTheDocument()
   })
 
   it('applies correct color for error status', () => {
-    render(<StatusBadge status="error">Error</StatusBadge>)
+    render(<StatusBadge status="error" />)
     const badge = screen.getByText('Error')
     expect(badge).toBeInTheDocument()
   })
 
-  it('applies correct color for info status', () => {
-    render(<StatusBadge status="info">Info</StatusBadge>)
-    const badge = screen.getByText('Info')
+  it('handles unknown status gracefully', () => {
+    render(<StatusBadge status="unknown" />)
+    const badge = screen.getByText('Unknown')
     expect(badge).toBeInTheDocument()
+  })
+
+  it('renders with different sizes', () => {
+    const { rerender } = render(<StatusBadge status="ok" size="sm" />)
+    expect(screen.getByText('OK')).toBeInTheDocument()
+
+    rerender(<StatusBadge status="ok" size="lg" />)
+    expect(screen.getByText('OK')).toBeInTheDocument()
   })
 })
 
 describe('StatusDot Component', () => {
   it('renders with default size', () => {
-    render(<StatusDot status="online" />)
+    render(<StatusDot status="ok" />)
     const dot = document.querySelector('.rounded-full')
     expect(dot).toBeInTheDocument()
   })
 
   it('renders with custom size', () => {
-    render(<StatusDot status="online" size="lg" />)
+    render(<StatusDot status="ok" size="lg" />)
     const dot = document.querySelector('.rounded-full')
     expect(dot).toBeInTheDocument()
   })
 
-  it('applies pulse animation when pulsing prop is true', () => {
-    render(<StatusDot status="online" pulsing />)
-    // Should have animation class
-    const dot = document.querySelector('.rounded-full')
+  it('renders with pulse animation by default', () => {
+    render(<StatusDot status="ok" />)
+    const animatedDot = document.querySelector('.animate-ping')
+    expect(animatedDot).toBeInTheDocument()
+  })
+
+  it('can disable pulse animation', () => {
+    render(<StatusDot status="ok" pulse={false} />)
+    const animatedDot = document.querySelector('.animate-ping')
+    expect(animatedDot).not.toBeInTheDocument()
+  })
+
+  it('renders healthy status with green color', () => {
+    render(<StatusDot status="healthy" />)
+    const dot = document.querySelector('.bg-green-500')
     expect(dot).toBeInTheDocument()
   })
 
-  it('renders offline status correctly', () => {
-    render(<StatusDot status="offline" />)
-    const dot = document.querySelector('.bg-red-500, .bg-gray-500')
+  it('renders warning status with yellow color', () => {
+    render(<StatusDot status="warning" />)
+    const dot = document.querySelector('.bg-yellow-500')
+    expect(dot).toBeInTheDocument()
+  })
+
+  it('renders error status with red color', () => {
+    render(<StatusDot status="error" />)
+    const dot = document.querySelector('.bg-red-500')
+    expect(dot).toBeInTheDocument()
+  })
+
+  it('renders unknown status with gray color', () => {
+    render(<StatusDot status="unknown" />)
+    const dot = document.querySelector('.bg-gray-500')
     expect(dot).toBeInTheDocument()
   })
 })
 
-describe('HealthBar Component', () => {
-  it('renders with value', () => {
-    render(<HealthBar value={75} />)
-    // Should render a progress bar
-    expect(document.querySelector('[role="progressbar"], .bg-green-500, .h-2')).toBeInTheDocument()
+describe('HealthIndicator Component', () => {
+  it('renders with services list', () => {
+    const services = [
+      { name: 'API', status: 'healthy' },
+      { name: 'DB', status: 'healthy' },
+    ]
+    render(<HealthIndicator services={services} />)
+    expect(screen.getByText('System Health')).toBeInTheDocument()
   })
 
-  it('shows correct color for high health', () => {
-    render(<HealthBar value={90} />)
-    // Should show green for healthy
-    const bar = document.querySelector('.bg-green-500, .bg-emerald-500')
-    expect(bar || document.querySelector('[style*="width"]')).toBeInTheDocument()
+  it('displays correct health percentage', () => {
+    const services = [
+      { name: 'API', status: 'healthy' },
+      { name: 'DB', status: 'healthy' },
+    ]
+    render(<HealthIndicator services={services} />)
+    expect(screen.getByText('100%')).toBeInTheDocument()
   })
 
-  it('shows correct color for medium health', () => {
-    render(<HealthBar value={60} />)
-    // Should show yellow/orange for medium
-    expect(document.querySelector('.bg-yellow-500, .bg-amber-500, [style*="width"]')).toBeInTheDocument()
+  it('shows correct counts for different statuses', () => {
+    const services = [
+      { name: 'API', status: 'healthy' },
+      { name: 'DB', status: 'degraded' },
+      { name: 'Cache', status: 'down' },
+    ]
+    render(<HealthIndicator services={services} />)
+    expect(screen.getByText(/1 Healthy/)).toBeInTheDocument()
+    expect(screen.getByText(/1 Degraded/)).toBeInTheDocument()
+    expect(screen.getByText(/1 Down/)).toBeInTheDocument()
   })
 
-  it('shows correct color for low health', () => {
-    render(<HealthBar value={20} />)
-    // Should show red for low
-    expect(document.querySelector('.bg-red-500, [style*="width"]')).toBeInTheDocument()
-  })
-
-  it('renders label when provided', () => {
-    render(<HealthBar value={85} label="CPU Health" />)
-    expect(screen.getByText('CPU Health')).toBeInTheDocument()
-  })
-
-  it('shows percentage when showValue is true', () => {
-    render(<HealthBar value={85} showValue />)
-    expect(screen.getByText(/85/)).toBeInTheDocument()
+  it('handles empty services array', () => {
+    render(<HealthIndicator services={[]} />)
+    expect(screen.getByText('System Health')).toBeInTheDocument()
+    expect(screen.getByText('0%')).toBeInTheDocument()
   })
 })
 
-describe('TrendIndicator Component', () => {
-  it('renders up trend correctly', () => {
-    render(<TrendIndicator direction="up" value="5%" />)
-    expect(screen.getByText(/5%/)).toBeInTheDocument()
+describe('LoadingSpinner Component', () => {
+  it('renders with default size', () => {
+    render(<LoadingSpinner />)
+    const spinner = document.querySelector('.animate-spin')
+    expect(spinner).toBeInTheDocument()
   })
 
-  it('renders down trend correctly', () => {
-    render(<TrendIndicator direction="down" value="3%" />)
-    expect(screen.getByText(/3%/)).toBeInTheDocument()
+  it('renders with label', () => {
+    render(<LoadingSpinner label="Loading data..." />)
+    expect(screen.getByText('Loading data...')).toBeInTheDocument()
   })
 
-  it('renders flat trend correctly', () => {
-    render(<TrendIndicator direction="flat" value="0%" />)
-    expect(screen.getByText(/0%/)).toBeInTheDocument()
+  it('renders with different sizes', () => {
+    const { rerender } = render(<LoadingSpinner size="sm" />)
+    expect(document.querySelector('.w-4')).toBeInTheDocument()
+
+    rerender(<LoadingSpinner size="lg" />)
+    expect(document.querySelector('.w-12')).toBeInTheDocument()
+  })
+})
+
+describe('Skeleton Component', () => {
+  it('renders with default class', () => {
+    render(<Skeleton />)
+    const skeleton = document.querySelector('.skeleton')
+    expect(skeleton).toBeInTheDocument()
   })
 
-  it('applies correct color for positive trend', () => {
-    render(<TrendIndicator direction="up" value="5%" positive />)
-    // Should have green color
-    const indicator = screen.getByText(/5%/).closest('div, span')
-    expect(indicator).toBeInTheDocument()
-  })
-
-  it('applies correct color for negative trend', () => {
-    render(<TrendIndicator direction="down" value="5%" negative />)
-    // Should have red color
-    const indicator = screen.getByText(/5%/).closest('div, span')
-    expect(indicator).toBeInTheDocument()
+  it('accepts custom className', () => {
+    render(<Skeleton className="h-10 w-full" />)
+    const skeleton = document.querySelector('.skeleton.h-10.w-full')
+    expect(skeleton).toBeInTheDocument()
   })
 })

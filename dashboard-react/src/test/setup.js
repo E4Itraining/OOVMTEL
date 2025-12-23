@@ -45,6 +45,9 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 // Mock scrollTo
 window.scrollTo = vi.fn()
 
+// Mock scrollIntoView (not available in JSDOM)
+Element.prototype.scrollIntoView = vi.fn()
+
 // Mock fetch API
 global.fetch = vi.fn(() =>
   Promise.resolve({
@@ -100,6 +103,14 @@ vi.mock('framer-motion', async () => {
       section: 'section',
       aside: 'aside',
       main: 'main',
+      // SVG elements used in Gauge components
+      svg: 'svg',
+      circle: 'circle',
+      path: 'path',
+      g: 'g',
+      rect: 'rect',
+      line: 'line',
+      text: 'text',
     },
     AnimatePresence: ({ children }) => children,
   }

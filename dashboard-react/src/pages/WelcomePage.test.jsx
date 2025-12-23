@@ -14,10 +14,10 @@ describe('WelcomePage Component', () => {
   it('renders welcome title', () => {
     render(<WelcomePage />)
 
-    // Should have a welcome heading
-    const heading = screen.getByRole('heading') ||
-                    screen.queryByText(/welcome|bienvenue|synapsix/i)
-    expect(heading).toBeInTheDocument()
+    // Should have welcome headings
+    const headings = screen.queryAllByRole('heading')
+    const welcomeText = screen.queryByText(/welcome|bienvenue|synapsix/i)
+    expect(headings.length > 0 || welcomeText).toBeTruthy()
   })
 
   it('renders persona selection', () => {
