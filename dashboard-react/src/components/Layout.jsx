@@ -39,7 +39,8 @@ import {
   Lightbulb,
   Sparkles,
   UserCircle2,
-  GitBranch
+  GitBranch,
+  Brain
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
@@ -177,6 +178,7 @@ const getNavConfig = (t, userMode) => {
     { id: 'opensearch', path: '/opensearch', icon: Search, getLabel: () => t('nav.main.opensearch') },
     { id: 'kafka', path: '/kafka', icon: MessageSquare, getLabel: () => t('nav.main.kafka') },
     { id: 'observability', path: '/observability', icon: Shield, getLabel: () => t('nav.main.observability') },
+    { id: 'ai-observability', path: '/ai-observability', icon: Brain, getLabel: () => t('nav.main.aiObservability') || 'AI Observability' },
     { id: 'security', path: '/security', icon: Lock, getLabel: () => t('nav.main.security') }
   ]
 

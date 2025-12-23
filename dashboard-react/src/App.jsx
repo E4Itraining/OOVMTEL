@@ -21,6 +21,7 @@ import ObservabilityRemediationView from './pages/ObservabilityRemediationView'
 import SecurityComplianceView from './pages/SecurityComplianceView'
 import ImpactAnalysisView from './pages/ImpactAnalysisView'
 import ImpactChainPage from './pages/ImpactChainPage'
+import AIObservabilityPage from './pages/AIObservabilityPage'
 import ErrorBoundary from './components/ErrorBoundary'
 
 // Component to check if user should be redirected to welcome page
@@ -65,6 +66,7 @@ function App() {
                       <Route path="security" element={<ErrorBoundary><SecurityComplianceView /></ErrorBoundary>} />
                       <Route path="impact-analysis" element={<ImpactAnalysisView />} />
                       <Route path="impact-chain" element={<ImpactChainPage />} />
+                      <Route path="ai-observability" element={<AIObservabilityPage />} />
                     </Route>
                   </Routes>
                 </PersonaGuard>

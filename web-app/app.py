@@ -60,6 +60,19 @@ except ImportError as e:
     LLM_MODULE_AVAILABLE = False
     logging.warning(f"LLM module not available: {e}")
 
+# Import AI Observability module
+try:
+    from modules.ai_observability import (
+        AIObservabilityEngine,
+        AIObservabilityConfig,
+        ModelType,
+        AIRiskLevel,
+    )
+    AI_OBSERVABILITY_AVAILABLE = True
+except ImportError as e:
+    AI_OBSERVABILITY_AVAILABLE = False
+    logging.warning(f"AI Observability module not available: {e}")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -170,10 +183,11 @@ remediation_engine: Optional[Any] = None
 edge_manager: Optional[Any] = None
 hpc_engine: Optional[Any] = None
 llm_nlp: Optional[Any] = None  # LLM-enhanced NLP
+ai_observability_engine: Optional[Any] = None  # AI Observability Engine
 
 @app.on_event("startup")
 async def startup_event():
-    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine, llm_nlp
+    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine, llm_nlp, ai_observability_engine
 
     http_client = httpx.AsyncClient(timeout=10.0)
 
@@ -213,6 +227,18 @@ async def startup_event():
         except Exception as e:
             logger.warning(f"LLM initialization failed: {e}")
             llm_nlp = None
+
+    # Initialize AI Observability Engine
+    if AI_OBSERVABILITY_AVAILABLE:
+        try:
+            ai_observability_engine = AIObservabilityEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL
+            )
+            await ai_observability_engine.initialize()
+            logger.info("AI Observability Engine initialized successfully")
+        except Exception as e:
+            logger.warning(f"AI Observability initialization failed: {e}")
+            ai_observability_engine = None
 
     logger.info("OOVMTEL Unified View API started")
     # Start background task for metrics refresh
@@ -1026,6 +1052,19 @@ async def modules_status():
             "description": "LLM-enhanced NLP for natural language understanding",
             "provider": get_llm_settings().active_provider.value if LLM_MODULE_AVAILABLE else None,
             "fallback_enabled": get_llm_settings().fallback_to_rules if LLM_MODULE_AVAILABLE else True
+        },
+        "ai_observability": {
+            "enabled": ai_observability_engine is not None,
+            "module_available": AI_OBSERVABILITY_AVAILABLE,
+            "description": "AI/ML model monitoring, drift detection, and explainability",
+            "models_count": len(ai_observability_engine.get_all_models()) if ai_observability_engine else 0,
+            "capabilities": [
+                "model_registry",
+                "drift_detection",
+                "performance_tracking",
+                "explainability",
+                "eu_ai_act_compliance"
+            ] if ai_observability_engine else []
         }
     }
 
@@ -1630,6 +1669,503 @@ async def simulate_cluster_activity(utilization: float = Query(50, ge=0, le=100)
     except Exception as e:
         logger.error(f"Simulate activity error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================
+# AI Observability Endpoints
+# =========================================
+
+@app.get("/api/ai-observability/dashboard")
+async def get_ai_observability_dashboard():
+    """Get comprehensive AI observability dashboard data."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_dashboard_data()
+    except Exception as e:
+        logger.error(f"AI Observability dashboard error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models")
+async def list_ai_models():
+    """List all registered AI/ML models."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        models = ai_observability_engine.get_all_models()
+        return {
+            "models": [
+                {
+                    "model_id": m.model_id,
+                    "name": m.name,
+                    "version": m.version,
+                    "type": m.model_type.value,
+                    "status": m.status.value,
+                    "risk_level": m.risk_level.value,
+                    "deployment_target": m.deployment_target,
+                    "description": m.description,
+                    "tags": m.tags,
+                    "deployed_at": m.deployed_at.isoformat() if m.deployed_at else None,
+                }
+                for m in models
+            ],
+            "count": len(models)
+        }
+    except Exception as e:
+        logger.error(f"List AI models error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models/{model_id}")
+async def get_ai_model_detail(model_id: str):
+    """Get detailed information for a specific AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        detail = ai_observability_engine.get_model_detail(model_id)
+        if not detail:
+            raise HTTPException(status_code=404, detail=f"Model {model_id} not found")
+        return detail
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get AI model detail error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models/{model_id}/health")
+async def get_ai_model_health(model_id: str):
+    """Get health score for a specific AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        health = ai_observability_engine.get_health_score(model_id)
+        return {
+            "model_id": health.model_id,
+            "timestamp": health.timestamp.isoformat(),
+            "overall_score": health.overall_score,
+            "status": health.status,
+            "performance_score": health.performance_score,
+            "accuracy_score": health.accuracy_score,
+            "drift_score": health.drift_score,
+            "availability_score": health.availability_score,
+            "resource_score": health.resource_score,
+            "compliance_score": health.compliance_score,
+            "slo_violations": health.slo_violations,
+            "slo_compliance_pct": health.slo_compliance_pct,
+            "recommendations": health.recommendations,
+            "score_trend": health.score_trend,
+        }
+    except Exception as e:
+        logger.error(f"Get AI model health error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models/{model_id}/metrics")
+async def get_ai_model_metrics(model_id: str, window_minutes: int = Query(5)):
+    """Get performance metrics for a specific AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        metrics = ai_observability_engine.get_performance_metrics(model_id, window_minutes)
+        return {
+            "model_id": metrics.model_id,
+            "timestamp": metrics.timestamp.isoformat(),
+            "latency_p50": metrics.latency_p50,
+            "latency_p95": metrics.latency_p95,
+            "latency_p99": metrics.latency_p99,
+            "latency_avg": metrics.latency_avg,
+            "latency_max": metrics.latency_max,
+            "requests_total": metrics.requests_total,
+            "requests_per_second": metrics.requests_per_second,
+            "errors_total": metrics.errors_total,
+            "error_rate_pct": metrics.error_rate_pct,
+        }
+    except Exception as e:
+        logger.error(f"Get AI model metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/health-scores")
+async def get_all_health_scores():
+    """Get health scores for all active AI models."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        scores = ai_observability_engine.get_all_health_scores()
+        return {
+            "health_scores": {
+                model_id: {
+                    "overall_score": score.overall_score,
+                    "status": score.status,
+                    "score_trend": score.score_trend,
+                }
+                for model_id, score in scores.items()
+            },
+            "summary": {
+                "total_models": len(scores),
+                "healthy": len([s for s in scores.values() if s.status == "healthy"]),
+                "warning": len([s for s in scores.values() if s.status == "warning"]),
+                "critical": len([s for s in scores.values() if s.status == "critical"]),
+                "avg_score": round(sum(s.overall_score for s in scores.values()) / len(scores), 1) if scores else 0,
+            }
+        }
+    except Exception as e:
+        logger.error(f"Get all health scores error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/drift")
+async def get_drift_summary():
+    """Get drift detection summary."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_drift_summary()
+    except Exception as e:
+        logger.error(f"Get drift summary error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/drift/{model_id}")
+async def get_model_drift_history(model_id: str, hours: int = Query(24)):
+    """Get drift detection history for a specific model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        history = ai_observability_engine.get_drift_history(model_id, hours)
+        return {
+            "model_id": model_id,
+            "history": [
+                {
+                    "timestamp": d.timestamp.isoformat(),
+                    "drift_type": d.drift_type.value,
+                    "severity": d.severity.value,
+                    "drift_score": d.drift_score,
+                    "affected_features": d.affected_features,
+                    "recommendation": d.recommendation,
+                    "requires_retraining": d.requires_retraining,
+                }
+                for d in history
+            ],
+            "count": len(history)
+        }
+    except Exception as e:
+        logger.error(f"Get model drift history error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DriftDetectionRequest(BaseModel):
+    feature_id: str
+    current_data: List[float]
+
+
+@app.post("/api/ai-observability/drift/{model_id}/detect")
+async def detect_drift(model_id: str, request: DriftDetectionRequest):
+    """Detect drift for a specific feature."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        result = await ai_observability_engine.detect_drift(
+            model_id=model_id,
+            feature_id=request.feature_id,
+            current_data=request.current_data
+        )
+        return {
+            "model_id": result.model_id,
+            "timestamp": result.timestamp.isoformat(),
+            "drift_type": result.drift_type.value,
+            "severity": result.severity.value,
+            "drift_score": result.drift_score,
+            "statistical_distance": result.statistical_distance,
+            "affected_features": result.affected_features,
+            "recommendation": result.recommendation,
+            "requires_retraining": result.requires_retraining,
+            "details": result.details,
+        }
+    except Exception as e:
+        logger.error(f"Detect drift error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/explainability")
+async def get_explainability_summary():
+    """Get explainability and audit logging summary."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.explainability.get_explainability_summary()
+    except Exception as e:
+        logger.error(f"Get explainability summary error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/audit-logs")
+async def get_audit_logs(
+    model_id: Optional[str] = Query(None),
+    hours: int = Query(24),
+    limit: int = Query(100)
+):
+    """Get prediction audit logs."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        logs = ai_observability_engine.get_audit_logs(model_id, hours, limit)
+        return {
+            "audit_logs": [
+                {
+                    "prediction_id": log.prediction_id,
+                    "model_id": log.model_id,
+                    "timestamp": log.timestamp.isoformat(),
+                    "confidence": log.confidence,
+                    "latency_ms": log.latency_ms,
+                    "top_contributing_features": log.top_contributing_features[:3],
+                    "decision_path": log.decision_path,
+                    "human_feedback": log.human_feedback,
+                }
+                for log in logs
+            ],
+            "count": len(logs)
+        }
+    except Exception as e:
+        logger.error(f"Get audit logs error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/explain/{prediction_id}")
+async def explain_prediction(prediction_id: str):
+    """Get detailed explanation for a prediction."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        explanation = ai_observability_engine.explain_prediction(prediction_id)
+        if not explanation:
+            raise HTTPException(status_code=404, detail=f"Prediction {prediction_id} not found")
+        return explanation
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Explain prediction error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class FeedbackRequest(BaseModel):
+    feedback: str
+    score: Optional[float] = None
+
+
+@app.post("/api/ai-observability/feedback/{prediction_id}")
+async def record_prediction_feedback(prediction_id: str, request: FeedbackRequest):
+    """Record human feedback on a prediction."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        success = ai_observability_engine.record_feedback(
+            prediction_id=prediction_id,
+            feedback=request.feedback,
+            score=request.score
+        )
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Prediction {prediction_id} not found")
+        return {"status": "recorded", "prediction_id": prediction_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Record feedback error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/alerts")
+async def get_ai_alerts(model_id: Optional[str] = Query(None)):
+    """Get active AI-related alerts."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        alerts = ai_observability_engine.get_active_alerts(model_id)
+        return {
+            "alerts": [
+                {
+                    "alert_id": a.alert_id,
+                    "model_id": a.model_id,
+                    "timestamp": a.timestamp.isoformat(),
+                    "severity": a.severity,
+                    "category": a.category,
+                    "title": a.title,
+                    "description": a.description,
+                    "metric_name": a.metric_name,
+                    "metric_value": a.metric_value,
+                    "threshold_value": a.threshold_value,
+                    "state": a.state,
+                    "acknowledged": a.acknowledged,
+                    "suggested_actions": a.suggested_actions,
+                }
+                for a in alerts
+            ],
+            "count": len(alerts)
+        }
+    except Exception as e:
+        logger.error(f"Get AI alerts error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ai-observability/alerts/{alert_id}/acknowledge")
+async def acknowledge_ai_alert(alert_id: str, user: str = Query(...)):
+    """Acknowledge an AI alert."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        success = ai_observability_engine.acknowledge_alert(alert_id, user)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
+        return {"status": "acknowledged", "alert_id": alert_id, "acknowledged_by": user}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Acknowledge alert error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/inventory")
+async def get_ai_inventory():
+    """Get AI model inventory for compliance reporting."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_model_inventory()
+    except Exception as e:
+        logger.error(f"Get AI inventory error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/compliance")
+async def get_ai_compliance_report():
+    """Get EU AI Act compliance report."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_compliance_report()
+    except Exception as e:
+        logger.error(f"Get compliance report error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/transparency/{model_id}")
+async def get_ai_transparency_report(model_id: str):
+    """Get AI Act transparency report for a specific model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_transparency_report(model_id)
+    except Exception as e:
+        logger.error(f"Get transparency report error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ModelRegistrationRequest(BaseModel):
+    name: str
+    version: str
+    model_type: str
+    description: str = ""
+    risk_level: str = "minimal"
+    deployment_target: str = "central"
+    tags: List[str] = []
+
+
+@app.post("/api/ai-observability/models/register")
+async def register_ai_model(request: ModelRegistrationRequest):
+    """Register a new AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        # Map string to enums
+        type_map = {
+            "anomaly_detection": ModelType.ANOMALY_DETECTION,
+            "predictive_maintenance": ModelType.PREDICTIVE_MAINTENANCE,
+            "root_cause_analysis": ModelType.ROOT_CAUSE_ANALYSIS,
+            "nlp_query": ModelType.NLP_QUERY,
+            "time_series_forecast": ModelType.TIME_SERIES_FORECAST,
+            "classification": ModelType.CLASSIFICATION,
+            "regression": ModelType.REGRESSION,
+            "recommendation": ModelType.RECOMMENDATION,
+            "llm_assistant": ModelType.LLM_ASSISTANT,
+            "edge_inference": ModelType.EDGE_INFERENCE,
+            "custom": ModelType.CUSTOM,
+        }
+        risk_map = {
+            "unacceptable": AIRiskLevel.UNACCEPTABLE,
+            "high": AIRiskLevel.HIGH,
+            "limited": AIRiskLevel.LIMITED,
+            "minimal": AIRiskLevel.MINIMAL,
+        }
+
+        model = ai_observability_engine.register_model(
+            name=request.name,
+            version=request.version,
+            model_type=type_map.get(request.model_type, ModelType.CUSTOM),
+            description=request.description,
+            risk_level=risk_map.get(request.risk_level, AIRiskLevel.MINIMAL),
+            deployment_target=request.deployment_target,
+            tags=request.tags,
+        )
+
+        return {
+            "status": "registered",
+            "model_id": model.model_id,
+            "name": model.name,
+            "version": model.version,
+        }
+    except Exception as e:
+        logger.error(f"Register AI model error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class InferenceRecordRequest(BaseModel):
+    latency_ms: float
+    success: bool = True
+    input_data: Optional[Dict[str, Any]] = None
+    output: Optional[Any] = None
+    confidence: float = 0.0
+
+
+@app.post("/api/ai-observability/models/{model_id}/inference")
+async def record_model_inference(model_id: str, request: InferenceRecordRequest):
+    """Record a model inference for observability tracking."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        ai_observability_engine.record_inference(
+            model_id=model_id,
+            latency_ms=request.latency_ms,
+            success=request.success,
+            input_data=request.input_data,
+            output=request.output,
+            confidence=request.confidence,
+        )
+        return {"status": "recorded", "model_id": model_id}
+    except Exception as e:
+        logger.error(f"Record inference error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # =========================================
 # Background Tasks
