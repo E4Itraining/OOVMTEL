@@ -57,3 +57,55 @@ python-dotenv==1.0.0
 
 # Note: All game-changer modules use only standard library
 # and existing dependencies (pydantic, httpx, asyncio)
+
+# =============================================
+# Security & Authentication
+# =============================================
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# =============================================
+# Rate Limiting
+# =============================================
+slowapi==0.1.9
+
+# =============================================
+# Caching (Redis)
+# =============================================
+redis==5.0.1
+aioredis==2.0.1
+
+# =============================================
+# Prometheus Metrics
+# =============================================
+prometheus-client==0.19.0
+prometheus-fastapi-instrumentator==6.1.0
+
+# =============================================
+# GraphQL Support
+# =============================================
+strawberry-graphql[fastapi]==0.217.1
+
+# =============================================
+# Workflow Automation
+# =============================================
+apscheduler==3.10.4
+aiosmtplib==3.0.1
+
+# =============================================
+# External Data Sources
+# =============================================
+aiohttp==3.9.1
+
+# =============================================
+# Voice/Audio Processing (Multi-modal NLP)
+# =============================================
+SpeechRecognition==3.10.1
+pydub==0.25.1
+
+# =============================================
+# Enhanced Visualizations (data processing)
+# =============================================
+numpy==1.26.3
+pandas==2.1.4

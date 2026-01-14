@@ -1,6 +1,6 @@
 """
 OOVMTEL Unified Business-Tech View
-Backend API Service
+Backend API Service v2.0
 
 This service provides a unified API for aggregating business and technical metrics
 from various data sources (VictoriaMetrics, OpenSearch, Kafka) and serves the
@@ -12,6 +12,17 @@ Game-Changer Modules:
 - Predictive Maintenance: Anomaly detection and RUL prediction
 - Auto-Remediation: Runbook-based automatic incident remediation
 - Edge Computing: Edge agent management and data aggregation
+- HPC: High-performance computing for simulations
+- AI Observability: Model monitoring and drift detection
+
+Security & Infrastructure:
+- JWT Authentication with OAuth2
+- Rate Limiting
+- Redis Caching
+- Prometheus Metrics
+- GraphQL API
+- Workflow Automation
+- External Data Sources Integration
 """
 
 import os
@@ -19,17 +30,93 @@ import asyncio
 import logging
 import uuid
 import json
+import hashlib
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
+from contextlib import asynccontextmanager
 import random
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body, Depends, Request, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 import httpx
 from pydantic import BaseModel
+
+# Rate Limiting
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+    RATE_LIMITING_AVAILABLE = True
+except ImportError:
+    RATE_LIMITING_AVAILABLE = False
+    logging.warning("Rate limiting not available (slowapi not installed)")
+
+# Import new security modules
+try:
+    from modules.auth import (
+        JWTHandler, Token, TokenData, User, get_current_user,
+        get_current_active_user, get_jwt_handler, require_roles
+    )
+    from modules.auth.config import get_auth_config
+    AUTH_MODULE_AVAILABLE = True
+except ImportError as e:
+    AUTH_MODULE_AVAILABLE = False
+    logging.warning(f"Auth module not available: {e}")
+
+# Import caching module
+try:
+    from modules.cache import CacheManager, get_cache_manager
+    CACHE_MODULE_AVAILABLE = True
+except ImportError as e:
+    CACHE_MODULE_AVAILABLE = False
+    logging.warning(f"Cache module not available: {e}")
+
+# Import metrics module
+try:
+    from modules.metrics import (
+        MetricsManager, get_metrics_manager, setup_instrumentator,
+        WEBSOCKET_CONNECTIONS, NLP_QUERIES
+    )
+    METRICS_MODULE_AVAILABLE = True
+except ImportError as e:
+    METRICS_MODULE_AVAILABLE = False
+    logging.warning(f"Metrics module not available: {e}")
+
+# Import workflow module
+try:
+    from modules.workflow import WorkflowEngine, get_workflow_engine
+    WORKFLOW_MODULE_AVAILABLE = True
+except ImportError as e:
+    WORKFLOW_MODULE_AVAILABLE = False
+    logging.warning(f"Workflow module not available: {e}")
+
+# Import external data sources module
+try:
+    from modules.external import get_external_data_manager
+    EXTERNAL_MODULE_AVAILABLE = True
+except ImportError as e:
+    EXTERNAL_MODULE_AVAILABLE = False
+    logging.warning(f"External data module not available: {e}")
+
+# Import GraphQL module
+try:
+    from modules.graphql import get_graphql_router
+    GRAPHQL_MODULE_AVAILABLE = True
+except ImportError as e:
+    GRAPHQL_MODULE_AVAILABLE = False
+    logging.warning(f"GraphQL module not available: {e}")
+
+# Import voice/multimodal NLP
+try:
+    from modules.nlp.voice import get_voice_processor, AudioFormat
+    VOICE_MODULE_AVAILABLE = True
+except ImportError as e:
+    VOICE_MODULE_AVAILABLE = False
+    logging.warning(f"Voice module not available: {e}")
 
 # Import game-changer modules
 try:
@@ -149,17 +236,174 @@ class UnifiedMetrics(BaseModel):
     events: List[Event]
     timestamp: datetime
 
-# Initialize FastAPI app
+# =========================================
+# Rate Limiter Setup
+# =========================================
+
+limiter = None
+if RATE_LIMITING_AVAILABLE:
+    limiter = Limiter(key_func=get_remote_address)
+
+
+# =========================================
+# Application Lifespan (replaces deprecated @app.on_event)
+# =========================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan manager.
+    Handles startup and shutdown events.
+    """
+    global http_client, nlp_engine, rca_engine, predictive_engine
+    global remediation_engine, edge_manager, hpc_engine, llm_nlp
+    global ai_observability_engine, cache_manager, workflow_engine
+    global external_data_manager, voice_processor
+
+    # ===== STARTUP =====
+    logger.info("Starting OOVMTEL Unified View API v2.0...")
+
+    # Initialize HTTP client
+    http_client = httpx.AsyncClient(timeout=10.0)
+
+    # Initialize cache
+    if CACHE_MODULE_AVAILABLE:
+        try:
+            cache_manager = await get_cache_manager()
+            logger.info("Cache manager initialized")
+        except Exception as e:
+            logger.warning(f"Cache initialization failed: {e}")
+
+    # Initialize game-changer modules
+    if MODULES_AVAILABLE:
+        try:
+            nlp_engine = NLPEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL,
+                opensearch_url=config.OPENSEARCH_URL
+            )
+            rca_engine = RCAEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL,
+                opensearch_url=config.OPENSEARCH_URL
+            )
+            predictive_engine = PredictiveEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL
+            )
+            remediation_engine = RemediationEngine(dry_run=True)
+            edge_manager = EdgeAgentManager()
+            hpc_engine = HPCEngine(
+                auto_create_cluster=True,
+                default_cluster_preset="medium"
+            )
+            logger.info("Game-changer modules initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize modules: {e}")
+
+    # Initialize LLM-enhanced NLP
+    if LLM_MODULE_AVAILABLE:
+        try:
+            llm_nlp = LLMEnhancedNLP()
+            initialized = await llm_nlp.initialize()
+            if initialized:
+                logger.info("LLM-enhanced NLP initialized")
+            else:
+                logger.info("LLM not configured - using rule-based NLP fallback")
+        except Exception as e:
+            logger.warning(f"LLM initialization failed: {e}")
+
+    # Initialize AI Observability Engine
+    if AI_OBSERVABILITY_AVAILABLE:
+        try:
+            ai_observability_engine = AIObservabilityEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL
+            )
+            await ai_observability_engine.initialize()
+            logger.info("AI Observability Engine initialized")
+        except Exception as e:
+            logger.warning(f"AI Observability initialization failed: {e}")
+
+    # Initialize workflow engine
+    if WORKFLOW_MODULE_AVAILABLE:
+        try:
+            workflow_engine = get_workflow_engine()
+            logger.info("Workflow engine initialized")
+        except Exception as e:
+            logger.warning(f"Workflow initialization failed: {e}")
+
+    # Initialize external data sources
+    if EXTERNAL_MODULE_AVAILABLE:
+        try:
+            external_data_manager = await get_external_data_manager()
+            logger.info("External data sources initialized")
+        except Exception as e:
+            logger.warning(f"External data initialization failed: {e}")
+
+    # Initialize voice processor
+    if VOICE_MODULE_AVAILABLE:
+        try:
+            voice_processor = await get_voice_processor()
+            logger.info("Voice processor initialized")
+        except Exception as e:
+            logger.warning(f"Voice processor initialization failed: {e}")
+
+    logger.info("OOVMTEL Unified View API v2.0 started successfully")
+
+    # Start background tasks
+    asyncio.create_task(metrics_refresh_loop())
+
+    yield  # Application runs here
+
+    # ===== SHUTDOWN =====
+    logger.info("Shutting down OOVMTEL Unified View API...")
+
+    if http_client:
+        await http_client.aclose()
+
+    if CACHE_MODULE_AVAILABLE and cache_manager:
+        await cache_manager.close()
+
+    if EXTERNAL_MODULE_AVAILABLE and external_data_manager:
+        await external_data_manager.close()
+
+    logger.info("OOVMTEL Unified View API stopped")
+
+
+# =========================================
+# Initialize FastAPI app with lifespan
+# =========================================
+
 app = FastAPI(
     title="OOVMTEL Unified View API",
     description="Unified Business-Tech View for Industrial Observability Platform",
-    version="1.0.0"
+    version="2.0.0",
+    lifespan=lifespan,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json"
 )
 
-# CORS middleware
+# Add rate limiter if available
+if RATE_LIMITING_AVAILABLE and limiter:
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Setup Prometheus metrics if available
+if METRICS_MODULE_AVAILABLE:
+    setup_instrumentator(app)
+
+# Add GraphQL router if available
+if GRAPHQL_MODULE_AVAILABLE:
+    try:
+        graphql_router = get_graphql_router()
+        app.include_router(graphql_router)
+        logger.info("GraphQL endpoint available at /graphql")
+    except Exception as e:
+        logger.warning(f"GraphQL setup failed: {e}")
+
+# CORS middleware - configurable origins
+ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -185,71 +429,13 @@ hpc_engine: Optional[Any] = None
 llm_nlp: Optional[Any] = None  # LLM-enhanced NLP
 ai_observability_engine: Optional[Any] = None  # AI Observability Engine
 
-@app.on_event("startup")
-async def startup_event():
-    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine, llm_nlp, ai_observability_engine
+# New infrastructure modules
+cache_manager: Optional[Any] = None
+workflow_engine: Optional[Any] = None
+external_data_manager: Optional[Any] = None
+voice_processor: Optional[Any] = None
 
-    http_client = httpx.AsyncClient(timeout=10.0)
-
-    # Initialize game-changer modules
-    if MODULES_AVAILABLE:
-        try:
-            nlp_engine = NLPEngine(
-                victoria_metrics_url=config.VICTORIA_METRICS_URL,
-                opensearch_url=config.OPENSEARCH_URL
-            )
-            rca_engine = RCAEngine(
-                victoria_metrics_url=config.VICTORIA_METRICS_URL,
-                opensearch_url=config.OPENSEARCH_URL
-            )
-            predictive_engine = PredictiveEngine(
-                victoria_metrics_url=config.VICTORIA_METRICS_URL
-            )
-            remediation_engine = RemediationEngine(dry_run=True)  # Dry run by default
-            edge_manager = EdgeAgentManager()
-            hpc_engine = HPCEngine(
-                auto_create_cluster=True,
-                default_cluster_preset="medium"
-            )
-            logger.info("Game-changer modules initialized successfully (including HPC)")
-        except Exception as e:
-            logger.error(f"Failed to initialize modules: {e}")
-
-    # Initialize LLM-enhanced NLP
-    if LLM_MODULE_AVAILABLE:
-        try:
-            llm_nlp = LLMEnhancedNLP()
-            initialized = await llm_nlp.initialize()
-            if initialized:
-                logger.info("LLM-enhanced NLP initialized successfully")
-            else:
-                logger.info("LLM not configured - using rule-based NLP fallback")
-        except Exception as e:
-            logger.warning(f"LLM initialization failed: {e}")
-            llm_nlp = None
-
-    # Initialize AI Observability Engine
-    if AI_OBSERVABILITY_AVAILABLE:
-        try:
-            ai_observability_engine = AIObservabilityEngine(
-                victoria_metrics_url=config.VICTORIA_METRICS_URL
-            )
-            await ai_observability_engine.initialize()
-            logger.info("AI Observability Engine initialized successfully")
-        except Exception as e:
-            logger.warning(f"AI Observability initialization failed: {e}")
-            ai_observability_engine = None
-
-    logger.info("OOVMTEL Unified View API started")
-    # Start background task for metrics refresh
-    asyncio.create_task(metrics_refresh_loop())
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    global http_client
-    if http_client:
-        await http_client.aclose()
-    logger.info("OOVMTEL Unified View API stopped")
+# Note: Startup and shutdown are now handled by the lifespan context manager above
 
 # Static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -2165,6 +2351,498 @@ async def record_model_inference(model_id: str, request: InferenceRecordRequest)
     except Exception as e:
         logger.error(f"Record inference error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================
+# Authentication Endpoints (v1 API)
+# =========================================
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+@app.post("/api/v1/auth/token", response_model=Token if AUTH_MODULE_AVAILABLE else dict, tags=["Authentication"])
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    OAuth2 compatible token login.
+    Returns JWT access and refresh tokens.
+    """
+    if not AUTH_MODULE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Authentication module not available")
+
+    jwt_handler = get_jwt_handler()
+    user = jwt_handler.authenticate_user(form_data.username, form_data.password)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token = jwt_handler.create_access_token(
+        data={"sub": user.username, "roles": user.roles}
+    )
+    refresh_token = jwt_handler.create_refresh_token(
+        data={"sub": user.username, "roles": user.roles}
+    )
+
+    config = get_auth_config()
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=config.access_token_expire_minutes * 60,
+        refresh_token=refresh_token
+    )
+
+
+@app.get("/api/v1/auth/me", tags=["Authentication"])
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user) if AUTH_MODULE_AVAILABLE else None
+):
+    """Get current authenticated user information."""
+    if not AUTH_MODULE_AVAILABLE:
+        return {"username": "anonymous", "roles": ["admin"]}
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "roles": current_user.roles
+    }
+
+
+@app.post("/api/v1/auth/refresh", tags=["Authentication"])
+async def refresh_token(refresh_token: str = Body(..., embed=True)):
+    """Refresh an access token using a refresh token."""
+    if not AUTH_MODULE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Authentication module not available")
+
+    jwt_handler = get_jwt_handler()
+    token_data = jwt_handler.verify_token(refresh_token)
+
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token"
+        )
+
+    user = jwt_handler.get_user(token_data.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_access_token = jwt_handler.create_access_token(
+        data={"sub": user.username, "roles": user.roles}
+    )
+
+    return {"access_token": new_access_token, "token_type": "bearer"}
+
+
+# =========================================
+# Workflow Automation Endpoints
+# =========================================
+
+@app.get("/api/v1/workflows/rules", tags=["Workflow"])
+async def list_workflow_rules(enabled_only: bool = False):
+    """List all workflow automation rules."""
+    if not WORKFLOW_MODULE_AVAILABLE or not workflow_engine:
+        raise HTTPException(status_code=503, detail="Workflow module not available")
+
+    rules = workflow_engine.list_rules(enabled_only=enabled_only)
+    return {
+        "rules": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "description": r.description,
+                "enabled": r.enabled,
+                "trigger_count": len(r.triggers),
+                "action_count": len(r.actions),
+                "last_triggered": r.last_triggered.isoformat() if r.last_triggered else None,
+                "execution_count": r.execution_count
+            }
+            for r in rules
+        ],
+        "total": len(rules)
+    }
+
+
+@app.get("/api/v1/workflows/rules/{rule_id}", tags=["Workflow"])
+async def get_workflow_rule(rule_id: str):
+    """Get a specific workflow rule."""
+    if not WORKFLOW_MODULE_AVAILABLE or not workflow_engine:
+        raise HTTPException(status_code=503, detail="Workflow module not available")
+
+    rule = workflow_engine.get_rule(rule_id)
+    if not rule:
+        raise HTTPException(status_code=404, detail=f"Rule {rule_id} not found")
+
+    return {
+        "id": rule.id,
+        "name": rule.name,
+        "description": rule.description,
+        "enabled": rule.enabled,
+        "triggers": [{"type": t.type.value, "condition": t.condition} for t in rule.triggers],
+        "actions": [{"type": a.type.value, "config": a.config} for a in rule.actions],
+        "created_at": rule.created_at.isoformat(),
+        "updated_at": rule.updated_at.isoformat(),
+        "last_triggered": rule.last_triggered.isoformat() if rule.last_triggered else None,
+        "execution_count": rule.execution_count
+    }
+
+
+@app.post("/api/v1/workflows/trigger", tags=["Workflow"])
+async def trigger_workflow_event(
+    event_type: str = Body(...),
+    event_data: dict = Body(...)
+):
+    """Manually trigger a workflow event."""
+    if not WORKFLOW_MODULE_AVAILABLE or not workflow_engine:
+        raise HTTPException(status_code=503, detail="Workflow module not available")
+
+    try:
+        executions = await workflow_engine.trigger_event(event_type, event_data)
+        return {
+            "triggered": len(executions),
+            "executions": [
+                {
+                    "id": e.id,
+                    "rule_id": e.rule_id,
+                    "rule_name": e.rule_name,
+                    "status": e.status.value,
+                    "started_at": e.started_at.isoformat()
+                }
+                for e in executions
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Workflow trigger error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/workflows/executions", tags=["Workflow"])
+async def get_workflow_executions(limit: int = 100, rule_id: Optional[str] = None):
+    """Get workflow execution history."""
+    if not WORKFLOW_MODULE_AVAILABLE or not workflow_engine:
+        raise HTTPException(status_code=503, detail="Workflow module not available")
+
+    executions = workflow_engine.get_execution_history(limit=limit, rule_id=rule_id)
+    return {
+        "executions": [
+            {
+                "id": e.id,
+                "rule_id": e.rule_id,
+                "rule_name": e.rule_name,
+                "trigger_type": e.trigger_type.value,
+                "status": e.status.value,
+                "started_at": e.started_at.isoformat(),
+                "completed_at": e.completed_at.isoformat() if e.completed_at else None,
+                "error": e.error
+            }
+            for e in executions
+        ],
+        "count": len(executions)
+    }
+
+
+@app.get("/api/v1/workflows/stats", tags=["Workflow"])
+async def get_workflow_statistics():
+    """Get workflow statistics."""
+    if not WORKFLOW_MODULE_AVAILABLE or not workflow_engine:
+        raise HTTPException(status_code=503, detail="Workflow module not available")
+
+    return workflow_engine.get_statistics()
+
+
+# =========================================
+# External Data Sources Endpoints
+# =========================================
+
+@app.get("/api/v1/external/sources", tags=["External Data"])
+async def list_external_sources():
+    """List all external data sources and their status."""
+    if not EXTERNAL_MODULE_AVAILABLE or not external_data_manager:
+        raise HTTPException(status_code=503, detail="External data module not available")
+
+    return {
+        "sources": external_data_manager.get_source_status()
+    }
+
+
+@app.get("/api/v1/external/fetch", tags=["External Data"])
+async def fetch_all_external_data():
+    """Fetch data from all external sources."""
+    if not EXTERNAL_MODULE_AVAILABLE or not external_data_manager:
+        raise HTTPException(status_code=503, detail="External data module not available")
+
+    try:
+        results = await external_data_manager.fetch_all()
+        return {
+            "data": {
+                name: {
+                    "status": result.status.value,
+                    "data": result.data,
+                    "timestamp": result.timestamp.isoformat(),
+                    "latency_ms": result.latency_ms,
+                    "error": result.error
+                }
+                for name, result in results.items()
+            }
+        }
+    except Exception as e:
+        logger.error(f"External data fetch error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/external/{source_name}", tags=["External Data"])
+async def fetch_external_source(source_name: str):
+    """Fetch data from a specific external source."""
+    if not EXTERNAL_MODULE_AVAILABLE or not external_data_manager:
+        raise HTTPException(status_code=503, detail="External data module not available")
+
+    result = await external_data_manager.fetch_source(source_name)
+    if not result:
+        raise HTTPException(status_code=404, detail=f"Source {source_name} not found")
+
+    return {
+        "source": source_name,
+        "status": result.status.value,
+        "data": result.data,
+        "timestamp": result.timestamp.isoformat(),
+        "latency_ms": result.latency_ms,
+        "error": result.error
+    }
+
+
+@app.get("/api/v1/external/weather/current", tags=["External Data"])
+async def get_weather_data():
+    """Get current weather data."""
+    if not EXTERNAL_MODULE_AVAILABLE or not external_data_manager:
+        raise HTTPException(status_code=503, detail="External data module not available")
+
+    result = await external_data_manager.fetch_source("weather")
+    if not result or result.error:
+        raise HTTPException(status_code=500, detail="Weather data unavailable")
+
+    return result.data
+
+
+@app.get("/api/v1/external/energy/current", tags=["External Data"])
+async def get_energy_data():
+    """Get current energy consumption data."""
+    if not EXTERNAL_MODULE_AVAILABLE or not external_data_manager:
+        raise HTTPException(status_code=503, detail="External data module not available")
+
+    result = await external_data_manager.fetch_source("energy")
+    if not result or result.error:
+        raise HTTPException(status_code=500, detail="Energy data unavailable")
+
+    return result.data
+
+
+# =========================================
+# Voice / Multimodal NLP Endpoints
+# =========================================
+
+class VoiceTranscriptionRequest(BaseModel):
+    audio_base64: str
+    audio_format: str = "wav"
+    language: Optional[str] = None
+
+
+@app.post("/api/v1/voice/transcribe", tags=["Voice"])
+async def transcribe_voice(request: VoiceTranscriptionRequest):
+    """
+    Transcribe voice input to text.
+    Supports WAV, MP3, OGG, WEBM, M4A formats.
+    """
+    if not VOICE_MODULE_AVAILABLE or not voice_processor:
+        raise HTTPException(status_code=503, detail="Voice module not available")
+
+    try:
+        # Parse audio format
+        try:
+            audio_format = AudioFormat(request.audio_format.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported audio format: {request.audio_format}"
+            )
+
+        result = await voice_processor.transcribe_base64(
+            audio_base64=request.audio_base64,
+            audio_format=audio_format,
+            language=request.language
+        )
+
+        return {
+            "id": result.id,
+            "status": result.status.value,
+            "text": result.text,
+            "confidence": result.confidence,
+            "language": result.language,
+            "duration_seconds": result.duration_seconds,
+            "processing_time_ms": result.processing_time_ms,
+            "error": result.error
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Voice transcription error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/voice/query", tags=["Voice"])
+async def voice_nlp_query(request: VoiceTranscriptionRequest):
+    """
+    Voice-to-query pipeline: transcribe voice and process as NLP query.
+    """
+    if not VOICE_MODULE_AVAILABLE or not voice_processor:
+        raise HTTPException(status_code=503, detail="Voice module not available")
+
+    try:
+        # Parse audio format
+        try:
+            audio_format = AudioFormat(request.audio_format.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported audio format: {request.audio_format}"
+            )
+
+        # Transcribe voice
+        transcription = await voice_processor.transcribe_base64(
+            audio_base64=request.audio_base64,
+            audio_format=audio_format,
+            language=request.language
+        )
+
+        if transcription.status.value != "completed" or not transcription.text:
+            return {
+                "transcription": {
+                    "status": transcription.status.value,
+                    "error": transcription.error or "Could not transcribe audio"
+                },
+                "nlp_response": None
+            }
+
+        # Process with NLP
+        nlp_result = None
+        if LLM_MODULE_AVAILABLE and llm_nlp:
+            nlp_result = await llm_nlp.process_query(
+                query=transcription.text,
+                language=transcription.language[:2] if transcription.language else "en"
+            )
+        elif MODULES_AVAILABLE and nlp_engine:
+            nlp_result = await nlp_engine.process_query(
+                query=ConversationalQuery(
+                    query=transcription.text,
+                    language=transcription.language[:2] if transcription.language else "en"
+                )
+            )
+
+        return {
+            "transcription": {
+                "text": transcription.text,
+                "confidence": transcription.confidence,
+                "language": transcription.language,
+                "processing_time_ms": transcription.processing_time_ms
+            },
+            "nlp_response": nlp_result
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Voice query error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/voice/languages", tags=["Voice"])
+async def get_supported_languages():
+    """Get list of supported voice recognition languages."""
+    if not VOICE_MODULE_AVAILABLE or not voice_processor:
+        raise HTTPException(status_code=503, detail="Voice module not available")
+
+    return {
+        "languages": voice_processor.get_supported_languages(),
+        "default": voice_processor.config.default_language
+    }
+
+
+@app.get("/api/v1/voice/config", tags=["Voice"])
+async def get_voice_config():
+    """Get voice processor configuration."""
+    if not VOICE_MODULE_AVAILABLE or not voice_processor:
+        raise HTTPException(status_code=503, detail="Voice module not available")
+
+    return voice_processor.get_config()
+
+
+# =========================================
+# Cache Management Endpoints
+# =========================================
+
+@app.get("/api/v1/cache/stats", tags=["Cache"])
+async def get_cache_stats():
+    """Get cache statistics."""
+    if not CACHE_MODULE_AVAILABLE or not cache_manager:
+        return {"status": "disabled", "message": "Cache module not available"}
+
+    return cache_manager.get_stats()
+
+
+@app.delete("/api/v1/cache/clear", tags=["Cache"])
+async def clear_cache(pattern: str = "*"):
+    """Clear cache entries matching pattern."""
+    if not CACHE_MODULE_AVAILABLE or not cache_manager:
+        raise HTTPException(status_code=503, detail="Cache module not available")
+
+    try:
+        count = await cache_manager.clear_pattern(pattern)
+        return {"cleared": count, "pattern": pattern}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================
+# System Status Endpoint (Enhanced)
+# =========================================
+
+@app.get("/api/v1/system/status", tags=["System"])
+async def get_system_status():
+    """Get comprehensive system status including all modules."""
+    return {
+        "version": "2.0.0",
+        "status": "operational",
+        "timestamp": datetime.utcnow().isoformat(),
+        "modules": {
+            "auth": AUTH_MODULE_AVAILABLE,
+            "cache": CACHE_MODULE_AVAILABLE,
+            "metrics": METRICS_MODULE_AVAILABLE,
+            "workflow": WORKFLOW_MODULE_AVAILABLE,
+            "external_data": EXTERNAL_MODULE_AVAILABLE,
+            "graphql": GRAPHQL_MODULE_AVAILABLE,
+            "voice": VOICE_MODULE_AVAILABLE,
+            "nlp": MODULES_AVAILABLE,
+            "rca": MODULES_AVAILABLE,
+            "predictive": MODULES_AVAILABLE,
+            "remediation": MODULES_AVAILABLE,
+            "edge": MODULES_AVAILABLE,
+            "hpc": MODULES_AVAILABLE,
+            "llm": LLM_MODULE_AVAILABLE,
+            "ai_observability": AI_OBSERVABILITY_AVAILABLE,
+        },
+        "endpoints": {
+            "rest_api": "/api/v1/",
+            "graphql": "/graphql" if GRAPHQL_MODULE_AVAILABLE else None,
+            "websocket": "/ws",
+            "metrics": "/metrics" if METRICS_MODULE_AVAILABLE else None,
+            "docs": "/api/docs",
+            "redoc": "/api/redoc"
+        }
+    }
 
 
 # =========================================
