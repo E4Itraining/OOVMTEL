@@ -971,7 +971,9 @@ Docker Volumes:
 | **Kafka UI** | http://localhost:8090 | - |
 | **VictoriaMetrics** | http://localhost:8428 | - |
 | **OTEL Health** | http://localhost:13133 | - |
-| **OTEL zPages** | http://localhost:55679 | - |
+| **OTEL zPages** | http://localhost:55679/debug/servicez | - |
+
+> **Note:** OTEL zPages requires specific debug paths: `/debug/servicez`, `/debug/pipelinez`, `/debug/extensionz`, `/debug/tracez`
 
 ---
 
