@@ -178,7 +178,16 @@ cd OOVMTEL
 | **Kafka UI** | http://localhost:8090 | - |
 | **Victoria Metrics** | http://localhost:8428 | - |
 | **OTEL Collector Health** | http://localhost:13133 | - |
-| **OTEL zPages** | http://localhost:55679 | - |
+| **OTEL zPages** | http://localhost:55679/debug/servicez | - |
+
+### OTEL zPages Debug Endpoints
+
+| Page | URL | Description |
+|------|-----|-------------|
+| ServiceZ | http://localhost:55679/debug/servicez | Service status overview |
+| PipelineZ | http://localhost:55679/debug/pipelinez | Pipeline configuration |
+| ExtensionZ | http://localhost:55679/debug/extensionz | Extensions status |
+| TraceZ | http://localhost:55679/debug/tracez | Active traces debugging |
 
 ## Unified Business-Tech View
 
