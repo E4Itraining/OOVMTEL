@@ -3,11 +3,17 @@ Mistral AI Provider Implementation.
 
 Implements the BaseLLMProvider interface for Mistral AI's API.
 Supports chat completions, streaming, and function calling.
+
+Integrated with LLM Observability module for:
+- Distributed tracing (OpenTelemetry)
+- Metrics collection (latency, tokens, costs)
+- Structured logging
 """
 
 import asyncio
 import logging
 import time
+import uuid
 from typing import Any, AsyncIterator, Dict, List, Optional
 
 import httpx
@@ -21,6 +27,28 @@ from .base import (
     MessageRole,
     ProviderType,
 )
+
+# Import observability module (with graceful fallback)
+try:
+    from ..llm_observability.telemetry import get_llm_telemetry
+    from ..llm_observability.metrics import get_llm_metrics
+    from ..llm_observability.decorators import LLMCallContext
+    from ..llm_observability.normalizer import ProviderDataFormat
+    OBSERVABILITY_AVAILABLE = True
+except ImportError:
+    OBSERVABILITY_AVAILABLE = False
+    # Define stub for graceful degradation
+    class LLMCallContext:
+        def __init__(self, *args, **kwargs):
+            pass
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            pass
+        def set_request(self, *args):
+            pass
+        def set_response(self, *args):
+            pass
 
 logger = logging.getLogger(__name__)
 
@@ -134,11 +162,40 @@ class MistralProvider(BaseLLMProvider):
         if not self._client:
             raise RuntimeError("Mistral client not initialized")
 
+        # Extract observability parameters
+        request_id = kwargs.pop("request_id", None) or str(uuid.uuid4())
+        session_id = kwargs.pop("session_id", None)
+
         start_time = time.time()
 
         # Prepare request body
         request_body = self._prepare_request(messages, **kwargs)
 
+        # Use observability context if available
+        if OBSERVABILITY_AVAILABLE:
+            async with LLMCallContext(
+                provider="mistral",
+                model=request_body.get("model", self.config.model),
+                operation="chat",
+                request_id=request_id,
+                session_id=session_id,
+            ) as ctx:
+                ctx.set_request(request_body)
+                response, latency_ms = await self._execute_request(
+                    request_body, start_time
+                )
+                ctx.set_response(response.raw_response)
+                return response
+        else:
+            response, _ = await self._execute_request(request_body, start_time)
+            return response
+
+    async def _execute_request(
+        self,
+        request_body: Dict[str, Any],
+        start_time: float,
+    ) -> tuple:
+        """Execute the actual API request."""
         try:
             response = await self._client.post(
                 self.CHAT_ENDPOINT,
@@ -153,7 +210,7 @@ class MistralProvider(BaseLLMProvider):
                 raise RuntimeError(f"Mistral API error: {response.status_code}")
 
             data = response.json()
-            return self._parse_response(data, latency_ms)
+            return self._parse_response(data, latency_ms), latency_ms
 
         except httpx.TimeoutException:
             logger.error("Mistral API request timed out")
@@ -183,9 +240,21 @@ class MistralProvider(BaseLLMProvider):
         if not self._client:
             raise RuntimeError("Mistral client not initialized")
 
+        # Extract observability parameters
+        request_id = kwargs.pop("request_id", None) or str(uuid.uuid4())
+        session_id = kwargs.pop("session_id", None)
+
+        start_time = time.time()
+        first_token_time = None
+        total_tokens = 0
+
         # Prepare request body with streaming
         request_body = self._prepare_request(messages, **kwargs)
         request_body["stream"] = True
+
+        # Track metrics if observability available
+        if OBSERVABILITY_AVAILABLE:
+            get_llm_metrics().increment_active_requests()
 
         try:
             async with self._client.stream(
@@ -211,17 +280,61 @@ class MistralProvider(BaseLLMProvider):
                                 delta = data["choices"][0].get("delta", {})
                                 content = delta.get("content", "")
                                 if content:
+                                    # Track time to first token
+                                    if first_token_time is None:
+                                        first_token_time = time.time()
+                                    total_tokens += 1
                                     yield content
                         except Exception as e:
                             logger.warning(f"Failed to parse streaming chunk: {e}")
                             continue
 
+            # Record streaming completion metrics
+            if OBSERVABILITY_AVAILABLE:
+                latency_ms = (time.time() - start_time) * 1000
+                ttft_ms = ((first_token_time - start_time) * 1000) if first_token_time else None
+
+                telemetry = get_llm_telemetry()
+                telemetry.record_llm_event(
+                    provider="mistral",
+                    response={
+                        "model": request_body.get("model", self.config.model),
+                        "usage": {"completion_tokens": total_tokens, "total_tokens": total_tokens},
+                        "choices": [{"finish_reason": "stop"}],
+                    },
+                    request_data=request_body,
+                    latency_ms=latency_ms,
+                    request_id=request_id,
+                    session_id=session_id,
+                )
+
         except httpx.TimeoutException:
             logger.error("Mistral streaming request timed out")
+            if OBSERVABILITY_AVAILABLE:
+                telemetry = get_llm_telemetry()
+                telemetry.record_llm_error(
+                    provider="mistral",
+                    error=httpx.TimeoutException("Streaming request timed out"),
+                    request_data=request_body,
+                    latency_ms=(time.time() - start_time) * 1000,
+                    request_id=request_id,
+                )
             raise
         except Exception as e:
             logger.error(f"Mistral streaming error: {e}")
+            if OBSERVABILITY_AVAILABLE:
+                telemetry = get_llm_telemetry()
+                telemetry.record_llm_error(
+                    provider="mistral",
+                    error=e,
+                    request_data=request_body,
+                    latency_ms=(time.time() - start_time) * 1000,
+                    request_id=request_id,
+                )
             raise
+        finally:
+            if OBSERVABILITY_AVAILABLE:
+                get_llm_metrics().decrement_active_requests()
 
     async def generate_json(
         self,

@@ -73,6 +73,20 @@ except ImportError as e:
     AI_OBSERVABILITY_AVAILABLE = False
     logging.warning(f"AI Observability module not available: {e}")
 
+# Import LLM Observability module
+try:
+    from modules.llm_observability import (
+        init_llm_telemetry,
+        get_llm_telemetry,
+        get_llm_metrics,
+        get_observability_config,
+        LLMObservabilityConfig,
+    )
+    LLM_OBSERVABILITY_AVAILABLE = True
+except ImportError as e:
+    LLM_OBSERVABILITY_AVAILABLE = False
+    logging.warning(f"LLM Observability module not available: {e}")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -184,6 +198,7 @@ edge_manager: Optional[Any] = None
 hpc_engine: Optional[Any] = None
 llm_nlp: Optional[Any] = None  # LLM-enhanced NLP
 ai_observability_engine: Optional[Any] = None  # AI Observability Engine
+llm_telemetry: Optional[Any] = None  # LLM Observability Telemetry
 
 @app.on_event("startup")
 async def startup_event():
@@ -239,6 +254,14 @@ async def startup_event():
         except Exception as e:
             logger.warning(f"AI Observability initialization failed: {e}")
             ai_observability_engine = None
+
+    # Initialize LLM Observability Telemetry
+    if LLM_OBSERVABILITY_AVAILABLE:
+        try:
+            llm_telemetry = init_llm_telemetry()
+            logger.info("LLM Observability Telemetry initialized successfully")
+        except Exception as e:
+            logger.warning(f"LLM Observability initialization failed: {e}")
 
     logger.info("OOVMTEL Unified View API started")
     # Start background task for metrics refresh
@@ -1207,6 +1230,229 @@ async def llm_chat(request: LLMChatRequest):
     except Exception as e:
         logger.error(f"LLM chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================
+# LLM Observability Endpoints
+# =========================================
+
+@app.get("/api/llm/observability/status")
+async def llm_observability_status():
+    """
+    Get LLM observability module status.
+
+    Returns configuration, telemetry status, and availability information.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        return {
+            "available": False,
+            "reason": "LLM Observability module not installed"
+        }
+
+    try:
+        config = get_observability_config()
+        telemetry = get_llm_telemetry()
+        metrics = get_llm_metrics()
+
+        return {
+            "available": True,
+            "config": config.to_dict(),
+            "telemetry": telemetry.get_status(),
+            "metrics": metrics.get_status(),
+        }
+    except Exception as e:
+        logger.error(f"LLM observability status error: {e}")
+        return {
+            "available": True,
+            "error": str(e)
+        }
+
+
+@app.get("/api/llm/observability/metrics")
+async def llm_observability_metrics(
+    window_minutes: int = Query(default=60, ge=1, le=1440, description="Time window in minutes"),
+    provider: Optional[str] = Query(default=None, description="Filter by provider"),
+    model: Optional[str] = Query(default=None, description="Filter by model"),
+):
+    """
+    Get aggregated LLM metrics.
+
+    Returns request counts, token usage, latency statistics, costs, and error rates.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        metrics = get_llm_metrics()
+        aggregated = metrics.get_aggregated_metrics(
+            window_minutes=window_minutes,
+            provider=provider,
+            model=model,
+        )
+        return aggregated.to_dict()
+    except Exception as e:
+        logger.error(f"LLM observability metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/llm/observability/metrics/realtime")
+async def llm_observability_realtime_metrics():
+    """
+    Get real-time LLM metrics for last 5 minutes.
+
+    Provides quick access to current operational state.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        metrics = get_llm_metrics()
+        realtime = metrics.get_aggregated_metrics(window_minutes=5)
+        hourly = metrics.get_current_hour_usage()
+
+        return {
+            "realtime_5min": realtime.to_dict(),
+            "hourly_usage": hourly,
+            "active_requests": metrics._active_requests,
+        }
+    except Exception as e:
+        logger.error(f"LLM realtime metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/llm/observability/alerts")
+async def llm_observability_alerts():
+    """
+    Get active LLM observability alerts.
+
+    Checks for threshold violations (latency, error rate, token limits, costs).
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        metrics = get_llm_metrics()
+        alerts = metrics.check_alerts()
+
+        return {
+            "alerts": alerts,
+            "alert_count": len(alerts),
+            "has_critical": any(a["severity"] == "critical" for a in alerts),
+            "has_warning": any(a["severity"] == "warning" for a in alerts),
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"LLM alerts error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/llm/observability/dashboard")
+async def llm_observability_dashboard():
+    """
+    Get comprehensive dashboard data for LLM observability.
+
+    Combines metrics, alerts, and configuration for dashboard rendering.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        config = get_observability_config()
+        metrics = get_llm_metrics()
+        telemetry = get_llm_telemetry()
+
+        # Get metrics for different windows
+        metrics_5m = metrics.get_aggregated_metrics(window_minutes=5)
+        metrics_1h = metrics.get_aggregated_metrics(window_minutes=60)
+        metrics_24h = metrics.get_aggregated_metrics(window_minutes=1440)
+        hourly = metrics.get_current_hour_usage()
+        alerts = metrics.check_alerts()
+
+        # Determine overall health
+        if any(a["severity"] == "critical" for a in alerts):
+            health_status = "critical"
+        elif any(a["severity"] == "warning" for a in alerts):
+            health_status = "warning"
+        else:
+            health_status = "healthy"
+
+        return {
+            "health_status": health_status,
+            "metrics": {
+                "last_5_minutes": metrics_5m.to_dict(),
+                "last_hour": metrics_1h.to_dict(),
+                "last_24_hours": metrics_24h.to_dict(),
+            },
+            "hourly_usage": hourly,
+            "alerts": alerts,
+            "config": {
+                "service_name": config.service_name,
+                "environment": config.environment,
+                "tracing_enabled": config.tracing.enabled,
+                "metrics_enabled": config.metrics.enabled,
+                "sample_rate": config.tracing.sample_rate,
+            },
+            "thresholds": {
+                "latency_warning_ms": config.alerting.latency_warning_ms,
+                "latency_critical_ms": config.alerting.latency_critical_ms,
+                "error_rate_warning_pct": config.alerting.error_rate_warning_pct,
+                "error_rate_critical_pct": config.alerting.error_rate_critical_pct,
+                "hourly_token_limit": config.alerting.hourly_token_limit,
+                "hourly_cost_limit_usd": config.alerting.hourly_cost_limit_usd,
+            },
+            "telemetry_status": telemetry.get_status(),
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"LLM dashboard error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class LLMObservabilityConfigUpdate(BaseModel):
+    """Request model for updating observability config."""
+    latency_warning_ms: Optional[float] = None
+    latency_critical_ms: Optional[float] = None
+    error_rate_warning_pct: Optional[float] = None
+    error_rate_critical_pct: Optional[float] = None
+    hourly_token_limit: Optional[int] = None
+    hourly_cost_limit_usd: Optional[float] = None
+
+
+@app.post("/api/llm/observability/config")
+async def update_llm_observability_config(update: LLMObservabilityConfigUpdate):
+    """
+    Update LLM observability alerting thresholds.
+
+    Note: Changes are applied at runtime but not persisted to env vars.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        config = get_observability_config()
+
+        # Update alerting config
+        if update.latency_warning_ms is not None:
+            config.alerting.latency_warning_ms = update.latency_warning_ms
+        if update.latency_critical_ms is not None:
+            config.alerting.latency_critical_ms = update.latency_critical_ms
+        if update.error_rate_warning_pct is not None:
+            config.alerting.error_rate_warning_pct = update.error_rate_warning_pct
+        if update.error_rate_critical_pct is not None:
+            config.alerting.error_rate_critical_pct = update.error_rate_critical_pct
+        if update.hourly_token_limit is not None:
+            config.alerting.hourly_token_limit = update.hourly_token_limit
+        if update.hourly_cost_limit_usd is not None:
+            config.alerting.hourly_cost_limit_usd = update.hourly_cost_limit_usd
+
+        return {
+            "message": "Configuration updated successfully",
+            "config": config.to_dict(),
+        }
+    except Exception as e:
+        logger.error(f"LLM config update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # =========================================
 # HPC - High Performance Computing Endpoints
