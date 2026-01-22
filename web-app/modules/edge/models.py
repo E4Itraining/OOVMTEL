@@ -41,6 +41,8 @@ class AggregationType(str, Enum):
 
 class EdgeConfig(BaseModel):
     """Configuration for an edge agent."""
+    model_config = {"protected_namespaces": ()}
+
     agent_id: str
     site_name: str
     location: str = ""
@@ -173,6 +175,8 @@ class EdgeAlert(BaseModel):
 
 class ModelDeployment(BaseModel):
     """ML model deployed to edge."""
+    model_config = {"protected_namespaces": ()}
+
     id: str
     name: str
     version: str
