@@ -81,6 +81,10 @@ try:
         get_llm_metrics,
         get_observability_config,
         LLMObservabilityConfig,
+        # Industrial data normalizer
+        get_industrial_normalizer,
+        IndustrialDataSource,
+        NormalizedIndustrialEvent,
     )
     LLM_OBSERVABILITY_AVAILABLE = True
 except ImportError as e:
@@ -1452,6 +1456,306 @@ async def update_llm_observability_config(update: LLMObservabilityConfigUpdate):
     except Exception as e:
         logger.error(f"LLM config update error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================
+# Industrial Data Normalization Endpoints
+# =========================================
+
+class IndustrialDataInput(BaseModel):
+    """Input model for industrial data normalization."""
+    source: str  # scada, mes, plm, opcua
+    data: Dict[str, Any]
+    correlation_id: Optional[str] = None
+
+
+class IndustrialDataBatchInput(BaseModel):
+    """Input model for batch industrial data normalization."""
+    source: str
+    data_list: List[Dict[str, Any]]
+    correlation_id: Optional[str] = None
+
+
+@app.post("/api/industrial/normalize")
+async def normalize_industrial_data_endpoint(input_data: IndustrialDataInput):
+    """
+    Normalize a single industrial data point.
+
+    Supports sources: scada, mes, plm, opcua
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+        event = normalizer.normalize(
+            source=input_data.source,
+            data=input_data.data,
+            correlation_id=input_data.correlation_id,
+        )
+        return event.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Industrial data normalization error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/industrial/normalize/batch")
+async def normalize_industrial_data_batch(input_data: IndustrialDataBatchInput):
+    """
+    Normalize a batch of industrial data points.
+
+    All data points must be from the same source.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+        events = normalizer.normalize_batch(
+            source=input_data.source,
+            data_list=input_data.data_list,
+            correlation_id=input_data.correlation_id,
+        )
+        return {
+            "count": len(events),
+            "events": [e.to_dict() for e in events],
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Industrial data batch normalization error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/events")
+async def get_industrial_events(
+    source: Optional[str] = Query(default=None, description="Filter by source (scada, mes, plm, opcua)"),
+    minutes: int = Query(default=5, ge=1, le=60, description="Time window in minutes"),
+    limit: int = Query(default=100, ge=1, le=1000, description="Max events to return"),
+):
+    """
+    Get recent normalized industrial events from buffer.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+
+        source_enum = None
+        if source:
+            try:
+                source_enum = IndustrialDataSource(source.lower())
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid source: {source}")
+
+        events = normalizer.get_recent_events(
+            source=source_enum,
+            minutes=minutes,
+            limit=limit,
+        )
+
+        return {
+            "count": len(events),
+            "events": [e.to_dict() for e in events],
+            "filters": {
+                "source": source,
+                "minutes": minutes,
+                "limit": limit,
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Industrial events retrieval error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/context")
+async def get_industrial_context_for_llm(
+    equipment: Optional[str] = Query(default=None, description="Filter by equipment ID"),
+    area: Optional[str] = Query(default=None, description="Filter by area"),
+    sources: Optional[str] = Query(default=None, description="Comma-separated sources (scada,mes,plm,opcua)"),
+    minutes: int = Query(default=15, ge=1, le=60, description="Time window in minutes"),
+    max_events: int = Query(default=50, ge=1, le=200, description="Max events to include"),
+):
+    """
+    Get industrial context formatted for LLM queries.
+
+    Returns a human-readable summary of recent industrial data
+    that can be used to enrich LLM responses.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+
+        # Parse sources
+        source_list = None
+        if sources:
+            source_list = []
+            for s in sources.split(","):
+                try:
+                    source_list.append(IndustrialDataSource(s.strip().lower()))
+                except ValueError:
+                    pass
+
+        context = normalizer.get_context_for_llm(
+            equipment=equipment,
+            area=area,
+            sources=source_list,
+            minutes=minutes,
+            max_events=max_events,
+        )
+
+        return {
+            "context": context,
+            "filters": {
+                "equipment": equipment,
+                "area": area,
+                "sources": sources,
+                "minutes": minutes,
+                "max_events": max_events,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Industrial context generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/correlations")
+async def get_industrial_correlations(
+    time_window_seconds: int = Query(default=60, ge=1, le=300, description="Correlation time window"),
+    equipment: Optional[str] = Query(default=None, description="Filter by equipment ID"),
+):
+    """
+    Find correlated events across industrial sources.
+
+    Groups events that occurred within the time window
+    and may be related (e.g., SCADA alarm followed by MES downtime).
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+
+        groups = normalizer.correlate_events(
+            time_window_seconds=time_window_seconds,
+            equipment=equipment,
+        )
+
+        return {
+            "correlation_groups": [
+                {
+                    "count": len(group),
+                    "time_span_seconds": (group[-1].timestamp.utc - group[0].timestamp.utc).total_seconds(),
+                    "sources": list(set(e.source.value for e in group)),
+                    "events": [e.to_dict() for e in group],
+                }
+                for group in groups
+            ],
+            "total_groups": len(groups),
+        }
+    except Exception as e:
+        logger.error(f"Industrial correlation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/statistics")
+async def get_industrial_statistics():
+    """
+    Get industrial data normalizer statistics.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+        return normalizer.get_statistics()
+    except Exception as e:
+        logger.error(f"Industrial statistics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/sources")
+async def list_industrial_sources():
+    """
+    List supported industrial data sources and their schemas.
+    """
+    return {
+        "sources": [
+            {
+                "id": "scada",
+                "name": "SCADA",
+                "description": "Supervisory Control and Data Acquisition",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "tag_id": "Unique tag identifier (e.g., SCADA.ZONE_A.REACTOR_001.TEMP)",
+                    "tag_name": "Human-readable tag name",
+                    "value": "Numeric or string value",
+                    "unit": "Engineering unit (e.g., °C, bar, m³/h)",
+                    "quality": "Data quality (good, uncertain, bad)",
+                    "source": "PLC/RTU source identifier",
+                    "area": "Plant area",
+                    "equipment_id": "Equipment identifier",
+                },
+            },
+            {
+                "id": "mes",
+                "name": "MES",
+                "description": "Manufacturing Execution System",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "event_type": "Event type (production_start, production_end, quality_check, etc.)",
+                    "order_id": "Production order ID",
+                    "product_id": "Product identifier",
+                    "workstation_id": "Workstation identifier",
+                    "operator_id": "Operator identifier",
+                    "quantity": "Produced quantity",
+                    "status": "Event status",
+                    "cycle_time_ms": "Cycle time in milliseconds",
+                    "quality_score": "Quality score (0-100)",
+                    "defects": "Number of defects",
+                },
+            },
+            {
+                "id": "plm",
+                "name": "PLM",
+                "description": "Product Lifecycle Management",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "document_id": "Document identifier",
+                    "revision": "Document revision",
+                    "author": "Author identifier",
+                    "change_type": "Change type (create, modify, revision, approve, etc.)",
+                    "component_id": "Component identifier",
+                    "bom_level": "BOM hierarchy level",
+                    "status": "Document status",
+                    "approval_status": "Approval status",
+                },
+            },
+            {
+                "id": "opcua",
+                "name": "OPC-UA",
+                "description": "Open Platform Communications Unified Architecture",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "node_id": "OPC-UA node identifier (e.g., ns=2;s=Device1.Temperature)",
+                    "display_name": "Human-readable node name",
+                    "value": "Node value",
+                    "data_type": "OPC-UA data type (Double, Int32, Boolean, String, etc.)",
+                    "status_code": "OPC-UA status code",
+                    "source_timestamp": "Source timestamp",
+                    "server_timestamp": "Server timestamp",
+                    "namespace": "OPC-UA namespace",
+                },
+            },
+        ],
+    }
 
 
 # =========================================
