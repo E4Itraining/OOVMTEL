@@ -98,6 +98,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Base directory for static files (resolve relative paths correctly)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
 # Configuration
 class Config:
     VICTORIA_METRICS_URL = os.getenv('VICTORIA_METRICS_URL', 'http://victoria-metrics:8428')
@@ -278,13 +282,13 @@ async def shutdown_event():
         await http_client.aclose()
     logger.info("OOVMTEL Unified View API stopped")
 
-# Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Static files (using absolute path for reliability)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/")
 async def root():
     """Serve the main dashboard HTML page."""
-    return FileResponse("static/index.html")
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 @app.get("/health")
 async def health_check():
