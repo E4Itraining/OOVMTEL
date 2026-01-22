@@ -872,6 +872,11 @@ export const translations = {
         aiAssistant: 'AI Assistant',
         impactAnalysis: 'Impact & Recommendations',
         impactChain: 'IT/OT Impact Chain',
+        simulators: 'Simulator Launcher',
+        industrialObs: 'Industrial Observability',
+        correlation: 'IT-OT-AI Correlation',
+        cybersecurityOT: 'OT/IT Cybersecurity',
+        aiObservability: 'AI Observability',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
@@ -1640,6 +1645,8 @@ export const translations = {
 
     // Navigation - Main menu
     nav: {
+      persona: 'Profiel',
+      changePersona: 'Profiel wijzigen',
       main: {
         home: 'Home',
         globalView: 'Globaal Overzicht',
@@ -1647,6 +1654,13 @@ export const translations = {
         technicalView: 'Technisch Overzicht',
         businessKPI: 'Zakelijke KPIs',
         aiAssistant: 'AI Assistent',
+        impactAnalysis: 'Impact & Aanbevelingen',
+        impactChain: 'IT/OT Impactketen',
+        simulators: 'Simulator Launcher',
+        industrialObs: 'Industriele Observabiliteit',
+        correlation: 'IT-OT-AI Correlatie',
+        cybersecurityOT: 'OT/IT Cyberbeveiliging',
+        aiObservability: 'AI Observabiliteit',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
@@ -2243,6 +2257,8 @@ export const translations = {
 
     // Navigation - Main menu
     nav: {
+      persona: 'Profil',
+      changePersona: 'Profil wechseln',
       main: {
         home: 'Startseite',
         globalView: 'Globale Ansicht',
@@ -2250,6 +2266,13 @@ export const translations = {
         technicalView: 'Technische Ansicht',
         businessKPI: 'Business-KPIs',
         aiAssistant: 'KI-Assistent',
+        impactAnalysis: 'Impact & Empfehlungen',
+        impactChain: 'IT/OT Impact-Kette',
+        simulators: 'Simulator Launcher',
+        industrialObs: 'Industrielle Observability',
+        correlation: 'IT-OT-KI Korrelation',
+        cybersecurityOT: 'OT/IT Cybersicherheit',
+        aiObservability: 'KI Observability',
         grafana: 'Grafana',
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
