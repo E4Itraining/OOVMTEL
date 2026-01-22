@@ -97,8 +97,13 @@ export const translations = {
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
         observability: 'Observabilité',
-        aiObservability: 'Observabilité IA',
-        security: 'Sécurité & Conformité'
+        security: 'Sécurité & Conformité',
+        dpoDashboard: 'Dashboard DPO',
+        complianceDashboard: 'Dashboard Conformité',
+        rseDashboard: 'Dashboard RSE',
+        greenitDashboard: 'Dashboard Green IT',
+        socDashboard: 'Dashboard SOC',
+        mlopsDashboard: 'Dashboard MLOps'
       },
       // Home page submenus
       home: {
@@ -882,7 +887,13 @@ export const translations = {
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
         observability: 'Observability',
-        security: 'Security & Compliance'
+        security: 'Security & Compliance',
+        dpoDashboard: 'DPO Dashboard',
+        complianceDashboard: 'Compliance Dashboard',
+        rseDashboard: 'CSR Dashboard',
+        greenitDashboard: 'Green IT Dashboard',
+        socDashboard: 'SOC Dashboard',
+        mlopsDashboard: 'MLOps Dashboard'
       },
       // Home page submenus
       home: {
@@ -1666,7 +1677,13 @@ export const translations = {
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
         observability: 'Observabiliteit',
-        security: 'Beveiliging & Compliance'
+        security: 'Beveiliging & Compliance',
+        dpoDashboard: 'DPO Dashboard',
+        complianceDashboard: 'Compliance Dashboard',
+        rseDashboard: 'MVO Dashboard',
+        greenitDashboard: 'Green IT Dashboard',
+        socDashboard: 'SOC Dashboard',
+        mlopsDashboard: 'MLOps Dashboard'
       },
       // Home page submenus
       home: {
@@ -2278,7 +2295,13 @@ export const translations = {
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
         observability: 'Observability',
-        security: 'Sicherheit & Compliance'
+        security: 'Sicherheit & Compliance',
+        dpoDashboard: 'DPO Dashboard',
+        complianceDashboard: 'Compliance Dashboard',
+        rseDashboard: 'CSR Dashboard',
+        greenitDashboard: 'Green IT Dashboard',
+        socDashboard: 'SOC Dashboard',
+        mlopsDashboard: 'MLOps Dashboard'
       },
       // Home page submenus
       home: {

@@ -20,13 +20,12 @@ import KafkaView from './pages/KafkaView'
 import ObservabilityRemediationView from './pages/ObservabilityRemediationView'
 import SecurityComplianceView from './pages/SecurityComplianceView'
 import ImpactAnalysisView from './pages/ImpactAnalysisView'
-import ImpactChainPage from './pages/ImpactChainPage'
-import AIObservabilityPage from './pages/AIObservabilityPage'
-import SimulatorLauncher from './pages/SimulatorLauncher'
-import IndustrialObservabilityView from './pages/IndustrialObservabilityView'
-import CorrelationITOTAIView from './pages/CorrelationITOTAIView'
-import CybersecurityOTView from './pages/CybersecurityOTView'
-import ErrorBoundary from './components/ErrorBoundary'
+import DPODashboardView from './pages/DPODashboardView'
+import ComplianceDashboardView from './pages/ComplianceDashboardView'
+import RSEDashboardView from './pages/RSEDashboardView'
+import GreenITDashboardView from './pages/GreenITDashboardView'
+import SOCDashboardView from './pages/SOCDashboardView'
+import MLOpsDashboardView from './pages/MLOpsDashboardView'
 
 // Component to check if user should be redirected to welcome page
 function PersonaGuard({ children }) {
@@ -69,12 +68,13 @@ function App() {
                       <Route path="observability" element={<ObservabilityRemediationView />} />
                       <Route path="security" element={<ErrorBoundary><SecurityComplianceView /></ErrorBoundary>} />
                       <Route path="impact-analysis" element={<ImpactAnalysisView />} />
-                      <Route path="impact-chain" element={<ImpactChainPage />} />
-                      <Route path="ai-observability" element={<AIObservabilityPage />} />
-                      <Route path="simulators" element={<SimulatorLauncher />} />
-                      <Route path="industrial-observability" element={<IndustrialObservabilityView />} />
-                      <Route path="correlation" element={<CorrelationITOTAIView />} />
-                      <Route path="cybersecurity-ot" element={<CybersecurityOTView />} />
+                      {/* Role-specific dashboards */}
+                      <Route path="dpo-dashboard" element={<DPODashboardView />} />
+                      <Route path="compliance-dashboard" element={<ComplianceDashboardView />} />
+                      <Route path="rse-dashboard" element={<RSEDashboardView />} />
+                      <Route path="greenit-dashboard" element={<GreenITDashboardView />} />
+                      <Route path="soc-dashboard" element={<SOCDashboardView />} />
+                      <Route path="mlops-dashboard" element={<MLOpsDashboardView />} />
                     </Route>
                   </Routes>
                 </PersonaGuard>

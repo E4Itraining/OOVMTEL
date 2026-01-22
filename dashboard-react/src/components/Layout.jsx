@@ -39,12 +39,12 @@ import {
   Lightbulb,
   Sparkles,
   UserCircle2,
-  GitBranch,
-  Brain,
-  Radio,
-  Factory,
-  Network,
-  ShieldAlert
+  UserCheck,
+  Scale,
+  Leaf,
+  Cpu,
+  ShieldAlert,
+  BrainCircuit
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
@@ -215,10 +215,21 @@ const getNavConfig = (t, userMode) => {
     { id: 'security', path: '/security', icon: Lock, getLabel: () => t('nav.main.security') }
   ]
 
+  // Role-specific dashboards
+  const roleNav = [
+    { id: 'dpo-dashboard', path: '/dpo-dashboard', icon: UserCheck, getLabel: () => t('nav.main.dpoDashboard') },
+    { id: 'compliance-dashboard', path: '/compliance-dashboard', icon: Scale, getLabel: () => t('nav.main.complianceDashboard') },
+    { id: 'rse-dashboard', path: '/rse-dashboard', icon: Leaf, getLabel: () => t('nav.main.rseDashboard') },
+    { id: 'greenit-dashboard', path: '/greenit-dashboard', icon: Cpu, getLabel: () => t('nav.main.greenitDashboard') },
+    { id: 'soc-dashboard', path: '/soc-dashboard', icon: ShieldAlert, getLabel: () => t('nav.main.socDashboard') },
+    { id: 'mlops-dashboard', path: '/mlops-dashboard', icon: BrainCircuit, getLabel: () => t('nav.main.mlopsDashboard') }
+  ]
+
   return {
     mainNav,
     profileMenus: profileMenus[userMode] || [],
-    serviceNav
+    serviceNav,
+    roleNav
   }
 }
 
@@ -472,6 +483,35 @@ function Layout() {
           )}
 
           {navConfig.serviceNav.map((item) => {
+            const isActive = location.pathname === item.path
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+                  ${isActive
+                    ? 'bg-industrial-accent/20 text-industrial-accent'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && (
+                  <span className="font-medium text-sm">{item.getLabel()}</span>
+                )}
+              </button>
+            )
+          })}
+
+          {/* Role-specific Dashboards Section */}
+          {sidebarOpen && (
+            <div className="pt-4 mt-4 border-t border-industrial-border/50">
+              <p className="px-3 text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Dashboards Métier
+              </p>
+            </div>
+          )}
+
+          {navConfig.roleNav.map((item) => {
             const isActive = location.pathname === item.path
             return (
               <button

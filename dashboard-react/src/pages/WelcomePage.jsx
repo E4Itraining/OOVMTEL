@@ -122,12 +122,12 @@ export const PERSONA_JOURNEYS = {
   [PERSONAS.DATA_MLOPS]: {
     name: 'Parcours Data & MLOps',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Pipelines Data', route: '/kafka', icon: Database },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Qualité Données', route: '/grafana', icon: BarChart3 },
-      { id: JOURNEY_STAGES.ACTION, label: 'Modèles ML', route: '/observability', icon: CircuitBoard },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Drift & Performance', route: '/opensearch', icon: Activity }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Dashboard MLOps', route: '/mlops-dashboard', icon: Database },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Modèles ML', route: '/mlops-dashboard#models', icon: BarChart3 },
+      { id: JOURNEY_STAGES.ACTION, label: 'Data Quality', route: '/mlops-dashboard#quality', icon: CircuitBoard },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Observabilité IA', route: '/mlops-dashboard#observability', icon: Activity }
     ],
-    defaultRoute: '/kafka',
+    defaultRoute: '/mlops-dashboard',
     focusAreas: ['data-quality', 'ml-models', 'drift', 'pipelines', 'feature-engineering']
   },
   [PERSONAS.DEVOPS_SRE]: {
@@ -159,12 +159,12 @@ export const PERSONA_JOURNEYS = {
   [PERSONAS.ANALYSTE_SOC]: {
     name: 'Parcours Analyste SOC',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Alertes Sécurité', route: '/security', icon: AlertTriangle },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Analyse Menaces', route: '/security#threats', icon: Shield },
-      { id: JOURNEY_STAGES.ACTION, label: 'Investigation', route: '/opensearch', icon: Eye },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Logs Sécurité', route: '/grafana', icon: Activity }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Dashboard SOC', route: '/soc-dashboard', icon: AlertTriangle },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Incidents', route: '/soc-dashboard#incidents', icon: Shield },
+      { id: JOURNEY_STAGES.ACTION, label: 'Threat Intel', route: '/soc-dashboard#threats', icon: Eye },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Forensics', route: '/soc-dashboard#forensics', icon: Activity }
     ],
-    defaultRoute: '/security',
+    defaultRoute: '/soc-dashboard',
     focusAreas: ['threats', 'incidents', 'forensics', 'detection', 'response']
   },
 
@@ -174,23 +174,23 @@ export const PERSONA_JOURNEYS = {
   [PERSONAS.DPO]: {
     name: 'Parcours DPO',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Conformité RGPD', route: '/security#compliance', icon: FileCheck },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Traitements Données', route: '/security#privacy', icon: Database },
-      { id: JOURNEY_STAGES.ACTION, label: 'Plan d\'Actions', route: '/impact-analysis', icon: Target },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Audit Trail', route: '/security#audit', icon: Eye }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Dashboard DPO', route: '/dpo-dashboard', icon: FileCheck },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Registre Traitements', route: '/dpo-dashboard#registry', icon: Database },
+      { id: JOURNEY_STAGES.ACTION, label: 'Demandes & Droits', route: '/dpo-dashboard#requests', icon: Target },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Consentements', route: '/dpo-dashboard#consent', icon: Eye }
     ],
-    defaultRoute: '/security',
+    defaultRoute: '/dpo-dashboard',
     focusAreas: ['rgpd', 'privacy', 'consent', 'data-processing', 'rights']
   },
   [PERSONAS.RESPONSABLE_CONFORMITE]: {
     name: 'Parcours Conformité',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Vue Réglementaire', route: '/security#compliance', icon: Scale },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Régulations EU', route: '/security#euRegulations', icon: Gavel },
-      { id: JOURNEY_STAGES.ACTION, label: 'Actions Correctives', route: '/impact-analysis', icon: Target },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Suivi Audits', route: '/security#audit', icon: ClipboardCheck }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Dashboard Conformité', route: '/compliance-dashboard', icon: Scale },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Réglementations', route: '/compliance-dashboard#frameworks', icon: Gavel },
+      { id: JOURNEY_STAGES.ACTION, label: 'AI Act & Audits', route: '/compliance-dashboard#aiact', icon: Target },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Plan d\'Actions', route: '/compliance-dashboard#actions', icon: ClipboardCheck }
     ],
-    defaultRoute: '/security',
+    defaultRoute: '/compliance-dashboard',
     focusAreas: ['nis2', 'ai-act', 'dora', 'iso27001', 'audit']
   },
 
@@ -200,23 +200,23 @@ export const PERSONA_JOURNEYS = {
   [PERSONAS.RESPONSABLE_RSE]: {
     name: 'Parcours RSE',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Impact Carbone', route: '/command-center', icon: TreePine },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'KPIs Durabilité', route: '/business-kpi', icon: Leaf },
-      { id: JOURNEY_STAGES.ACTION, label: 'Plan Transition', route: '/impact-analysis', icon: Target },
-      { id: JOURNEY_STAGES.MONITORING, label: 'Reporting ESG', route: '/business-kpi#sustainability', icon: BarChart3 }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Dashboard RSE', route: '/rse-dashboard', icon: TreePine },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Empreinte Carbone', route: '/rse-dashboard#carbon', icon: Leaf },
+      { id: JOURNEY_STAGES.ACTION, label: 'Reporting CSRD', route: '/rse-dashboard#csrd', icon: Target },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Score ESG', route: '/rse-dashboard#esg', icon: BarChart3 }
     ],
-    defaultRoute: '/command-center',
+    defaultRoute: '/rse-dashboard',
     focusAreas: ['carbon-footprint', 'sustainability', 'esg', 'csrd', 'energy']
   },
   [PERSONAS.GREEN_IT_MANAGER]: {
     name: 'Parcours Green IT',
     stages: [
-      { id: JOURNEY_STAGES.DISCOVERY, label: 'Énergie IT', route: '/technical', icon: Zap },
-      { id: JOURNEY_STAGES.ASSESSMENT, label: 'Efficience', route: '/grafana', icon: Gauge },
-      { id: JOURNEY_STAGES.ACTION, label: 'Optimisations', route: '/impact-analysis', icon: Recycle },
-      { id: JOURNEY_STAGES.MONITORING, label: 'PUE & Conso', route: '/observability', icon: Activity }
+      { id: JOURNEY_STAGES.DISCOVERY, label: 'Dashboard Green IT', route: '/greenit-dashboard', icon: Zap },
+      { id: JOURNEY_STAGES.ASSESSMENT, label: 'PUE & Datacenter', route: '/greenit-dashboard#datacenter', icon: Gauge },
+      { id: JOURNEY_STAGES.ACTION, label: 'Cloud Carbon', route: '/greenit-dashboard#cloud', icon: Recycle },
+      { id: JOURNEY_STAGES.MONITORING, label: 'Optimisations', route: '/greenit-dashboard#optimization', icon: Activity }
     ],
-    defaultRoute: '/technical',
+    defaultRoute: '/greenit-dashboard',
     focusAreas: ['pue', 'energy-efficiency', 'e-waste', 'cloud-carbon', 'optimization']
   }
 }
@@ -321,7 +321,7 @@ const getPersonaConfig = (t) => [
       t('personas.dataMlops.feature2'),
       t('personas.dataMlops.feature3')
     ],
-    defaultRoute: '/kafka',
+    defaultRoute: '/mlops-dashboard',
     focusAreas: ['data-quality', 'ml-models', 'pipelines']
   },
   {
@@ -382,7 +382,7 @@ const getPersonaConfig = (t) => [
       t('personas.analyteSoc.feature2'),
       t('personas.analyteSoc.feature3')
     ],
-    defaultRoute: '/security',
+    defaultRoute: '/soc-dashboard',
     focusAreas: ['threats', 'incidents', 'forensics']
   },
 
@@ -405,7 +405,7 @@ const getPersonaConfig = (t) => [
       t('personas.dpo.feature2'),
       t('personas.dpo.feature3')
     ],
-    defaultRoute: '/security',
+    defaultRoute: '/dpo-dashboard',
     focusAreas: ['rgpd', 'privacy', 'data-processing']
   },
   {
@@ -424,7 +424,7 @@ const getPersonaConfig = (t) => [
       t('personas.responsableConformite.feature2'),
       t('personas.responsableConformite.feature3')
     ],
-    defaultRoute: '/security',
+    defaultRoute: '/compliance-dashboard',
     focusAreas: ['nis2', 'ai-act', 'audit']
   },
 
@@ -447,7 +447,7 @@ const getPersonaConfig = (t) => [
       t('personas.responsableRse.feature2'),
       t('personas.responsableRse.feature3')
     ],
-    defaultRoute: '/command-center',
+    defaultRoute: '/rse-dashboard',
     focusAreas: ['carbon-footprint', 'sustainability', 'esg']
   },
   {
@@ -466,7 +466,7 @@ const getPersonaConfig = (t) => [
       t('personas.greenItManager.feature2'),
       t('personas.greenItManager.feature3')
     ],
-    defaultRoute: '/technical',
+    defaultRoute: '/greenit-dashboard',
     focusAreas: ['pue', 'energy-efficiency', 'cloud-carbon']
   }
 ]
