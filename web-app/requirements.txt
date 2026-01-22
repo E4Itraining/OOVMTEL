@@ -55,5 +55,23 @@ python-dotenv==1.0.0
 # Optional: OpenAI SDK (uncomment for OpenAI support)
 # openai>=1.0.0
 
+# =============================================
+# LLM Observability Dependencies (OpenTelemetry)
+# =============================================
+# Core OpenTelemetry SDK
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+
+# OTLP Exporters (for sending to OTEL Collector)
+opentelemetry-exporter-otlp-proto-http>=1.21.0
+
+# Semantic conventions (GenAI attributes)
+opentelemetry-semantic-conventions>=0.42b0
+
+# Optional: Logging support (structured logs to OTEL)
+# Note: Requires opentelemetry-sdk[logs]
+# opentelemetry-sdk[logs]>=1.21.0
+
+# =============================================
 # Note: All game-changer modules use only standard library
 # and existing dependencies (pydantic, httpx, asyncio)

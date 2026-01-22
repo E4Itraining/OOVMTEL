@@ -45,6 +45,89 @@ const defaultMetrics = {
     kafkaPartitions: 0,
     kafkaConsumerLag: 0
   },
+  // Métriques OT (Operational Technology) - Zone industrielle
+  ot: {
+    // Santé globale OT
+    globalHealth: 0,
+    // Systèmes OT
+    scada: {
+      status: 'unknown',
+      connectedDevices: 0,
+      activeAlarms: 0,
+      dataPointsPerSec: 0,
+      lastSync: null
+    },
+    mes: {
+      status: 'unknown',
+      activeOrders: 0,
+      completedToday: 0,
+      pendingOrders: 0,
+      efficiency: 0
+    },
+    plm: {
+      status: 'unknown',
+      activeProducts: 0,
+      revisionsPending: 0,
+      qualityHolds: 0
+    },
+    opcua: {
+      status: 'unknown',
+      connectedServers: 0,
+      activeSubscriptions: 0,
+      tagsMonitored: 0,
+      latencyMs: 0
+    },
+    // Métriques industrielles avancées
+    mtbf: 0, // Mean Time Between Failures (heures)
+    mttr: 0, // Mean Time To Repair (heures)
+    trs: { // Taux de Rendement Synthétique détaillé
+      disponibilite: 0,
+      performance: 0,
+      qualite: 0,
+      global: 0
+    },
+    // Par zone de production
+    zones: [],
+    // Par ligne de production
+    productionLines: [],
+    // Chaîne logique-métier (dépendances)
+    dependencyChain: [],
+    // Impacts actifs
+    activeImpacts: [],
+    // Cascades d'impact en cours
+    activeCascades: []
+  },
+  // Graphe de dépendances IT/OT
+  itotGraph: {
+    // Nœuds du graphe (systèmes IT et OT)
+    nodes: [],
+    // Connexions entre nœuds
+    edges: [],
+    // Impacts actifs avec propagation
+    impacts: [],
+    // Métriques du graphe
+    stats: {
+      totalNodes: 0,
+      itNodes: 0,
+      otNodes: 0,
+      connections: 0,
+      healthRate: 100,
+      activeImpacts: 0,
+      criticalImpacts: 0,
+      totalLoss: 0
+    }
+  },
+  // Corrélations IT/OT
+  correlations: {
+    // Alertes corrélées IT/OT
+    correlatedAlerts: [],
+    // Patterns détectés
+    detectedPatterns: [],
+    // Score de corrélation global
+    correlationScore: 0,
+    // Dernière analyse
+    lastAnalysis: null
+  },
   services: [],
   events: [],
   lastUpdate: null

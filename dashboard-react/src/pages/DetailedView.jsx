@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Activity,
   Database,
@@ -15,7 +15,13 @@ import {
   RefreshCw,
   ExternalLink,
   Zap,
-  MemoryStick
+  MemoryStick,
+  Video,
+  Camera,
+  Play,
+  Maximize2,
+  Circle,
+  MapPin
 } from 'lucide-react'
 import { useDashboard } from '../context/DashboardContext'
 import { Card, CardHeader, CardBody, MetricCard } from '../components/ui/Card'
@@ -88,6 +94,19 @@ const serviceConfigs = {
       { key: 'queueSize', label: 'Queue Size', value: '128', unit: '', trend: 'stable', trendValue: '' },
     ]
   },
+  'otel': {
+    name: 'OTEL Collector',
+    icon: Zap,
+    color: 'from-purple-500 to-pink-600',
+    url: 'http://localhost:8888',
+    description: 'OpenTelemetry data collection and processing',
+    metrics: [
+      { key: 'metricsRate', label: 'Metrics/s', value: '125,000', unit: '/s', trend: 'up', trendValue: '+5%' },
+      { key: 'logsRate', label: 'Logs/s', value: '8,500', unit: '/s', trend: 'up', trendValue: '+3%' },
+      { key: 'tracesRate', label: 'Traces/s', value: '2,500', unit: '/s', trend: 'stable', trendValue: '' },
+      { key: 'pipelines', label: 'Pipelines', value: '4', unit: '', trend: 'stable', trendValue: '' },
+    ]
+  },
   'grafana': {
     name: 'Grafana',
     icon: Activity,
@@ -114,6 +133,201 @@ const serviceConfigs = {
       { key: 'retention', label: 'Retention', value: '7', unit: 'days', trend: 'stable', trendValue: '' },
     ]
   }
+}
+
+// OTEL Monitoring Video Feeds
+const otelVideoFeeds = [
+  {
+    id: 'otel-feed-001',
+    name: 'Pipeline Metrics Flow',
+    location: 'Data Pipeline - Stage 1',
+    status: 'online',
+    recording: true,
+    lastActivity: new Date(Date.now() - 30000),
+    resolution: '1080p',
+    fps: 30,
+    alerts: 0,
+    type: 'metrics'
+  },
+  {
+    id: 'otel-feed-002',
+    name: 'Trace Visualization',
+    location: 'Distributed Tracing',
+    status: 'online',
+    recording: true,
+    lastActivity: new Date(Date.now() - 120000),
+    resolution: '4K',
+    fps: 60,
+    alerts: 1,
+    type: 'traces'
+  },
+  {
+    id: 'otel-feed-003',
+    name: 'Log Aggregation Stream',
+    location: 'Log Processing',
+    status: 'online',
+    recording: true,
+    lastActivity: new Date(Date.now() - 60000),
+    resolution: '1080p',
+    fps: 30,
+    alerts: 0,
+    type: 'logs'
+  },
+  {
+    id: 'otel-feed-004',
+    name: 'Collector Health Monitor',
+    location: 'System Overview',
+    status: 'online',
+    recording: false,
+    lastActivity: new Date(Date.now() - 300000),
+    resolution: '720p',
+    fps: 15,
+    alerts: 0,
+    type: 'health'
+  }
+]
+
+// Video Feed Card Component for OTEL
+function OtelVideoFeedCard({ feed }) {
+  const [isHovered, setIsHovered] = useState(false)
+
+  const formatTime = (date) => {
+    const diff = Date.now() - date.getTime()
+    const minutes = Math.floor(diff / 60000)
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes} min ago`
+    return `${Math.floor(minutes / 60)}h ago`
+  }
+
+  const typeColors = {
+    metrics: 'from-cyan-500 to-blue-600',
+    traces: 'from-purple-500 to-pink-600',
+    logs: 'from-green-500 to-teal-600',
+    health: 'from-orange-500 to-red-600'
+  }
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="rounded-xl border border-industrial-border bg-industrial-card/50 overflow-hidden"
+    >
+      {/* Video Preview Area */}
+      <div className="relative aspect-video bg-black/50">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center">
+          {feed.status === 'online' ? (
+            <div className="relative w-full h-full">
+              {/* Animated data visualization background */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className={`absolute inset-0 bg-gradient-to-br ${typeColors[feed.type]} opacity-10`} />
+                {/* Animated grid */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="w-full h-full" style={{
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+                    backgroundSize: '20px 20px'
+                  }} />
+                </div>
+                {/* Animated data flow lines */}
+                <motion.div
+                  animate={{ x: [0, 100], opacity: [0, 1, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                  className={`absolute top-1/4 left-0 right-0 h-0.5 bg-gradient-to-r ${typeColors[feed.type]}`}
+                />
+                <motion.div
+                  animate={{ x: [100, 0], opacity: [0, 1, 0] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', delay: 0.5 }}
+                  className={`absolute top-2/4 left-0 right-0 h-0.5 bg-gradient-to-r ${typeColors[feed.type]}`}
+                />
+                <motion.div
+                  animate={{ x: [0, 100], opacity: [0, 1, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: 'linear', delay: 1 }}
+                  className={`absolute top-3/4 left-0 right-0 h-0.5 bg-gradient-to-r ${typeColors[feed.type]}`}
+                />
+              </div>
+              {/* Center icon */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Activity className="w-12 h-12 text-gray-600" />
+              </div>
+              {/* Recording indicator */}
+              {feed.recording && (
+                <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded bg-red-500/90 text-white text-xs">
+                  <Circle className="w-2 h-2 fill-current animate-pulse" />
+                  REC
+                </div>
+              )}
+              {/* Live badge */}
+              <div className="absolute top-2 right-2 px-2 py-1 rounded bg-green-500/90 text-white text-xs font-medium">
+                LIVE
+              </div>
+              {/* Resolution badge */}
+              <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 text-white text-xs">
+                {feed.resolution} @ {feed.fps}fps
+              </div>
+              {/* Timestamp */}
+              <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/60 text-white text-xs font-mono">
+                {new Date().toLocaleTimeString()}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-gray-500">
+              <Video className="w-12 h-12" />
+              <span className="text-sm">Offline</span>
+            </div>
+          )}
+        </div>
+
+        {/* Hover overlay with controls */}
+        <AnimatePresence>
+          {isHovered && feed.status === 'online' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 flex items-center justify-center gap-4"
+            >
+              <button className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
+                <Play className="w-6 h-6 text-white" />
+              </button>
+              <button className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
+                <Maximize2 className="w-6 h-6 text-white" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Feed Info */}
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <h4 className="font-semibold text-white">{feed.name}</h4>
+            <div className="flex items-center gap-1 text-sm text-gray-400">
+              <MapPin className="w-3 h-3" />
+              {feed.location}
+            </div>
+          </div>
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs ${
+            feed.status === 'online'
+              ? 'bg-green-500/20 text-green-400'
+              : 'bg-red-500/20 text-red-400'
+          }`}>
+            <Circle className={`w-2 h-2 fill-current ${feed.status === 'online' ? 'animate-pulse' : ''}`} />
+            {feed.status === 'online' ? 'Online' : 'Offline'}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-gray-400">
+          <span>Last activity: {formatTime(feed.lastActivity)}</span>
+          {feed.alerts > 0 && (
+            <span className="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
+              {feed.alerts} alert{feed.alerts > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
 }
 
 function DetailedView() {
@@ -289,6 +503,20 @@ function DetailedView() {
           </CardBody>
         </Card>
       </div>
+
+      {/* OTEL Data Streams - Only shown for OTEL service */}
+      {(service === 'otel' || service === 'otel-collector') && (
+        <Card>
+          <CardHeader title="Data Stream Monitoring" icon={Video} />
+          <CardBody>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {otelVideoFeeds.map((feed) => (
+                <OtelVideoFeedCard key={feed.id} feed={feed} />
+              ))}
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       {/* Detailed Stats */}
       <Card>

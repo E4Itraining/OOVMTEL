@@ -60,12 +60,47 @@ except ImportError as e:
     LLM_MODULE_AVAILABLE = False
     logging.warning(f"LLM module not available: {e}")
 
+# Import AI Observability module
+try:
+    from modules.ai_observability import (
+        AIObservabilityEngine,
+        AIObservabilityConfig,
+        ModelType,
+        AIRiskLevel,
+    )
+    AI_OBSERVABILITY_AVAILABLE = True
+except ImportError as e:
+    AI_OBSERVABILITY_AVAILABLE = False
+    logging.warning(f"AI Observability module not available: {e}")
+
+# Import LLM Observability module
+try:
+    from modules.llm_observability import (
+        init_llm_telemetry,
+        get_llm_telemetry,
+        get_llm_metrics,
+        get_observability_config,
+        LLMObservabilityConfig,
+        # Industrial data normalizer
+        get_industrial_normalizer,
+        IndustrialDataSource,
+        NormalizedIndustrialEvent,
+    )
+    LLM_OBSERVABILITY_AVAILABLE = True
+except ImportError as e:
+    LLM_OBSERVABILITY_AVAILABLE = False
+    logging.warning(f"LLM Observability module not available: {e}")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Base directory for static files (resolve relative paths correctly)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 # Configuration
 class Config:
@@ -170,10 +205,12 @@ remediation_engine: Optional[Any] = None
 edge_manager: Optional[Any] = None
 hpc_engine: Optional[Any] = None
 llm_nlp: Optional[Any] = None  # LLM-enhanced NLP
+ai_observability_engine: Optional[Any] = None  # AI Observability Engine
+llm_telemetry: Optional[Any] = None  # LLM Observability Telemetry
 
 @app.on_event("startup")
 async def startup_event():
-    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine, llm_nlp
+    global http_client, nlp_engine, rca_engine, predictive_engine, remediation_engine, edge_manager, hpc_engine, llm_nlp, ai_observability_engine
 
     http_client = httpx.AsyncClient(timeout=10.0)
 
@@ -214,6 +251,26 @@ async def startup_event():
             logger.warning(f"LLM initialization failed: {e}")
             llm_nlp = None
 
+    # Initialize AI Observability Engine
+    if AI_OBSERVABILITY_AVAILABLE:
+        try:
+            ai_observability_engine = AIObservabilityEngine(
+                victoria_metrics_url=config.VICTORIA_METRICS_URL
+            )
+            await ai_observability_engine.initialize()
+            logger.info("AI Observability Engine initialized successfully")
+        except Exception as e:
+            logger.warning(f"AI Observability initialization failed: {e}")
+            ai_observability_engine = None
+
+    # Initialize LLM Observability Telemetry
+    if LLM_OBSERVABILITY_AVAILABLE:
+        try:
+            llm_telemetry = init_llm_telemetry()
+            logger.info("LLM Observability Telemetry initialized successfully")
+        except Exception as e:
+            logger.warning(f"LLM Observability initialization failed: {e}")
+
     logger.info("OOVMTEL Unified View API started")
     # Start background task for metrics refresh
     asyncio.create_task(metrics_refresh_loop())
@@ -225,13 +282,15 @@ async def shutdown_event():
         await http_client.aclose()
     logger.info("OOVMTEL Unified View API stopped")
 
-# Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Static files (using absolute path for reliability)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+# Mount assets at /assets for Vite-built files (HTML references /assets/...)
+app.mount("/assets", StaticFiles(directory=os.path.join(STATIC_DIR, "assets")), name="assets")
 
 @app.get("/")
 async def root():
     """Serve the main dashboard HTML page."""
-    return FileResponse("static/index.html")
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 @app.get("/health")
 async def health_check():
@@ -1026,6 +1085,19 @@ async def modules_status():
             "description": "LLM-enhanced NLP for natural language understanding",
             "provider": get_llm_settings().active_provider.value if LLM_MODULE_AVAILABLE else None,
             "fallback_enabled": get_llm_settings().fallback_to_rules if LLM_MODULE_AVAILABLE else True
+        },
+        "ai_observability": {
+            "enabled": ai_observability_engine is not None,
+            "module_available": AI_OBSERVABILITY_AVAILABLE,
+            "description": "AI/ML model monitoring, drift detection, and explainability",
+            "models_count": len(ai_observability_engine.get_all_models()) if ai_observability_engine else 0,
+            "capabilities": [
+                "model_registry",
+                "drift_detection",
+                "performance_tracking",
+                "explainability",
+                "eu_ai_act_compliance"
+            ] if ai_observability_engine else []
         }
     }
 
@@ -1168,6 +1240,529 @@ async def llm_chat(request: LLMChatRequest):
     except Exception as e:
         logger.error(f"LLM chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================
+# LLM Observability Endpoints
+# =========================================
+
+@app.get("/api/llm/observability/status")
+async def llm_observability_status():
+    """
+    Get LLM observability module status.
+
+    Returns configuration, telemetry status, and availability information.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        return {
+            "available": False,
+            "reason": "LLM Observability module not installed"
+        }
+
+    try:
+        config = get_observability_config()
+        telemetry = get_llm_telemetry()
+        metrics = get_llm_metrics()
+
+        return {
+            "available": True,
+            "config": config.to_dict(),
+            "telemetry": telemetry.get_status(),
+            "metrics": metrics.get_status(),
+        }
+    except Exception as e:
+        logger.error(f"LLM observability status error: {e}")
+        return {
+            "available": True,
+            "error": str(e)
+        }
+
+
+@app.get("/api/llm/observability/metrics")
+async def llm_observability_metrics(
+    window_minutes: int = Query(default=60, ge=1, le=1440, description="Time window in minutes"),
+    provider: Optional[str] = Query(default=None, description="Filter by provider"),
+    model: Optional[str] = Query(default=None, description="Filter by model"),
+):
+    """
+    Get aggregated LLM metrics.
+
+    Returns request counts, token usage, latency statistics, costs, and error rates.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        metrics = get_llm_metrics()
+        aggregated = metrics.get_aggregated_metrics(
+            window_minutes=window_minutes,
+            provider=provider,
+            model=model,
+        )
+        return aggregated.to_dict()
+    except Exception as e:
+        logger.error(f"LLM observability metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/llm/observability/metrics/realtime")
+async def llm_observability_realtime_metrics():
+    """
+    Get real-time LLM metrics for last 5 minutes.
+
+    Provides quick access to current operational state.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        metrics = get_llm_metrics()
+        realtime = metrics.get_aggregated_metrics(window_minutes=5)
+        hourly = metrics.get_current_hour_usage()
+
+        return {
+            "realtime_5min": realtime.to_dict(),
+            "hourly_usage": hourly,
+            "active_requests": metrics._active_requests,
+        }
+    except Exception as e:
+        logger.error(f"LLM realtime metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/llm/observability/alerts")
+async def llm_observability_alerts():
+    """
+    Get active LLM observability alerts.
+
+    Checks for threshold violations (latency, error rate, token limits, costs).
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        metrics = get_llm_metrics()
+        alerts = metrics.check_alerts()
+
+        return {
+            "alerts": alerts,
+            "alert_count": len(alerts),
+            "has_critical": any(a["severity"] == "critical" for a in alerts),
+            "has_warning": any(a["severity"] == "warning" for a in alerts),
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"LLM alerts error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/llm/observability/dashboard")
+async def llm_observability_dashboard():
+    """
+    Get comprehensive dashboard data for LLM observability.
+
+    Combines metrics, alerts, and configuration for dashboard rendering.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        config = get_observability_config()
+        metrics = get_llm_metrics()
+        telemetry = get_llm_telemetry()
+
+        # Get metrics for different windows
+        metrics_5m = metrics.get_aggregated_metrics(window_minutes=5)
+        metrics_1h = metrics.get_aggregated_metrics(window_minutes=60)
+        metrics_24h = metrics.get_aggregated_metrics(window_minutes=1440)
+        hourly = metrics.get_current_hour_usage()
+        alerts = metrics.check_alerts()
+
+        # Determine overall health
+        if any(a["severity"] == "critical" for a in alerts):
+            health_status = "critical"
+        elif any(a["severity"] == "warning" for a in alerts):
+            health_status = "warning"
+        else:
+            health_status = "healthy"
+
+        return {
+            "health_status": health_status,
+            "metrics": {
+                "last_5_minutes": metrics_5m.to_dict(),
+                "last_hour": metrics_1h.to_dict(),
+                "last_24_hours": metrics_24h.to_dict(),
+            },
+            "hourly_usage": hourly,
+            "alerts": alerts,
+            "config": {
+                "service_name": config.service_name,
+                "environment": config.environment,
+                "tracing_enabled": config.tracing.enabled,
+                "metrics_enabled": config.metrics.enabled,
+                "sample_rate": config.tracing.sample_rate,
+            },
+            "thresholds": {
+                "latency_warning_ms": config.alerting.latency_warning_ms,
+                "latency_critical_ms": config.alerting.latency_critical_ms,
+                "error_rate_warning_pct": config.alerting.error_rate_warning_pct,
+                "error_rate_critical_pct": config.alerting.error_rate_critical_pct,
+                "hourly_token_limit": config.alerting.hourly_token_limit,
+                "hourly_cost_limit_usd": config.alerting.hourly_cost_limit_usd,
+            },
+            "telemetry_status": telemetry.get_status(),
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"LLM dashboard error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class LLMObservabilityConfigUpdate(BaseModel):
+    """Request model for updating observability config."""
+    latency_warning_ms: Optional[float] = None
+    latency_critical_ms: Optional[float] = None
+    error_rate_warning_pct: Optional[float] = None
+    error_rate_critical_pct: Optional[float] = None
+    hourly_token_limit: Optional[int] = None
+    hourly_cost_limit_usd: Optional[float] = None
+
+
+@app.post("/api/llm/observability/config")
+async def update_llm_observability_config(update: LLMObservabilityConfigUpdate):
+    """
+    Update LLM observability alerting thresholds.
+
+    Note: Changes are applied at runtime but not persisted to env vars.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        config = get_observability_config()
+
+        # Update alerting config
+        if update.latency_warning_ms is not None:
+            config.alerting.latency_warning_ms = update.latency_warning_ms
+        if update.latency_critical_ms is not None:
+            config.alerting.latency_critical_ms = update.latency_critical_ms
+        if update.error_rate_warning_pct is not None:
+            config.alerting.error_rate_warning_pct = update.error_rate_warning_pct
+        if update.error_rate_critical_pct is not None:
+            config.alerting.error_rate_critical_pct = update.error_rate_critical_pct
+        if update.hourly_token_limit is not None:
+            config.alerting.hourly_token_limit = update.hourly_token_limit
+        if update.hourly_cost_limit_usd is not None:
+            config.alerting.hourly_cost_limit_usd = update.hourly_cost_limit_usd
+
+        return {
+            "message": "Configuration updated successfully",
+            "config": config.to_dict(),
+        }
+    except Exception as e:
+        logger.error(f"LLM config update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================
+# Industrial Data Normalization Endpoints
+# =========================================
+
+class IndustrialDataInput(BaseModel):
+    """Input model for industrial data normalization."""
+    source: str  # scada, mes, plm, opcua
+    data: Dict[str, Any]
+    correlation_id: Optional[str] = None
+
+
+class IndustrialDataBatchInput(BaseModel):
+    """Input model for batch industrial data normalization."""
+    source: str
+    data_list: List[Dict[str, Any]]
+    correlation_id: Optional[str] = None
+
+
+@app.post("/api/industrial/normalize")
+async def normalize_industrial_data_endpoint(input_data: IndustrialDataInput):
+    """
+    Normalize a single industrial data point.
+
+    Supports sources: scada, mes, plm, opcua
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+        event = normalizer.normalize(
+            source=input_data.source,
+            data=input_data.data,
+            correlation_id=input_data.correlation_id,
+        )
+        return event.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Industrial data normalization error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/industrial/normalize/batch")
+async def normalize_industrial_data_batch(input_data: IndustrialDataBatchInput):
+    """
+    Normalize a batch of industrial data points.
+
+    All data points must be from the same source.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+        events = normalizer.normalize_batch(
+            source=input_data.source,
+            data_list=input_data.data_list,
+            correlation_id=input_data.correlation_id,
+        )
+        return {
+            "count": len(events),
+            "events": [e.to_dict() for e in events],
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Industrial data batch normalization error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/events")
+async def get_industrial_events(
+    source: Optional[str] = Query(default=None, description="Filter by source (scada, mes, plm, opcua)"),
+    minutes: int = Query(default=5, ge=1, le=60, description="Time window in minutes"),
+    limit: int = Query(default=100, ge=1, le=1000, description="Max events to return"),
+):
+    """
+    Get recent normalized industrial events from buffer.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+
+        source_enum = None
+        if source:
+            try:
+                source_enum = IndustrialDataSource(source.lower())
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid source: {source}")
+
+        events = normalizer.get_recent_events(
+            source=source_enum,
+            minutes=minutes,
+            limit=limit,
+        )
+
+        return {
+            "count": len(events),
+            "events": [e.to_dict() for e in events],
+            "filters": {
+                "source": source,
+                "minutes": minutes,
+                "limit": limit,
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Industrial events retrieval error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/context")
+async def get_industrial_context_for_llm(
+    equipment: Optional[str] = Query(default=None, description="Filter by equipment ID"),
+    area: Optional[str] = Query(default=None, description="Filter by area"),
+    sources: Optional[str] = Query(default=None, description="Comma-separated sources (scada,mes,plm,opcua)"),
+    minutes: int = Query(default=15, ge=1, le=60, description="Time window in minutes"),
+    max_events: int = Query(default=50, ge=1, le=200, description="Max events to include"),
+):
+    """
+    Get industrial context formatted for LLM queries.
+
+    Returns a human-readable summary of recent industrial data
+    that can be used to enrich LLM responses.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+
+        # Parse sources
+        source_list = None
+        if sources:
+            source_list = []
+            for s in sources.split(","):
+                try:
+                    source_list.append(IndustrialDataSource(s.strip().lower()))
+                except ValueError:
+                    pass
+
+        context = normalizer.get_context_for_llm(
+            equipment=equipment,
+            area=area,
+            sources=source_list,
+            minutes=minutes,
+            max_events=max_events,
+        )
+
+        return {
+            "context": context,
+            "filters": {
+                "equipment": equipment,
+                "area": area,
+                "sources": sources,
+                "minutes": minutes,
+                "max_events": max_events,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Industrial context generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/correlations")
+async def get_industrial_correlations(
+    time_window_seconds: int = Query(default=60, ge=1, le=300, description="Correlation time window"),
+    equipment: Optional[str] = Query(default=None, description="Filter by equipment ID"),
+):
+    """
+    Find correlated events across industrial sources.
+
+    Groups events that occurred within the time window
+    and may be related (e.g., SCADA alarm followed by MES downtime).
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+
+        groups = normalizer.correlate_events(
+            time_window_seconds=time_window_seconds,
+            equipment=equipment,
+        )
+
+        return {
+            "correlation_groups": [
+                {
+                    "count": len(group),
+                    "time_span_seconds": (group[-1].timestamp.utc - group[0].timestamp.utc).total_seconds(),
+                    "sources": list(set(e.source.value for e in group)),
+                    "events": [e.to_dict() for e in group],
+                }
+                for group in groups
+            ],
+            "total_groups": len(groups),
+        }
+    except Exception as e:
+        logger.error(f"Industrial correlation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/statistics")
+async def get_industrial_statistics():
+    """
+    Get industrial data normalizer statistics.
+    """
+    if not LLM_OBSERVABILITY_AVAILABLE:
+        raise HTTPException(status_code=503, detail="LLM Observability module not available")
+
+    try:
+        normalizer = get_industrial_normalizer()
+        return normalizer.get_statistics()
+    except Exception as e:
+        logger.error(f"Industrial statistics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/industrial/sources")
+async def list_industrial_sources():
+    """
+    List supported industrial data sources and their schemas.
+    """
+    return {
+        "sources": [
+            {
+                "id": "scada",
+                "name": "SCADA",
+                "description": "Supervisory Control and Data Acquisition",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "tag_id": "Unique tag identifier (e.g., SCADA.ZONE_A.REACTOR_001.TEMP)",
+                    "tag_name": "Human-readable tag name",
+                    "value": "Numeric or string value",
+                    "unit": "Engineering unit (e.g., °C, bar, m³/h)",
+                    "quality": "Data quality (good, uncertain, bad)",
+                    "source": "PLC/RTU source identifier",
+                    "area": "Plant area",
+                    "equipment_id": "Equipment identifier",
+                },
+            },
+            {
+                "id": "mes",
+                "name": "MES",
+                "description": "Manufacturing Execution System",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "event_type": "Event type (production_start, production_end, quality_check, etc.)",
+                    "order_id": "Production order ID",
+                    "product_id": "Product identifier",
+                    "workstation_id": "Workstation identifier",
+                    "operator_id": "Operator identifier",
+                    "quantity": "Produced quantity",
+                    "status": "Event status",
+                    "cycle_time_ms": "Cycle time in milliseconds",
+                    "quality_score": "Quality score (0-100)",
+                    "defects": "Number of defects",
+                },
+            },
+            {
+                "id": "plm",
+                "name": "PLM",
+                "description": "Product Lifecycle Management",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "document_id": "Document identifier",
+                    "revision": "Document revision",
+                    "author": "Author identifier",
+                    "change_type": "Change type (create, modify, revision, approve, etc.)",
+                    "component_id": "Component identifier",
+                    "bom_level": "BOM hierarchy level",
+                    "status": "Document status",
+                    "approval_status": "Approval status",
+                },
+            },
+            {
+                "id": "opcua",
+                "name": "OPC-UA",
+                "description": "Open Platform Communications Unified Architecture",
+                "schema": {
+                    "timestamp": "ISO 8601 timestamp",
+                    "node_id": "OPC-UA node identifier (e.g., ns=2;s=Device1.Temperature)",
+                    "display_name": "Human-readable node name",
+                    "value": "Node value",
+                    "data_type": "OPC-UA data type (Double, Int32, Boolean, String, etc.)",
+                    "status_code": "OPC-UA status code",
+                    "source_timestamp": "Source timestamp",
+                    "server_timestamp": "Server timestamp",
+                    "namespace": "OPC-UA namespace",
+                },
+            },
+        ],
+    }
+
 
 # =========================================
 # HPC - High Performance Computing Endpoints
@@ -1555,6 +2150,8 @@ async def process_batch(request: BatchProcessRequest):
 
 # ML Training
 class MLTrainRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     model_name: str
     model_type: str  # neural_network, random_forest, xgboost, lstm
     training_data: Dict[str, Any] = {"size": 10000}
@@ -1630,6 +2227,810 @@ async def simulate_cluster_activity(utilization: float = Query(50, ge=0, le=100)
     except Exception as e:
         logger.error(f"Simulate activity error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================
+# AI Observability Endpoints
+# =========================================
+
+@app.get("/api/ai-observability/dashboard")
+async def get_ai_observability_dashboard():
+    """Get comprehensive AI observability dashboard data."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_dashboard_data()
+    except Exception as e:
+        logger.error(f"AI Observability dashboard error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models")
+async def list_ai_models():
+    """List all registered AI/ML models."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        models = ai_observability_engine.get_all_models()
+        return {
+            "models": [
+                {
+                    "model_id": m.model_id,
+                    "name": m.name,
+                    "version": m.version,
+                    "type": m.model_type.value,
+                    "status": m.status.value,
+                    "risk_level": m.risk_level.value,
+                    "deployment_target": m.deployment_target,
+                    "description": m.description,
+                    "tags": m.tags,
+                    "deployed_at": m.deployed_at.isoformat() if m.deployed_at else None,
+                }
+                for m in models
+            ],
+            "count": len(models)
+        }
+    except Exception as e:
+        logger.error(f"List AI models error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models/{model_id}")
+async def get_ai_model_detail(model_id: str):
+    """Get detailed information for a specific AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        detail = ai_observability_engine.get_model_detail(model_id)
+        if not detail:
+            raise HTTPException(status_code=404, detail=f"Model {model_id} not found")
+        return detail
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get AI model detail error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models/{model_id}/health")
+async def get_ai_model_health(model_id: str):
+    """Get health score for a specific AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        health = ai_observability_engine.get_health_score(model_id)
+        return {
+            "model_id": health.model_id,
+            "timestamp": health.timestamp.isoformat(),
+            "overall_score": health.overall_score,
+            "status": health.status,
+            "performance_score": health.performance_score,
+            "accuracy_score": health.accuracy_score,
+            "drift_score": health.drift_score,
+            "availability_score": health.availability_score,
+            "resource_score": health.resource_score,
+            "compliance_score": health.compliance_score,
+            "slo_violations": health.slo_violations,
+            "slo_compliance_pct": health.slo_compliance_pct,
+            "recommendations": health.recommendations,
+            "score_trend": health.score_trend,
+        }
+    except Exception as e:
+        logger.error(f"Get AI model health error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/models/{model_id}/metrics")
+async def get_ai_model_metrics(model_id: str, window_minutes: int = Query(5)):
+    """Get performance metrics for a specific AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        metrics = ai_observability_engine.get_performance_metrics(model_id, window_minutes)
+        return {
+            "model_id": metrics.model_id,
+            "timestamp": metrics.timestamp.isoformat(),
+            "latency_p50": metrics.latency_p50,
+            "latency_p95": metrics.latency_p95,
+            "latency_p99": metrics.latency_p99,
+            "latency_avg": metrics.latency_avg,
+            "latency_max": metrics.latency_max,
+            "requests_total": metrics.requests_total,
+            "requests_per_second": metrics.requests_per_second,
+            "errors_total": metrics.errors_total,
+            "error_rate_pct": metrics.error_rate_pct,
+        }
+    except Exception as e:
+        logger.error(f"Get AI model metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/health-scores")
+async def get_all_health_scores():
+    """Get health scores for all active AI models."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        scores = ai_observability_engine.get_all_health_scores()
+        return {
+            "health_scores": {
+                model_id: {
+                    "overall_score": score.overall_score,
+                    "status": score.status,
+                    "score_trend": score.score_trend,
+                }
+                for model_id, score in scores.items()
+            },
+            "summary": {
+                "total_models": len(scores),
+                "healthy": len([s for s in scores.values() if s.status == "healthy"]),
+                "warning": len([s for s in scores.values() if s.status == "warning"]),
+                "critical": len([s for s in scores.values() if s.status == "critical"]),
+                "avg_score": round(sum(s.overall_score for s in scores.values()) / len(scores), 1) if scores else 0,
+            }
+        }
+    except Exception as e:
+        logger.error(f"Get all health scores error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/drift")
+async def get_drift_summary():
+    """Get drift detection summary."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_drift_summary()
+    except Exception as e:
+        logger.error(f"Get drift summary error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/drift/{model_id}")
+async def get_model_drift_history(model_id: str, hours: int = Query(24)):
+    """Get drift detection history for a specific model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        history = ai_observability_engine.get_drift_history(model_id, hours)
+        return {
+            "model_id": model_id,
+            "history": [
+                {
+                    "timestamp": d.timestamp.isoformat(),
+                    "drift_type": d.drift_type.value,
+                    "severity": d.severity.value,
+                    "drift_score": d.drift_score,
+                    "affected_features": d.affected_features,
+                    "recommendation": d.recommendation,
+                    "requires_retraining": d.requires_retraining,
+                }
+                for d in history
+            ],
+            "count": len(history)
+        }
+    except Exception as e:
+        logger.error(f"Get model drift history error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DriftDetectionRequest(BaseModel):
+    feature_id: str
+    current_data: List[float]
+
+
+@app.post("/api/ai-observability/drift/{model_id}/detect")
+async def detect_drift(model_id: str, request: DriftDetectionRequest):
+    """Detect drift for a specific feature."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        result = await ai_observability_engine.detect_drift(
+            model_id=model_id,
+            feature_id=request.feature_id,
+            current_data=request.current_data
+        )
+        return {
+            "model_id": result.model_id,
+            "timestamp": result.timestamp.isoformat(),
+            "drift_type": result.drift_type.value,
+            "severity": result.severity.value,
+            "drift_score": result.drift_score,
+            "statistical_distance": result.statistical_distance,
+            "affected_features": result.affected_features,
+            "recommendation": result.recommendation,
+            "requires_retraining": result.requires_retraining,
+            "details": result.details,
+        }
+    except Exception as e:
+        logger.error(f"Detect drift error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/explainability")
+async def get_explainability_summary():
+    """Get explainability and audit logging summary."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.explainability.get_explainability_summary()
+    except Exception as e:
+        logger.error(f"Get explainability summary error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/audit-logs")
+async def get_audit_logs(
+    model_id: Optional[str] = Query(None),
+    hours: int = Query(24),
+    limit: int = Query(100)
+):
+    """Get prediction audit logs."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        logs = ai_observability_engine.get_audit_logs(model_id, hours, limit)
+        return {
+            "audit_logs": [
+                {
+                    "prediction_id": log.prediction_id,
+                    "model_id": log.model_id,
+                    "timestamp": log.timestamp.isoformat(),
+                    "confidence": log.confidence,
+                    "latency_ms": log.latency_ms,
+                    "top_contributing_features": log.top_contributing_features[:3],
+                    "decision_path": log.decision_path,
+                    "human_feedback": log.human_feedback,
+                }
+                for log in logs
+            ],
+            "count": len(logs)
+        }
+    except Exception as e:
+        logger.error(f"Get audit logs error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/explain/{prediction_id}")
+async def explain_prediction(prediction_id: str):
+    """Get detailed explanation for a prediction."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        explanation = ai_observability_engine.explain_prediction(prediction_id)
+        if not explanation:
+            raise HTTPException(status_code=404, detail=f"Prediction {prediction_id} not found")
+        return explanation
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Explain prediction error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class FeedbackRequest(BaseModel):
+    feedback: str
+    score: Optional[float] = None
+
+
+@app.post("/api/ai-observability/feedback/{prediction_id}")
+async def record_prediction_feedback(prediction_id: str, request: FeedbackRequest):
+    """Record human feedback on a prediction."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        success = ai_observability_engine.record_feedback(
+            prediction_id=prediction_id,
+            feedback=request.feedback,
+            score=request.score
+        )
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Prediction {prediction_id} not found")
+        return {"status": "recorded", "prediction_id": prediction_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Record feedback error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/alerts")
+async def get_ai_alerts(model_id: Optional[str] = Query(None)):
+    """Get active AI-related alerts."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        alerts = ai_observability_engine.get_active_alerts(model_id)
+        return {
+            "alerts": [
+                {
+                    "alert_id": a.alert_id,
+                    "model_id": a.model_id,
+                    "timestamp": a.timestamp.isoformat(),
+                    "severity": a.severity,
+                    "category": a.category,
+                    "title": a.title,
+                    "description": a.description,
+                    "metric_name": a.metric_name,
+                    "metric_value": a.metric_value,
+                    "threshold_value": a.threshold_value,
+                    "state": a.state,
+                    "acknowledged": a.acknowledged,
+                    "suggested_actions": a.suggested_actions,
+                }
+                for a in alerts
+            ],
+            "count": len(alerts)
+        }
+    except Exception as e:
+        logger.error(f"Get AI alerts error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ai-observability/alerts/{alert_id}/acknowledge")
+async def acknowledge_ai_alert(alert_id: str, user: str = Query(...)):
+    """Acknowledge an AI alert."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        success = ai_observability_engine.acknowledge_alert(alert_id, user)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
+        return {"status": "acknowledged", "alert_id": alert_id, "acknowledged_by": user}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Acknowledge alert error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/inventory")
+async def get_ai_inventory():
+    """Get AI model inventory for compliance reporting."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_model_inventory()
+    except Exception as e:
+        logger.error(f"Get AI inventory error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/compliance")
+async def get_ai_compliance_report():
+    """Get EU AI Act compliance report."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_compliance_report()
+    except Exception as e:
+        logger.error(f"Get compliance report error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai-observability/transparency/{model_id}")
+async def get_ai_transparency_report(model_id: str):
+    """Get AI Act transparency report for a specific model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        return ai_observability_engine.get_transparency_report(model_id)
+    except Exception as e:
+        logger.error(f"Get transparency report error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ModelRegistrationRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
+    name: str
+    version: str
+    model_type: str
+    description: str = ""
+    risk_level: str = "minimal"
+    deployment_target: str = "central"
+    tags: List[str] = []
+
+
+@app.post("/api/ai-observability/models/register")
+async def register_ai_model(request: ModelRegistrationRequest):
+    """Register a new AI model."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        # Map string to enums
+        type_map = {
+            "anomaly_detection": ModelType.ANOMALY_DETECTION,
+            "predictive_maintenance": ModelType.PREDICTIVE_MAINTENANCE,
+            "root_cause_analysis": ModelType.ROOT_CAUSE_ANALYSIS,
+            "nlp_query": ModelType.NLP_QUERY,
+            "time_series_forecast": ModelType.TIME_SERIES_FORECAST,
+            "classification": ModelType.CLASSIFICATION,
+            "regression": ModelType.REGRESSION,
+            "recommendation": ModelType.RECOMMENDATION,
+            "llm_assistant": ModelType.LLM_ASSISTANT,
+            "edge_inference": ModelType.EDGE_INFERENCE,
+            "custom": ModelType.CUSTOM,
+        }
+        risk_map = {
+            "unacceptable": AIRiskLevel.UNACCEPTABLE,
+            "high": AIRiskLevel.HIGH,
+            "limited": AIRiskLevel.LIMITED,
+            "minimal": AIRiskLevel.MINIMAL,
+        }
+
+        model = ai_observability_engine.register_model(
+            name=request.name,
+            version=request.version,
+            model_type=type_map.get(request.model_type, ModelType.CUSTOM),
+            description=request.description,
+            risk_level=risk_map.get(request.risk_level, AIRiskLevel.MINIMAL),
+            deployment_target=request.deployment_target,
+            tags=request.tags,
+        )
+
+        return {
+            "status": "registered",
+            "model_id": model.model_id,
+            "name": model.name,
+            "version": model.version,
+        }
+    except Exception as e:
+        logger.error(f"Register AI model error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class InferenceRecordRequest(BaseModel):
+    latency_ms: float
+    success: bool = True
+    input_data: Optional[Dict[str, Any]] = None
+    output: Optional[Any] = None
+    confidence: float = 0.0
+
+
+@app.post("/api/ai-observability/models/{model_id}/inference")
+async def record_model_inference(model_id: str, request: InferenceRecordRequest):
+    """Record a model inference for observability tracking."""
+    if not AI_OBSERVABILITY_AVAILABLE or not ai_observability_engine:
+        raise HTTPException(status_code=503, detail="AI Observability module not available")
+
+    try:
+        ai_observability_engine.record_inference(
+            model_id=model_id,
+            latency_ms=request.latency_ms,
+            success=request.success,
+            input_data=request.input_data,
+            output=request.output,
+            confidence=request.confidence,
+        )
+        return {"status": "recorded", "model_id": model_id}
+    except Exception as e:
+        logger.error(f"Record inference error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =========================================
+# Simulator Management API
+# =========================================
+
+# In-memory simulator state (in production, use Redis or similar)
+simulator_states = {}
+
+class SimulatorConfig(BaseModel):
+    rate: Optional[int] = 100
+    zones: Optional[List[str]] = None
+    metrics: Optional[List[str]] = None
+    anomalyRate: Optional[float] = 0.0
+
+class SimulatorStatus(BaseModel):
+    id: str
+    running: bool
+    config: SimulatorConfig
+    metrics: dict = {}
+    startedAt: Optional[str] = None
+
+@app.get("/api/simulators")
+async def get_simulators():
+    """Get status of all simulators."""
+    simulators = [
+        {"id": "scada", "name": "SCADA Simulator", "description": "Industrial SCADA data"},
+        {"id": "mes", "name": "MES Simulator", "description": "Manufacturing execution data"},
+        {"id": "plm", "name": "PLM Simulator", "description": "Product lifecycle data"},
+        {"id": "opcua", "name": "OPC-UA Simulator", "description": "OPC-UA node data"},
+        {"id": "it_infra", "name": "IT Infrastructure", "description": "IT metrics"},
+        {"id": "security", "name": "Security Events", "description": "Security events"}
+    ]
+
+    result = []
+    for sim in simulators:
+        state = simulator_states.get(sim["id"], {"running": False, "config": {}, "metrics": {}})
+        result.append({
+            **sim,
+            "running": state.get("running", False),
+            "config": state.get("config", {}),
+            "metrics": state.get("metrics", {}),
+            "startedAt": state.get("startedAt")
+        })
+
+    return {"simulators": result}
+
+@app.post("/api/simulators/{simulator_id}/start")
+async def start_simulator(simulator_id: str, config: SimulatorConfig = None):
+    """Start a simulator with optional configuration."""
+    import datetime
+
+    if config is None:
+        config = SimulatorConfig()
+
+    simulator_states[simulator_id] = {
+        "running": True,
+        "config": config.dict(),
+        "metrics": {"totalMessages": 0, "rate": config.rate},
+        "startedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+
+    logger.info(f"Started simulator: {simulator_id} with config: {config}")
+
+    return {
+        "status": "started",
+        "simulator_id": simulator_id,
+        "config": config.dict()
+    }
+
+@app.post("/api/simulators/{simulator_id}/stop")
+async def stop_simulator(simulator_id: str):
+    """Stop a simulator."""
+    if simulator_id in simulator_states:
+        simulator_states[simulator_id]["running"] = False
+        simulator_states[simulator_id]["stoppedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    logger.info(f"Stopped simulator: {simulator_id}")
+
+    return {"status": "stopped", "simulator_id": simulator_id}
+
+@app.get("/api/simulators/{simulator_id}/status")
+async def get_simulator_status(simulator_id: str):
+    """Get status of a specific simulator."""
+    state = simulator_states.get(simulator_id, {"running": False, "config": {}, "metrics": {}})
+    return {
+        "simulator_id": simulator_id,
+        **state
+    }
+
+class ScenarioConfig(BaseModel):
+    type: Optional[str] = None
+    duration: Optional[int] = None
+    anomalyRate: Optional[float] = 0.0
+    scenario: Optional[dict] = None
+
+@app.post("/api/scenarios/{scenario_id}/activate")
+async def activate_scenario(scenario_id: str, config: ScenarioConfig = None):
+    """Activate a predefined scenario."""
+    logger.info(f"Activating scenario: {scenario_id} with config: {config}")
+
+    return {
+        "status": "activated",
+        "scenario_id": scenario_id,
+        "config": config.dict() if config else {}
+    }
+
+@app.post("/api/scenarios/{scenario_id}/deactivate")
+async def deactivate_scenario(scenario_id: str):
+    """Deactivate a scenario."""
+    logger.info(f"Deactivating scenario: {scenario_id}")
+    return {"status": "deactivated", "scenario_id": scenario_id}
+
+
+# =========================================
+# Industrial Observability API
+# =========================================
+
+@app.get("/api/industrial/equipment")
+async def get_industrial_equipment():
+    """Get list of industrial equipment with health status."""
+    import random
+
+    equipment_types = ["MOTOR", "PUMP", "CONVEYOR", "ROBOT", "FURNACE", "PRESS", "CNC", "COMPRESSOR"]
+    zones = ["Production-Line-1", "Production-Line-2", "Assembly", "Utilities", "Packaging", "Welding"]
+
+    equipments = []
+    for i in range(12):
+        eq_type = equipment_types[i % len(equipment_types)]
+        health = 70 + random.random() * 30
+
+        equipments.append({
+            "id": f"{eq_type[:3]}-{str(i+1).zfill(3)}",
+            "type": eq_type,
+            "name": f"{eq_type.title()} {i+1}",
+            "zone": zones[i % len(zones)],
+            "level": i % 3,
+            "health": round(health, 1),
+            "status": "optimal" if health > 90 else "normal" if health > 70 else "degraded" if health > 50 else "critical",
+            "rul": random.randint(100, 900),
+            "alerts": [] if random.random() > 0.15 else [{"type": "warning", "message": "Value near threshold"}]
+        })
+
+    return {"equipment": equipments}
+
+@app.get("/api/industrial/zones")
+async def get_industrial_zones():
+    """Get ISA-95 zone information."""
+    zones = [
+        {"id": "zone-0", "name": "Zone 0 - Process", "level": 0, "securityLevel": "SL1"},
+        {"id": "zone-1", "name": "Zone 1 - Basic Control", "level": 1, "securityLevel": "SL2"},
+        {"id": "zone-2", "name": "Zone 2 - Area Control", "level": 2, "securityLevel": "SL3"},
+        {"id": "zone-3", "name": "Zone 3 - Site Operations", "level": 3, "securityLevel": "SL3"},
+        {"id": "zone-35", "name": "Zone 3.5 - DMZ", "level": 3.5, "securityLevel": "SL3"},
+        {"id": "zone-4", "name": "Zone 4 - Business Planning", "level": 4, "securityLevel": "SL2"},
+        {"id": "zone-5", "name": "Zone 5 - Enterprise", "level": 5, "securityLevel": "SL2"}
+    ]
+    return {"zones": zones}
+
+
+# =========================================
+# Correlation API (IT-OT-AI)
+# =========================================
+
+@app.get("/api/correlation/patterns")
+async def get_correlation_patterns():
+    """Get known correlation patterns between IT, OT, and AI domains."""
+    patterns = [
+        {
+            "id": "it_database_ot_mes",
+            "name": "Database -> MES",
+            "description": "Database latency impacts MES cycle time",
+            "source": {"domain": "it", "metric": "response_time", "component": "PostgreSQL"},
+            "target": {"domain": "ot", "metric": "cycle_time", "component": "MES-Server"},
+            "correlation": 0.87,
+            "lag": 30,
+            "impact": "high",
+            "causality": "confirmed"
+        },
+        {
+            "id": "ot_temp_ai_drift",
+            "name": "Temperature -> AI Drift",
+            "description": "Temperature variations cause predictive model drift",
+            "source": {"domain": "ot", "metric": "temperature", "component": "Main-Motor"},
+            "target": {"domain": "ai", "metric": "prediction_drift", "component": "RUL-Model"},
+            "correlation": 0.72,
+            "lag": 120,
+            "impact": "medium",
+            "causality": "probable"
+        },
+        {
+            "id": "ai_anomaly_it_alert",
+            "name": "AI Anomaly -> IT Alert",
+            "description": "Anomaly detection triggers monitoring alerts",
+            "source": {"domain": "ai", "metric": "anomaly_score", "component": "AnomalyDetector"},
+            "target": {"domain": "it", "metric": "alert_count", "component": "Prometheus"},
+            "correlation": 0.95,
+            "lag": 5,
+            "impact": "high",
+            "causality": "confirmed"
+        }
+    ]
+    return {"patterns": patterns}
+
+@app.get("/api/correlation/events")
+async def get_correlated_events():
+    """Get recent correlated events across domains."""
+    import random
+    from datetime import datetime, timedelta
+
+    now = datetime.now(datetime.timezone.utc)
+    events = []
+
+    event_types = [
+        {"type": "spike", "domain": "it", "metric": "cpu_usage", "severity": "warning"},
+        {"type": "degradation", "domain": "ot", "metric": "refresh_rate", "severity": "warning"},
+        {"type": "alert", "domain": "ot", "metric": "cycle_time", "severity": "high"},
+        {"type": "anomaly_detected", "domain": "ai", "metric": "anomaly_score", "severity": "info"},
+        {"type": "threshold", "domain": "ot", "metric": "temperature", "severity": "warning"},
+        {"type": "drift_detected", "domain": "ai", "metric": "prediction_drift", "severity": "low"}
+    ]
+
+    for i, evt in enumerate(event_types):
+        events.append({
+            "id": f"evt-{i}",
+            "timestamp": (now - timedelta(minutes=i*3)).isoformat(),
+            "correlatedWith": [f"evt-{j}" for j in range(i) if random.random() > 0.5],
+            **evt
+        })
+
+    return {"events": events}
+
+
+# =========================================
+# Cybersecurity OT API
+# =========================================
+
+@app.get("/api/security/ot/overview")
+async def get_ot_security_overview():
+    """Get OT security overview."""
+    import random
+
+    return {
+        "securityScore": 76,
+        "complianceScore": 82,
+        "totalThreats": 19,
+        "criticalVulnerabilities": 1,
+        "openVulnerabilities": 4,
+        "zonesProtected": 7,
+        "lastScan": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+
+@app.get("/api/security/ot/events")
+async def get_security_events():
+    """Get recent security events."""
+    import random
+    from datetime import datetime, timedelta
+
+    now = datetime.now(datetime.timezone.utc)
+    event_types = ["auth_failure", "port_scan", "modbus_anomaly", "firmware_change", "new_device"]
+    severities = ["critical", "high", "warning", "medium", "low"]
+    zones = ["Zone 5", "Zone 4", "Zone 3.5", "Zone 3", "Zone 2"]
+
+    events = []
+    for i in range(10):
+        events.append({
+            "id": f"sec-evt-{i}",
+            "type": random.choice(event_types),
+            "severity": random.choice(severities),
+            "zone": random.choice(zones),
+            "source": f"192.168.{random.randint(1,10)}.{random.randint(1,255)}",
+            "timestamp": (now - timedelta(minutes=i*5)).isoformat(),
+            "details": f"Security event detected"
+        })
+
+    return {"events": events}
+
+@app.get("/api/security/ot/vulnerabilities")
+async def get_ot_vulnerabilities():
+    """Get OT vulnerabilities."""
+    vulnerabilities = [
+        {"id": "CVE-2024-1234", "severity": "critical", "cvss": 9.8, "asset": "PLC Siemens S7-1500", "zone": "Zone 2", "status": "open", "age": 5},
+        {"id": "CVE-2024-5678", "severity": "high", "cvss": 8.2, "asset": "SCADA Server", "zone": "Zone 3", "status": "mitigated", "age": 12},
+        {"id": "CVE-2023-9012", "severity": "high", "cvss": 7.5, "asset": "Historian DB", "zone": "Zone 4", "status": "open", "age": 45},
+        {"id": "CVE-2024-3456", "severity": "medium", "cvss": 5.3, "asset": "HMI Panel", "zone": "Zone 3", "status": "patched", "age": 3}
+    ]
+    return {"vulnerabilities": vulnerabilities}
+
+@app.get("/api/security/ot/compliance")
+async def get_ot_compliance():
+    """Get OT compliance status across frameworks."""
+    compliance = {
+        "frameworks": [
+            {"name": "IEC 62443", "score": 78, "status": "partial"},
+            {"name": "NIS 2", "score": 85, "status": "compliant"},
+            {"name": "ISO 27001", "score": 92, "status": "compliant"},
+            {"name": "NIST CSF", "score": 70, "status": "partial"},
+            {"name": "CIS Controls", "score": 65, "status": "partial"},
+            {"name": "SOC 2", "score": 88, "status": "compliant"}
+        ],
+        "overallScore": 82,
+        "lastAudit": "2024-01-15",
+        "nextAudit": "2024-07-15"
+    }
+    return compliance
+
 
 # =========================================
 # Background Tasks

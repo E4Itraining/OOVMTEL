@@ -42,3 +42,7 @@ build/
 package-lock.json
 yarn.lock
 .npm/
+
+# Vitest test reports
+html/
+coverage/

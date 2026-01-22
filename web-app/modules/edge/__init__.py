@@ -12,7 +12,7 @@ Features:
 - Bandwidth optimization
 """
 
-from .agent import EdgeAgent
+from .agent import EdgeAgent, EdgeAgentManager
 from .models import (
     EdgeConfig,
     EdgeMetrics,
@@ -29,6 +29,7 @@ from .sync_manager import SyncManager
 
 __all__ = [
     'EdgeAgent',
+    'EdgeAgentManager',
     'EdgeConfig',
     'EdgeMetrics',
     'EdgeStatus',

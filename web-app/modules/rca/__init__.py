@@ -15,6 +15,8 @@ Features:
 from .engine import RCAEngine
 from .models import (
     Incident,
+    IncidentSeverity,
+    IncidentCategory,
     CausalNode,
     CausalEdge,
     CausalGraph,
@@ -29,6 +31,8 @@ from .graph_builder import CausalGraphBuilder
 __all__ = [
     'RCAEngine',
     'Incident',
+    'IncidentSeverity',
+    'IncidentCategory',
     'CausalNode',
     'CausalEdge',
     'CausalGraph',

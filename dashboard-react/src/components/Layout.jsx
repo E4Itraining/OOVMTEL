@@ -55,6 +55,7 @@ import NotificationCenter from './NotificationCenter'
 import FavoritesSystem, { FavoriteButton } from './FavoritesSystem'
 import ExportSystem from './ExportSystem'
 import OnboardingTour, { StartTourButton } from './OnboardingTour'
+import PersonaJourneyGuide from './PersonaJourneyGuide'
 
 // Dynamic navigation configuration based on profile
 const getNavConfig = (t, userMode) => {
@@ -93,6 +94,41 @@ const getNavConfig = (t, userMode) => {
       path: '/impact-analysis',
       icon: Target,
       getLabel: () => t('nav.main.impactAnalysis') || 'Impact & Préconisations',
+      submenu: []
+    },
+    {
+      id: 'impact-chain',
+      path: '/impact-chain',
+      icon: GitBranch,
+      getLabel: () => t('nav.main.impactChain') || 'Chaîne d\'Impact IT/OT',
+      submenu: []
+    },
+    {
+      id: 'simulators',
+      path: '/simulators',
+      icon: Radio,
+      getLabel: () => t('nav.main.simulators') || 'Lanceur Simulateurs',
+      submenu: []
+    },
+    {
+      id: 'industrial-observability',
+      path: '/industrial-observability',
+      icon: Factory,
+      getLabel: () => t('nav.main.industrialObs') || 'Observabilite Industrielle',
+      submenu: []
+    },
+    {
+      id: 'correlation',
+      path: '/correlation',
+      icon: Network,
+      getLabel: () => t('nav.main.correlation') || 'Correlation IT-OT-IA',
+      submenu: []
+    },
+    {
+      id: 'cybersecurity-ot',
+      path: '/cybersecurity-ot',
+      icon: ShieldAlert,
+      getLabel: () => t('nav.main.cybersecurityOT') || 'Cybersecurite OT/IT',
       submenu: []
     }
   ]
@@ -175,6 +211,7 @@ const getNavConfig = (t, userMode) => {
     { id: 'opensearch', path: '/opensearch', icon: Search, getLabel: () => t('nav.main.opensearch') },
     { id: 'kafka', path: '/kafka', icon: MessageSquare, getLabel: () => t('nav.main.kafka') },
     { id: 'observability', path: '/observability', icon: Shield, getLabel: () => t('nav.main.observability') },
+    { id: 'ai-observability', path: '/ai-observability', icon: Brain, getLabel: () => t('nav.main.aiObservability') || 'AI Observability' },
     { id: 'security', path: '/security', icon: Lock, getLabel: () => t('nav.main.security') }
   ]
 
@@ -673,6 +710,9 @@ function Layout() {
 
       {/* Onboarding Tour Overlay */}
       <OnboardingTour />
+
+      {/* Persona Journey Guide */}
+      <PersonaJourneyGuide />
     </div>
   )
 }

@@ -66,7 +66,7 @@ function App() {
                       <Route path="opensearch" element={<OpenSearchView />} />
                       <Route path="kafka" element={<KafkaView />} />
                       <Route path="observability" element={<ObservabilityRemediationView />} />
-                      <Route path="security" element={<SecurityComplianceView />} />
+                      <Route path="security" element={<ErrorBoundary><SecurityComplianceView /></ErrorBoundary>} />
                       <Route path="impact-analysis" element={<ImpactAnalysisView />} />
                       {/* Role-specific dashboards */}
                       <Route path="dpo-dashboard" element={<DPODashboardView />} />
