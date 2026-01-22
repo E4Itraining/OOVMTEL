@@ -13,7 +13,8 @@ import {
   MessageSquare,
   Shield,
   Activity,
-  Sparkles
+  Sparkles,
+  Brain
 } from 'lucide-react'
 import { useI18n } from '../i18n'
 
@@ -85,6 +86,14 @@ const TOUR_STEPS = [
     description: 'Gérez vos SLOs, incidents et la remédiation automatique.',
     icon: Activity,
     path: '/observability'
+  },
+  {
+    id: 'llm-observability',
+    target: '[data-tour="llm-observability"]',
+    title: 'Observabilité LLM',
+    description: 'Surveillez les performances de vos modèles IA : latence, tokens, coûts et taux d\'erreur. Visualisez les métriques par fournisseur.',
+    icon: Brain,
+    path: '/observability/llm'
   },
   {
     id: 'complete',

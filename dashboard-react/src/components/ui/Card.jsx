@@ -57,11 +57,11 @@ export function MetricCard({ label, value, unit, trend, trendValue, icon: Icon, 
       onClick={onClick}
       hoverable={!!onClick}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="stat-label">{label}</p>
+      <div className="flex items-start justify-between" role="region" aria-label={label}>
+        <div aria-live="polite" aria-atomic="true">
+          <p className="stat-label" id={`metric-label-${label?.replace(/\s+/g, '-').toLowerCase()}`}>{label}</p>
           <div className="flex items-baseline gap-1 mt-1">
-            <span className="stat-value">{value}</span>
+            <span className="stat-value" aria-describedby={`metric-label-${label?.replace(/\s+/g, '-').toLowerCase()}`}>{value}</span>
             {unit && <span className="text-gray-400 text-sm">{unit}</span>}
           </div>
           {trend && (

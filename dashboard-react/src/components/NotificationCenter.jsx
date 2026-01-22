@@ -84,9 +84,12 @@ function NotificationItem({ notification, onMarkRead, onDismiss }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       className={`p-4 border-b border-industrial-border/50 last:border-0 ${!notification.read ? 'bg-industrial-accent/5' : ''}`}
+      role={notification.type === 'critical' ? 'alert' : 'article'}
+      aria-live={notification.type === 'critical' ? 'assertive' : 'polite'}
+      aria-label={`${notification.type} notification: ${notification.title}`}
     >
       <div className="flex gap-3">
-        <div className={`w-10 h-10 rounded-lg ${config.bg} flex items-center justify-center flex-shrink-0`}>
+        <div className={`w-10 h-10 rounded-lg ${config.bg} flex items-center justify-center flex-shrink-0`} aria-hidden="true">
           <Icon className={`w-5 h-5 ${config.color}`} />
         </div>
         <div className="flex-1 min-w-0">
@@ -113,16 +116,18 @@ function NotificationItem({ notification, onMarkRead, onDismiss }) {
                   onClick={() => onMarkRead(notification.id)}
                   className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white transition-colors"
                   title="Marquer comme lu"
+                  aria-label={`Mark notification "${notification.title}" as read`}
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-4 h-4" aria-hidden="true" />
                 </button>
               )}
               <button
                 onClick={() => onDismiss(notification.id)}
                 className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-red-400 transition-colors"
                 title="Supprimer"
+                aria-label={`Delete notification "${notification.title}"`}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -217,7 +222,13 @@ function NotificationCenter({ isOpen, onClose, anchorRef }) {
         </div>
 
         {/* Notifications List */}
-        <div className="max-h-80 overflow-y-auto">
+        <div
+          className="max-h-80 overflow-y-auto"
+          role="log"
+          aria-live="polite"
+          aria-label="Notifications list"
+          aria-relevant="additions removals"
+        >
           {filteredNotifications.length > 0 ? (
             <AnimatePresence>
               {filteredNotifications.map(notification => (
@@ -230,8 +241,8 @@ function NotificationCenter({ isOpen, onClose, anchorRef }) {
               ))}
             </AnimatePresence>
           ) : (
-            <div className="px-4 py-8 text-center">
-              <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-2" />
+            <div className="px-4 py-8 text-center" role="status">
+              <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-2" aria-hidden="true" />
               <p className="text-gray-400">Aucune notification</p>
             </div>
           )}

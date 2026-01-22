@@ -40,8 +40,13 @@ export function StatusBadge({ status, label, size = 'md' }) {
   }
 
   return (
-    <span className={`badge badge-${config.color} inline-flex items-center ${sizeClasses[size]}`}>
-      <Icon className={`${iconSizes[size]} ${status === 'pending' ? 'animate-spin' : ''}`} />
+    <span
+      className={`badge badge-${config.color} inline-flex items-center ${sizeClasses[size]}`}
+      role="status"
+      aria-live="polite"
+      aria-label={`Status: ${displayLabel}`}
+    >
+      <Icon className={`${iconSizes[size]} ${status === 'pending' ? 'animate-spin' : ''}`} aria-hidden="true" />
       <span>{displayLabel}</span>
     </span>
   )
@@ -88,13 +93,17 @@ export function HealthIndicator({ services }) {
   const healthPercent = total > 0 ? (healthy / total) * 100 : 0
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-400">System Health</span>
-        <span className={`text-lg font-semibold ${
-          healthPercent >= 80 ? 'text-green-400' :
-          healthPercent >= 50 ? 'text-yellow-400' : 'text-red-400'
-        }`}>
+    <div className="space-y-3" role="region" aria-label="System Health Status">
+      <div className="flex items-center justify-between" aria-live="polite" aria-atomic="true">
+        <span className="text-sm text-gray-400" id="health-label">System Health</span>
+        <span
+          className={`text-lg font-semibold ${
+            healthPercent >= 80 ? 'text-green-400' :
+            healthPercent >= 50 ? 'text-yellow-400' : 'text-red-400'
+          }`}
+          aria-describedby="health-label"
+          aria-label={`System health: ${Math.round(healthPercent)} percent`}
+        >
           {Math.round(healthPercent)}%
         </span>
       </div>
@@ -158,11 +167,18 @@ export function AlertBanner({ type = 'info', message, onDismiss }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       className={`${config.bg} ${config.border} ${config.text} border rounded-lg p-4 flex items-center justify-between`}
+      role={type === 'error' || type === 'warning' ? 'alert' : 'status'}
+      aria-live={type === 'error' ? 'assertive' : 'polite'}
+      aria-atomic="true"
     >
       <span>{message}</span>
       {onDismiss && (
-        <button onClick={onDismiss} className="hover:opacity-70">
-          <XCircle className="w-5 h-5" />
+        <button
+          onClick={onDismiss}
+          className="hover:opacity-70"
+          aria-label="Dismiss notification"
+        >
+          <XCircle className="w-5 h-5" aria-hidden="true" />
         </button>
       )}
     </motion.div>

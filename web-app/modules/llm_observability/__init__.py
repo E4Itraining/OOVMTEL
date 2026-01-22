@@ -51,6 +51,18 @@ from .industrial_data_normalizer import (
     get_industrial_normalizer,
     normalize_industrial_data,
 )
+from .errors import (
+    ErrorCode,
+    ErrorDetail,
+    LLMObservabilityError,
+    get_error_detail,
+    create_error_response,
+    module_not_available_error,
+    invalid_provider_error,
+    invalid_time_window_error,
+    no_data_error,
+    internal_error,
+)
 
 __all__ = [
     # Telemetry
@@ -81,6 +93,17 @@ __all__ = [
     "trace_llm_call",
     "measure_llm_latency",
     "LLMCallContext",
+    # Errors
+    "ErrorCode",
+    "ErrorDetail",
+    "LLMObservabilityError",
+    "get_error_detail",
+    "create_error_response",
+    "module_not_available_error",
+    "invalid_provider_error",
+    "invalid_time_window_error",
+    "no_data_error",
+    "internal_error",
 ]
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
