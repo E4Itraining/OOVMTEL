@@ -1594,6 +1594,8 @@ async def process_batch(request: BatchProcessRequest):
 
 # ML Training
 class MLTrainRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     model_name: str
     model_type: str  # neural_network, random_forest, xgboost, lstm
     training_data: Dict[str, Any] = {"size": 10000}
@@ -2080,6 +2082,8 @@ async def get_ai_transparency_report(model_id: str):
 
 
 class ModelRegistrationRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     name: str
     version: str
     model_type: str
