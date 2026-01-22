@@ -8,6 +8,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
 from enum import Enum
+from threading import Lock
 
 
 class ExportProtocol(str, Enum):
@@ -274,32 +275,37 @@ class LLMObservabilityConfig:
         }
 
 
-# Singleton pattern
+# Singleton pattern with thread-safety
 _config: Optional[LLMObservabilityConfig] = None
+_config_lock = Lock()
 
 
 def get_observability_config() -> LLMObservabilityConfig:
     """
-    Get observability config singleton.
+    Get observability config singleton (thread-safe).
 
     Returns:
         LLMObservabilityConfig instance loaded from environment
     """
     global _config
     if _config is None:
-        _config = LLMObservabilityConfig.from_env()
+        with _config_lock:
+            # Double-checked locking pattern
+            if _config is None:
+                _config = LLMObservabilityConfig.from_env()
     return _config
 
 
 def reload_config() -> LLMObservabilityConfig:
     """
-    Reload configuration from environment.
+    Reload configuration from environment (thread-safe).
 
     Returns:
         New LLMObservabilityConfig instance
     """
     global _config
-    _config = LLMObservabilityConfig.from_env()
+    with _config_lock:
+        _config = LLMObservabilityConfig.from_env()
     return _config
 
 

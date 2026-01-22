@@ -26,6 +26,7 @@ from .normalizer import (
     NormalizedLLMEvent,
     ProviderDataFormat,
     CompletionStatus,
+    get_provider_enum,
 )
 from .metrics import get_llm_metrics
 
@@ -306,15 +307,8 @@ class LLMTelemetry:
         Returns:
             NormalizedLLMEvent with all telemetry data
         """
-        # Map provider string to enum
-        provider_map = {
-            "mistral": ProviderDataFormat.MISTRAL,
-            "claude": ProviderDataFormat.CLAUDE,
-            "anthropic": ProviderDataFormat.CLAUDE,
-            "openai": ProviderDataFormat.OPENAI,
-            "ollama": ProviderDataFormat.OLLAMA,
-        }
-        provider_enum = provider_map.get(provider.lower(), ProviderDataFormat.CUSTOM)
+        # Map provider string to enum using centralized function
+        provider_enum = get_provider_enum(provider)
 
         # Normalize the event
         event = self._normalizer.normalize_response(
@@ -361,13 +355,8 @@ class LLMTelemetry:
         Returns:
             NormalizedLLMEvent with error details
         """
-        provider_map = {
-            "mistral": ProviderDataFormat.MISTRAL,
-            "claude": ProviderDataFormat.CLAUDE,
-            "openai": ProviderDataFormat.OPENAI,
-            "ollama": ProviderDataFormat.OLLAMA,
-        }
-        provider_enum = provider_map.get(provider.lower(), ProviderDataFormat.CUSTOM)
+        # Map provider string to enum using centralized function
+        provider_enum = get_provider_enum(provider)
 
         # Normalize error
         normalized_error = self._normalizer.normalize_error(
