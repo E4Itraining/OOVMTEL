@@ -17,6 +17,321 @@ const CONFIG = {
     animations: true
 };
 
+// =========================================
+// Multilingual Translations (FR/EN/NL)
+// =========================================
+const TRANSLATIONS = {
+    fr: {
+        // Navigation
+        unifiedView: 'Vue Unifiée',
+        businessView: 'Vue Business',
+        techView: 'Vue Tech',
+        tagline: "Plateforme d'Observabilité Industrielle",
+        lastUpdate: 'Mise à jour:',
+
+        // Business KPIs
+        businessKPIs: 'KPIs Business',
+        oee: 'Efficacité Globale des Équipements',
+        target85: 'Objectif: 85%',
+        qualityRate: 'Taux de Qualité',
+        productionToday: 'Production du Jour',
+        activeAlarms: 'Alarmes Actives',
+        units: 'unités',
+        critical: 'critiques',
+
+        // Infrastructure
+        infrastructureHealth: 'Santé Infrastructure',
+        metricsIngestion: 'Ingestion Métriques',
+        logsIngestion: 'Ingestion Logs',
+        pipelineLatency: 'Latence Pipeline',
+        errorRate: "Taux d'Erreur",
+
+        // Sections
+        problemsImpacts: 'Problèmes & Impacts',
+        crossDomainInsights: 'Analyses Transversales',
+        businessTechCorrelation: 'Corrélation Business-Tech',
+        eventTimeline: 'Chronologie des Événements',
+
+        // Business View
+        productionQualityKPIs: 'KPIs Production & Qualité',
+        oeeLabel: 'Efficacité Globale des Équipements (OEE)',
+        worldClass: 'World Class: 85%+',
+        availability: 'Disponibilité',
+        performance: 'Performance',
+        quality: 'Qualité',
+        productionByProduct: 'Production par Produit',
+        equipmentMonitoring: 'Surveillance des Équipements',
+        processParameters: 'Paramètres Process',
+        temperatureTrends: 'Tendances Température',
+        pressureMonitoring: 'Surveillance Pression',
+        powerConsumption: 'Consommation Électrique',
+        vibrationAnalysis: 'Analyse Vibration',
+
+        // Tech View
+        serviceHealthOverview: 'Vue d\'Ensemble des Services',
+        resourceUtilization: 'Utilisation Ressources',
+        cpuUsage: 'Utilisation CPU',
+        memoryUsage: 'Utilisation Mémoire',
+        dataPipelineMetrics: 'Métriques Pipeline de Données',
+        otelReceiverThroughput: 'Débit OTEL Receiver',
+        otelExporterThroughput: 'Débit OTEL Exporter',
+        kafkaMessagesPerSec: 'Messages Kafka/sec',
+        vmWriteRate: 'Taux Écriture VictoriaMetrics',
+        storageMetrics: 'Métriques Stockage',
+        activeSeries: 'Séries Actives',
+        storageSize: 'Taille Stockage',
+        queryLatency: 'Latence Requêtes (P99)',
+        documents: 'Documents',
+        clusterHealth: 'Santé Cluster',
+        nodes: 'Nœuds',
+        topics: 'Topics',
+        partitions: 'Partitions',
+        consumerLag: 'Lag Consommateurs',
+
+        // Time
+        justNow: "à l'instant",
+        secondsAgo: 'il y a {n}s',
+        minutesAgo: 'il y a {n}min',
+        hoursAgo: 'il y a {n}h',
+
+        // Toast
+        systemInitialized: 'Système initialisé',
+        dashboardReady: 'Dashboard OOVMTEL prêt'
+    },
+    en: {
+        // Navigation
+        unifiedView: 'Unified View',
+        businessView: 'Business View',
+        techView: 'Tech View',
+        tagline: 'Industrial Observability Platform',
+        lastUpdate: 'Last update:',
+
+        // Business KPIs
+        businessKPIs: 'Business KPIs',
+        oee: 'Overall Equipment Effectiveness',
+        target85: 'Target: 85%',
+        qualityRate: 'Quality Rate',
+        productionToday: "Today's Production",
+        activeAlarms: 'Active Alarms',
+        units: 'units',
+        critical: 'critical',
+
+        // Infrastructure
+        infrastructureHealth: 'Infrastructure Health',
+        metricsIngestion: 'Metrics Ingestion',
+        logsIngestion: 'Logs Ingestion',
+        pipelineLatency: 'Pipeline Latency',
+        errorRate: 'Error Rate',
+
+        // Sections
+        problemsImpacts: 'Problems & Impacts',
+        crossDomainInsights: 'Cross-Domain Insights',
+        businessTechCorrelation: 'Business-Tech Correlation',
+        eventTimeline: 'Event Timeline',
+
+        // Business View
+        productionQualityKPIs: 'Production & Quality KPIs',
+        oeeLabel: 'Overall Equipment Effectiveness (OEE)',
+        worldClass: 'World Class: 85%+',
+        availability: 'Availability',
+        performance: 'Performance',
+        quality: 'Quality',
+        productionByProduct: 'Production by Product',
+        equipmentMonitoring: 'Equipment Monitoring',
+        processParameters: 'Process Parameters',
+        temperatureTrends: 'Temperature Trends',
+        pressureMonitoring: 'Pressure Monitoring',
+        powerConsumption: 'Power Consumption',
+        vibrationAnalysis: 'Vibration Analysis',
+
+        // Tech View
+        serviceHealthOverview: 'Service Health Overview',
+        resourceUtilization: 'Resource Utilization',
+        cpuUsage: 'CPU Usage',
+        memoryUsage: 'Memory Usage',
+        dataPipelineMetrics: 'Data Pipeline Metrics',
+        otelReceiverThroughput: 'OTEL Receiver Throughput',
+        otelExporterThroughput: 'OTEL Exporter Throughput',
+        kafkaMessagesPerSec: 'Kafka Messages/sec',
+        vmWriteRate: 'VictoriaMetrics Write Rate',
+        storageMetrics: 'Storage Metrics',
+        activeSeries: 'Active Series',
+        storageSize: 'Storage Size',
+        queryLatency: 'Query Latency (P99)',
+        documents: 'Documents',
+        clusterHealth: 'Cluster Health',
+        nodes: 'Nodes',
+        topics: 'Topics',
+        partitions: 'Partitions',
+        consumerLag: 'Consumer Lag',
+
+        // Time
+        justNow: 'just now',
+        secondsAgo: '{n}s ago',
+        minutesAgo: '{n}min ago',
+        hoursAgo: '{n}h ago',
+
+        // Toast
+        systemInitialized: 'System initialized',
+        dashboardReady: 'OOVMTEL Dashboard ready'
+    },
+    nl: {
+        // Navigation
+        unifiedView: 'Uniforme Weergave',
+        businessView: 'Business Weergave',
+        techView: 'Tech Weergave',
+        tagline: 'Industrieel Observabiliteitsplatform',
+        lastUpdate: 'Laatste update:',
+
+        // Business KPIs
+        businessKPIs: 'Business KPIs',
+        oee: 'Algehele Apparatuur Effectiviteit',
+        target85: 'Doel: 85%',
+        qualityRate: 'Kwaliteitspercentage',
+        productionToday: 'Productie Vandaag',
+        activeAlarms: 'Actieve Alarmen',
+        units: 'eenheden',
+        critical: 'kritiek',
+
+        // Infrastructure
+        infrastructureHealth: 'Infrastructuur Gezondheid',
+        metricsIngestion: 'Metriek Opname',
+        logsIngestion: 'Log Opname',
+        pipelineLatency: 'Pipeline Latentie',
+        errorRate: 'Foutpercentage',
+
+        // Sections
+        problemsImpacts: 'Problemen & Impacts',
+        crossDomainInsights: 'Cross-Domein Inzichten',
+        businessTechCorrelation: 'Business-Tech Correlatie',
+        eventTimeline: 'Gebeurtenis Tijdlijn',
+
+        // Business View
+        productionQualityKPIs: 'Productie & Kwaliteit KPIs',
+        oeeLabel: 'Algehele Apparatuur Effectiviteit (OEE)',
+        worldClass: 'World Class: 85%+',
+        availability: 'Beschikbaarheid',
+        performance: 'Prestatie',
+        quality: 'Kwaliteit',
+        productionByProduct: 'Productie per Product',
+        equipmentMonitoring: 'Apparatuur Monitoring',
+        processParameters: 'Proces Parameters',
+        temperatureTrends: 'Temperatuur Trends',
+        pressureMonitoring: 'Druk Monitoring',
+        powerConsumption: 'Stroomverbruik',
+        vibrationAnalysis: 'Trillingsanalyse',
+
+        // Tech View
+        serviceHealthOverview: 'Service Gezondheidsoverzicht',
+        resourceUtilization: 'Resource Gebruik',
+        cpuUsage: 'CPU Gebruik',
+        memoryUsage: 'Geheugen Gebruik',
+        dataPipelineMetrics: 'Data Pipeline Metrieken',
+        otelReceiverThroughput: 'OTEL Ontvanger Doorvoer',
+        otelExporterThroughput: 'OTEL Exporteur Doorvoer',
+        kafkaMessagesPerSec: 'Kafka Berichten/sec',
+        vmWriteRate: 'VictoriaMetrics Schrijfsnelheid',
+        storageMetrics: 'Opslag Metrieken',
+        activeSeries: 'Actieve Series',
+        storageSize: 'Opslag Grootte',
+        queryLatency: 'Query Latentie (P99)',
+        documents: 'Documenten',
+        clusterHealth: 'Cluster Gezondheid',
+        nodes: 'Nodes',
+        topics: 'Topics',
+        partitions: 'Partities',
+        consumerLag: 'Consumer Lag',
+
+        // Time
+        justNow: 'zojuist',
+        secondsAgo: '{n}s geleden',
+        minutesAgo: '{n}min geleden',
+        hoursAgo: '{n}u geleden',
+
+        // Toast
+        systemInitialized: 'Systeem geinitialiseerd',
+        dashboardReady: 'OOVMTEL Dashboard klaar'
+    }
+};
+
+// Current language state
+let currentLanguage = localStorage.getItem('oovmtel_language') || 'fr';
+
+// =========================================
+// Language Switcher Functions
+// =========================================
+
+function t(key) {
+    return TRANSLATIONS[currentLanguage][key] || TRANSLATIONS['en'][key] || key;
+}
+
+function setLanguage(lang) {
+    if (!TRANSLATIONS[lang]) return;
+
+    currentLanguage = lang;
+    localStorage.setItem('oovmtel_language', lang);
+    document.documentElement.lang = lang;
+
+    // Update all translatable elements
+    updateTranslations();
+
+    // Update language switcher UI
+    updateLanguageSwitcherUI();
+}
+
+function updateTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const translation = t(key);
+        if (translation) {
+            el.textContent = translation;
+        }
+    });
+}
+
+function updateLanguageSwitcherUI() {
+    const currentLangEl = document.getElementById('currentLang');
+    if (currentLangEl) {
+        currentLangEl.textContent = currentLanguage.toUpperCase();
+    }
+
+    document.querySelectorAll('.lang-option').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
+    });
+}
+
+function initLanguageSwitcher() {
+    const switcher = document.getElementById('languageSwitcher');
+    const toggle = document.getElementById('langToggle');
+    const dropdown = document.getElementById('langDropdown');
+
+    if (!switcher || !toggle) return;
+
+    // Toggle dropdown
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        switcher.classList.toggle('open');
+    });
+
+    // Language selection
+    document.querySelectorAll('.lang-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setLanguage(btn.dataset.lang);
+            switcher.classList.remove('open');
+        });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (!switcher.contains(e.target)) {
+            switcher.classList.remove('open');
+        }
+    });
+
+    // Initialize with current language
+    setLanguage(currentLanguage);
+}
+
 // Application State
 const state = {
     currentView: 'unified',
@@ -60,7 +375,8 @@ function formatBytes(bytes) {
 }
 
 function formatTime(date) {
-    return date.toLocaleTimeString('fr-FR', {
+    const localeMap = { fr: 'fr-FR', en: 'en-GB', nl: 'nl-NL' };
+    return date.toLocaleTimeString(localeMap[currentLanguage] || 'fr-FR', {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -70,12 +386,12 @@ function formatTime(date) {
 
 function formatTimeAgo(date) {
     const seconds = Math.floor((new Date() - date) / 1000);
-    if (seconds < 5) return 'à l\'instant';
-    if (seconds < 60) return `il y a ${seconds}s`;
+    if (seconds < 5) return t('justNow');
+    if (seconds < 60) return t('secondsAgo').replace('{n}', seconds);
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `il y a ${minutes}min`;
+    if (minutes < 60) return t('minutesAgo').replace('{n}', minutes);
     const hours = Math.floor(minutes / 60);
-    return `il y a ${hours}h`;
+    return t('hoursAgo').replace('{n}', hours);
 }
 
 function randomInRange(min, max) {
@@ -899,6 +1215,9 @@ function startTimeAgoUpdater() {
 async function init() {
     console.log('OOVMTEL Unified View initializing...');
 
+    // Initialize language switcher
+    initLanguageSwitcher();
+
     // Initialize view toggle
     initViewToggle();
 
@@ -922,7 +1241,7 @@ async function init() {
     }, CONFIG.refreshInterval);
 
     console.log('OOVMTEL Unified View initialized');
-    showToast('info', 'Système initialisé', 'Dashboard OOVMTEL prêt');
+    showToast('info', t('systemInitialized'), t('dashboardReady'));
 }
 
 // Start the application

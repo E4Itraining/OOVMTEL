@@ -19,21 +19,43 @@
                     <span class="logo-icon">O</span>
                     <span class="logo-text">OVMTEL</span>
                 </div>
-                <span class="tagline">Industrial Observability Platform</span>
+                <span class="tagline" data-i18n="tagline">Plateforme d'Observabilité Industrielle</span>
             </div>
             <nav class="view-toggle">
-                <button class="toggle-btn active" data-view="unified">Unified View</button>
-                <button class="toggle-btn" data-view="business">Business View</button>
-                <button class="toggle-btn" data-view="tech">Tech View</button>
+                <button class="toggle-btn active" data-view="unified" data-i18n="unifiedView">Vue Unifiée</button>
+                <button class="toggle-btn" data-view="business" data-i18n="businessView">Vue Business</button>
+                <button class="toggle-btn" data-view="tech" data-i18n="techView">Vue Tech</button>
             </nav>
             <div class="header-actions">
+                <!-- Language Switcher -->
+                <div class="language-switcher" id="languageSwitcher">
+                    <button class="lang-btn" id="langToggle" title="Change language">
+                        <span class="lang-icon">🌐</span>
+                        <span class="lang-code" id="currentLang">FR</span>
+                        <span class="lang-arrow">▼</span>
+                    </button>
+                    <div class="lang-dropdown" id="langDropdown">
+                        <button class="lang-option active" data-lang="fr">
+                            <span class="lang-flag">FR</span>
+                            <span class="lang-name">Français</span>
+                        </button>
+                        <button class="lang-option" data-lang="en">
+                            <span class="lang-flag">EN</span>
+                            <span class="lang-name">English</span>
+                        </button>
+                        <button class="lang-option" data-lang="nl">
+                            <span class="lang-flag">NL</span>
+                            <span class="lang-name">Nederlands</span>
+                        </button>
+                    </div>
+                </div>
                 <div class="refresh-indicator" id="refreshIndicator">
                     <span class="pulse"></span>
                     <span class="refresh-text">LIVE</span>
                     <span class="connection-status" id="connectionStatus" title="Connexion temps réel"></span>
                 </div>
                 <div class="update-info">
-                    <span class="last-update">Mise à jour: <span id="lastUpdateTime">--:--:--</span></span>
+                    <span class="last-update" data-i18n="lastUpdate">Mise à jour:</span> <span id="lastUpdateTime">--:--:--</span>
                     <span class="update-ago" id="updateAgo"></span>
                 </div>
             </div>
@@ -47,13 +69,13 @@
                 <section class="metrics-section business-summary">
                     <h2 class="section-title">
                         <span class="icon business-icon"></span>
-                        Business KPIs
+                        <span data-i18n="businessKPIs">KPIs Business</span>
                     </h2>
                     <div class="metrics-grid">
                         <div class="metric-card primary">
                             <div class="metric-header">
-                                <span class="metric-label">Overall Equipment Effectiveness</span>
-                                <span class="metric-badge good">Target: 85%</span>
+                                <span class="metric-label" data-i18n="oee">Efficacité Globale des Équipements</span>
+                                <span class="metric-badge good" data-i18n="target85">Objectif: 85%</span>
                             </div>
                             <div class="metric-value">
                                 <span id="oeeValue" class="big-number">--</span>
@@ -63,7 +85,7 @@
                         </div>
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Quality Rate</span>
+                                <span class="metric-label" data-i18n="qualityRate">Taux de Qualité</span>
                             </div>
                             <div class="metric-value">
                                 <span id="qualityValue" class="big-number">--</span>
@@ -73,21 +95,21 @@
                         </div>
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Production Today</span>
+                                <span class="metric-label" data-i18n="productionToday">Production du Jour</span>
                             </div>
                             <div class="metric-value">
                                 <span id="productionValue" class="big-number">--</span>
-                                <span class="unit">units</span>
+                                <span class="unit" data-i18n="units">unités</span>
                             </div>
                             <div class="metric-trend" id="productionTrend"></div>
                         </div>
                         <div class="metric-card warning">
                             <div class="metric-header">
-                                <span class="metric-label">Active Alarms</span>
+                                <span class="metric-label" data-i18n="activeAlarms">Alarmes Actives</span>
                             </div>
                             <div class="metric-value">
                                 <span id="alarmsValue" class="big-number">--</span>
-                                <span class="unit">critical</span>
+                                <span class="unit" data-i18n="critical">critiques</span>
                             </div>
                             <div class="alarm-list" id="alarmList"></div>
                         </div>
@@ -98,7 +120,7 @@
                 <section class="metrics-section tech-summary">
                     <h2 class="section-title">
                         <span class="icon tech-icon"></span>
-                        Infrastructure Health
+                        <span data-i18n="infrastructureHealth">Santé Infrastructure</span>
                     </h2>
                     <div class="services-status" id="servicesStatus">
                         <!-- Services will be populated by JS -->
@@ -106,7 +128,7 @@
                     <div class="metrics-grid tech-grid">
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Metrics Ingestion</span>
+                                <span class="metric-label" data-i18n="metricsIngestion">Ingestion Métriques</span>
                             </div>
                             <div class="metric-value">
                                 <span id="metricsRateValue" class="big-number">--</span>
@@ -115,7 +137,7 @@
                         </div>
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Logs Ingestion</span>
+                                <span class="metric-label" data-i18n="logsIngestion">Ingestion Logs</span>
                             </div>
                             <div class="metric-value">
                                 <span id="logsRateValue" class="big-number">--</span>
@@ -124,7 +146,7 @@
                         </div>
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Pipeline Latency</span>
+                                <span class="metric-label" data-i18n="pipelineLatency">Latence Pipeline</span>
                             </div>
                             <div class="metric-value">
                                 <span id="latencyValue" class="big-number">--</span>
@@ -133,7 +155,7 @@
                         </div>
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Error Rate</span>
+                                <span class="metric-label" data-i18n="errorRate">Taux d'Erreur</span>
                             </div>
                             <div class="metric-value">
                                 <span id="errorRateValue" class="big-number">--</span>
@@ -147,7 +169,7 @@
                 <section class="metrics-section problems-impacts-section">
                     <h2 class="section-title">
                         <span class="icon problems-icon"></span>
-                        Problèmes & Impacts
+                        <span data-i18n="problemsImpacts">Problèmes & Impacts</span>
                         <span class="section-badge critical" id="problemsCount">0</span>
                     </h2>
                     <div class="problems-impacts-container" id="problemsImpactsContainer">
@@ -159,17 +181,17 @@
                 <section class="metrics-section insights-section">
                     <h2 class="section-title">
                         <span class="icon insights-icon"></span>
-                        Cross-Domain Insights
+                        <span data-i18n="crossDomainInsights">Analyses Transversales</span>
                     </h2>
                     <div class="insights-grid">
                         <div class="insight-card" id="correlationCard">
-                            <h3>Business-Tech Correlation</h3>
+                            <h3 data-i18n="businessTechCorrelation">Corrélation Business-Tech</h3>
                             <div class="correlation-matrix" id="correlationMatrix">
                                 <!-- Correlation data will be populated -->
                             </div>
                         </div>
                         <div class="insight-card" id="timelineCard">
-                            <h3>Event Timeline</h3>
+                            <h3 data-i18n="eventTimeline">Chronologie des Événements</h3>
                             <div class="timeline" id="eventTimeline">
                                 <!-- Timeline events will be populated -->
                             </div>
