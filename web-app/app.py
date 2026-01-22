@@ -284,6 +284,10 @@ async def shutdown_event():
 
 # Static files (using absolute path for reliability)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+# Mount assets directory at /assets for Vite build compatibility
+ASSETS_DIR = os.path.join(STATIC_DIR, "assets")
+if os.path.exists(ASSETS_DIR):
+    app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
 
 @app.get("/")
 async def root():
