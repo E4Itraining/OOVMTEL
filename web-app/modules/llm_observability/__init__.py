@@ -8,7 +8,8 @@ Features:
 - Distributed tracing for LLM calls (spans with full context)
 - Custom metrics (latency, tokens, costs, errors)
 - Structured logging with correlation IDs
-- Multi-provider data normalization
+- Multi-provider LLM data normalization
+- Industrial data normalization (SCADA, MES, PLM, OPC-UA)
 - Real-time dashboards via Grafana
 
 Semantic Conventions:
@@ -37,6 +38,16 @@ from .config import (
 from .decorators import (
     trace_llm_call,
     measure_llm_latency,
+    LLMCallContext,
+)
+from .industrial_data_normalizer import (
+    IndustrialDataNormalizer,
+    NormalizedIndustrialEvent,
+    IndustrialDataSource,
+    DataQuality,
+    EventType,
+    get_industrial_normalizer,
+    normalize_industrial_data,
 )
 
 __all__ = [
@@ -47,16 +58,25 @@ __all__ = [
     # Metrics
     "LLMMetrics",
     "get_llm_metrics",
-    # Normalizer
+    # LLM Normalizer
     "LLMDataNormalizer",
     "NormalizedLLMEvent",
     "ProviderDataFormat",
+    # Industrial Normalizer
+    "IndustrialDataNormalizer",
+    "NormalizedIndustrialEvent",
+    "IndustrialDataSource",
+    "DataQuality",
+    "EventType",
+    "get_industrial_normalizer",
+    "normalize_industrial_data",
     # Config
     "LLMObservabilityConfig",
     "get_observability_config",
     # Decorators
     "trace_llm_call",
     "measure_llm_latency",
+    "LLMCallContext",
 ]
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
