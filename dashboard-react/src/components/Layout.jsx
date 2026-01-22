@@ -40,7 +40,11 @@ import {
   Sparkles,
   UserCircle2,
   GitBranch,
-  Brain
+  Brain,
+  Radio,
+  Factory,
+  Network,
+  ShieldAlert
 } from 'lucide-react'
 import { useDashboard, USER_MODES } from '../context/DashboardContext'
 import { useRealTimeData } from '../hooks/useRealTimeData'
@@ -51,6 +55,7 @@ import NotificationCenter from './NotificationCenter'
 import FavoritesSystem, { FavoriteButton } from './FavoritesSystem'
 import ExportSystem from './ExportSystem'
 import OnboardingTour, { StartTourButton } from './OnboardingTour'
+import PersonaJourneyGuide from './PersonaJourneyGuide'
 
 // Dynamic navigation configuration based on profile
 const getNavConfig = (t, userMode) => {
@@ -96,6 +101,34 @@ const getNavConfig = (t, userMode) => {
       path: '/impact-chain',
       icon: GitBranch,
       getLabel: () => t('nav.main.impactChain') || 'Chaîne d\'Impact IT/OT',
+      submenu: []
+    },
+    {
+      id: 'simulators',
+      path: '/simulators',
+      icon: Radio,
+      getLabel: () => t('nav.main.simulators') || 'Lanceur Simulateurs',
+      submenu: []
+    },
+    {
+      id: 'industrial-observability',
+      path: '/industrial-observability',
+      icon: Factory,
+      getLabel: () => t('nav.main.industrialObs') || 'Observabilite Industrielle',
+      submenu: []
+    },
+    {
+      id: 'correlation',
+      path: '/correlation',
+      icon: Network,
+      getLabel: () => t('nav.main.correlation') || 'Correlation IT-OT-IA',
+      submenu: []
+    },
+    {
+      id: 'cybersecurity-ot',
+      path: '/cybersecurity-ot',
+      icon: ShieldAlert,
+      getLabel: () => t('nav.main.cybersecurityOT') || 'Cybersecurite OT/IT',
       submenu: []
     }
   ]
@@ -637,6 +670,9 @@ function Layout() {
 
       {/* Onboarding Tour Overlay */}
       <OnboardingTour />
+
+      {/* Persona Journey Guide */}
+      <PersonaJourneyGuide />
     </div>
   )
 }

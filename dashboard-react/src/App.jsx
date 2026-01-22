@@ -22,6 +22,10 @@ import SecurityComplianceView from './pages/SecurityComplianceView'
 import ImpactAnalysisView from './pages/ImpactAnalysisView'
 import ImpactChainPage from './pages/ImpactChainPage'
 import AIObservabilityPage from './pages/AIObservabilityPage'
+import SimulatorLauncher from './pages/SimulatorLauncher'
+import IndustrialObservabilityView from './pages/IndustrialObservabilityView'
+import CorrelationITOTAIView from './pages/CorrelationITOTAIView'
+import CybersecurityOTView from './pages/CybersecurityOTView'
 import ErrorBoundary from './components/ErrorBoundary'
 
 // Component to check if user should be redirected to welcome page
@@ -67,6 +71,10 @@ function App() {
                       <Route path="impact-analysis" element={<ImpactAnalysisView />} />
                       <Route path="impact-chain" element={<ImpactChainPage />} />
                       <Route path="ai-observability" element={<AIObservabilityPage />} />
+                      <Route path="simulators" element={<SimulatorLauncher />} />
+                      <Route path="industrial-observability" element={<IndustrialObservabilityView />} />
+                      <Route path="correlation" element={<CorrelationITOTAIView />} />
+                      <Route path="cybersecurity-ot" element={<CybersecurityOTView />} />
                     </Route>
                   </Routes>
                 </PersonaGuard>

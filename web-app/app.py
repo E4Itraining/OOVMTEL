@@ -2722,6 +2722,311 @@ async def record_model_inference(model_id: str, request: InferenceRecordRequest)
 
 
 # =========================================
+# Simulator Management API
+# =========================================
+
+# In-memory simulator state (in production, use Redis or similar)
+simulator_states = {}
+
+class SimulatorConfig(BaseModel):
+    rate: Optional[int] = 100
+    zones: Optional[List[str]] = None
+    metrics: Optional[List[str]] = None
+    anomalyRate: Optional[float] = 0.0
+
+class SimulatorStatus(BaseModel):
+    id: str
+    running: bool
+    config: SimulatorConfig
+    metrics: dict = {}
+    startedAt: Optional[str] = None
+
+@app.get("/api/simulators")
+async def get_simulators():
+    """Get status of all simulators."""
+    simulators = [
+        {"id": "scada", "name": "SCADA Simulator", "description": "Industrial SCADA data"},
+        {"id": "mes", "name": "MES Simulator", "description": "Manufacturing execution data"},
+        {"id": "plm", "name": "PLM Simulator", "description": "Product lifecycle data"},
+        {"id": "opcua", "name": "OPC-UA Simulator", "description": "OPC-UA node data"},
+        {"id": "it_infra", "name": "IT Infrastructure", "description": "IT metrics"},
+        {"id": "security", "name": "Security Events", "description": "Security events"}
+    ]
+
+    result = []
+    for sim in simulators:
+        state = simulator_states.get(sim["id"], {"running": False, "config": {}, "metrics": {}})
+        result.append({
+            **sim,
+            "running": state.get("running", False),
+            "config": state.get("config", {}),
+            "metrics": state.get("metrics", {}),
+            "startedAt": state.get("startedAt")
+        })
+
+    return {"simulators": result}
+
+@app.post("/api/simulators/{simulator_id}/start")
+async def start_simulator(simulator_id: str, config: SimulatorConfig = None):
+    """Start a simulator with optional configuration."""
+    import datetime
+
+    if config is None:
+        config = SimulatorConfig()
+
+    simulator_states[simulator_id] = {
+        "running": True,
+        "config": config.dict(),
+        "metrics": {"totalMessages": 0, "rate": config.rate},
+        "startedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+
+    logger.info(f"Started simulator: {simulator_id} with config: {config}")
+
+    return {
+        "status": "started",
+        "simulator_id": simulator_id,
+        "config": config.dict()
+    }
+
+@app.post("/api/simulators/{simulator_id}/stop")
+async def stop_simulator(simulator_id: str):
+    """Stop a simulator."""
+    if simulator_id in simulator_states:
+        simulator_states[simulator_id]["running"] = False
+        simulator_states[simulator_id]["stoppedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    logger.info(f"Stopped simulator: {simulator_id}")
+
+    return {"status": "stopped", "simulator_id": simulator_id}
+
+@app.get("/api/simulators/{simulator_id}/status")
+async def get_simulator_status(simulator_id: str):
+    """Get status of a specific simulator."""
+    state = simulator_states.get(simulator_id, {"running": False, "config": {}, "metrics": {}})
+    return {
+        "simulator_id": simulator_id,
+        **state
+    }
+
+class ScenarioConfig(BaseModel):
+    type: Optional[str] = None
+    duration: Optional[int] = None
+    anomalyRate: Optional[float] = 0.0
+    scenario: Optional[dict] = None
+
+@app.post("/api/scenarios/{scenario_id}/activate")
+async def activate_scenario(scenario_id: str, config: ScenarioConfig = None):
+    """Activate a predefined scenario."""
+    logger.info(f"Activating scenario: {scenario_id} with config: {config}")
+
+    return {
+        "status": "activated",
+        "scenario_id": scenario_id,
+        "config": config.dict() if config else {}
+    }
+
+@app.post("/api/scenarios/{scenario_id}/deactivate")
+async def deactivate_scenario(scenario_id: str):
+    """Deactivate a scenario."""
+    logger.info(f"Deactivating scenario: {scenario_id}")
+    return {"status": "deactivated", "scenario_id": scenario_id}
+
+
+# =========================================
+# Industrial Observability API
+# =========================================
+
+@app.get("/api/industrial/equipment")
+async def get_industrial_equipment():
+    """Get list of industrial equipment with health status."""
+    import random
+
+    equipment_types = ["MOTOR", "PUMP", "CONVEYOR", "ROBOT", "FURNACE", "PRESS", "CNC", "COMPRESSOR"]
+    zones = ["Production-Line-1", "Production-Line-2", "Assembly", "Utilities", "Packaging", "Welding"]
+
+    equipments = []
+    for i in range(12):
+        eq_type = equipment_types[i % len(equipment_types)]
+        health = 70 + random.random() * 30
+
+        equipments.append({
+            "id": f"{eq_type[:3]}-{str(i+1).zfill(3)}",
+            "type": eq_type,
+            "name": f"{eq_type.title()} {i+1}",
+            "zone": zones[i % len(zones)],
+            "level": i % 3,
+            "health": round(health, 1),
+            "status": "optimal" if health > 90 else "normal" if health > 70 else "degraded" if health > 50 else "critical",
+            "rul": random.randint(100, 900),
+            "alerts": [] if random.random() > 0.15 else [{"type": "warning", "message": "Value near threshold"}]
+        })
+
+    return {"equipment": equipments}
+
+@app.get("/api/industrial/zones")
+async def get_industrial_zones():
+    """Get ISA-95 zone information."""
+    zones = [
+        {"id": "zone-0", "name": "Zone 0 - Process", "level": 0, "securityLevel": "SL1"},
+        {"id": "zone-1", "name": "Zone 1 - Basic Control", "level": 1, "securityLevel": "SL2"},
+        {"id": "zone-2", "name": "Zone 2 - Area Control", "level": 2, "securityLevel": "SL3"},
+        {"id": "zone-3", "name": "Zone 3 - Site Operations", "level": 3, "securityLevel": "SL3"},
+        {"id": "zone-35", "name": "Zone 3.5 - DMZ", "level": 3.5, "securityLevel": "SL3"},
+        {"id": "zone-4", "name": "Zone 4 - Business Planning", "level": 4, "securityLevel": "SL2"},
+        {"id": "zone-5", "name": "Zone 5 - Enterprise", "level": 5, "securityLevel": "SL2"}
+    ]
+    return {"zones": zones}
+
+
+# =========================================
+# Correlation API (IT-OT-AI)
+# =========================================
+
+@app.get("/api/correlation/patterns")
+async def get_correlation_patterns():
+    """Get known correlation patterns between IT, OT, and AI domains."""
+    patterns = [
+        {
+            "id": "it_database_ot_mes",
+            "name": "Database -> MES",
+            "description": "Database latency impacts MES cycle time",
+            "source": {"domain": "it", "metric": "response_time", "component": "PostgreSQL"},
+            "target": {"domain": "ot", "metric": "cycle_time", "component": "MES-Server"},
+            "correlation": 0.87,
+            "lag": 30,
+            "impact": "high",
+            "causality": "confirmed"
+        },
+        {
+            "id": "ot_temp_ai_drift",
+            "name": "Temperature -> AI Drift",
+            "description": "Temperature variations cause predictive model drift",
+            "source": {"domain": "ot", "metric": "temperature", "component": "Main-Motor"},
+            "target": {"domain": "ai", "metric": "prediction_drift", "component": "RUL-Model"},
+            "correlation": 0.72,
+            "lag": 120,
+            "impact": "medium",
+            "causality": "probable"
+        },
+        {
+            "id": "ai_anomaly_it_alert",
+            "name": "AI Anomaly -> IT Alert",
+            "description": "Anomaly detection triggers monitoring alerts",
+            "source": {"domain": "ai", "metric": "anomaly_score", "component": "AnomalyDetector"},
+            "target": {"domain": "it", "metric": "alert_count", "component": "Prometheus"},
+            "correlation": 0.95,
+            "lag": 5,
+            "impact": "high",
+            "causality": "confirmed"
+        }
+    ]
+    return {"patterns": patterns}
+
+@app.get("/api/correlation/events")
+async def get_correlated_events():
+    """Get recent correlated events across domains."""
+    import random
+    from datetime import datetime, timedelta
+
+    now = datetime.now(datetime.timezone.utc)
+    events = []
+
+    event_types = [
+        {"type": "spike", "domain": "it", "metric": "cpu_usage", "severity": "warning"},
+        {"type": "degradation", "domain": "ot", "metric": "refresh_rate", "severity": "warning"},
+        {"type": "alert", "domain": "ot", "metric": "cycle_time", "severity": "high"},
+        {"type": "anomaly_detected", "domain": "ai", "metric": "anomaly_score", "severity": "info"},
+        {"type": "threshold", "domain": "ot", "metric": "temperature", "severity": "warning"},
+        {"type": "drift_detected", "domain": "ai", "metric": "prediction_drift", "severity": "low"}
+    ]
+
+    for i, evt in enumerate(event_types):
+        events.append({
+            "id": f"evt-{i}",
+            "timestamp": (now - timedelta(minutes=i*3)).isoformat(),
+            "correlatedWith": [f"evt-{j}" for j in range(i) if random.random() > 0.5],
+            **evt
+        })
+
+    return {"events": events}
+
+
+# =========================================
+# Cybersecurity OT API
+# =========================================
+
+@app.get("/api/security/ot/overview")
+async def get_ot_security_overview():
+    """Get OT security overview."""
+    import random
+
+    return {
+        "securityScore": 76,
+        "complianceScore": 82,
+        "totalThreats": 19,
+        "criticalVulnerabilities": 1,
+        "openVulnerabilities": 4,
+        "zonesProtected": 7,
+        "lastScan": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+
+@app.get("/api/security/ot/events")
+async def get_security_events():
+    """Get recent security events."""
+    import random
+    from datetime import datetime, timedelta
+
+    now = datetime.now(datetime.timezone.utc)
+    event_types = ["auth_failure", "port_scan", "modbus_anomaly", "firmware_change", "new_device"]
+    severities = ["critical", "high", "warning", "medium", "low"]
+    zones = ["Zone 5", "Zone 4", "Zone 3.5", "Zone 3", "Zone 2"]
+
+    events = []
+    for i in range(10):
+        events.append({
+            "id": f"sec-evt-{i}",
+            "type": random.choice(event_types),
+            "severity": random.choice(severities),
+            "zone": random.choice(zones),
+            "source": f"192.168.{random.randint(1,10)}.{random.randint(1,255)}",
+            "timestamp": (now - timedelta(minutes=i*5)).isoformat(),
+            "details": f"Security event detected"
+        })
+
+    return {"events": events}
+
+@app.get("/api/security/ot/vulnerabilities")
+async def get_ot_vulnerabilities():
+    """Get OT vulnerabilities."""
+    vulnerabilities = [
+        {"id": "CVE-2024-1234", "severity": "critical", "cvss": 9.8, "asset": "PLC Siemens S7-1500", "zone": "Zone 2", "status": "open", "age": 5},
+        {"id": "CVE-2024-5678", "severity": "high", "cvss": 8.2, "asset": "SCADA Server", "zone": "Zone 3", "status": "mitigated", "age": 12},
+        {"id": "CVE-2023-9012", "severity": "high", "cvss": 7.5, "asset": "Historian DB", "zone": "Zone 4", "status": "open", "age": 45},
+        {"id": "CVE-2024-3456", "severity": "medium", "cvss": 5.3, "asset": "HMI Panel", "zone": "Zone 3", "status": "patched", "age": 3}
+    ]
+    return {"vulnerabilities": vulnerabilities}
+
+@app.get("/api/security/ot/compliance")
+async def get_ot_compliance():
+    """Get OT compliance status across frameworks."""
+    compliance = {
+        "frameworks": [
+            {"name": "IEC 62443", "score": 78, "status": "partial"},
+            {"name": "NIS 2", "score": 85, "status": "compliant"},
+            {"name": "ISO 27001", "score": 92, "status": "compliant"},
+            {"name": "NIST CSF", "score": 70, "status": "partial"},
+            {"name": "CIS Controls", "score": 65, "status": "partial"},
+            {"name": "SOC 2", "score": 88, "status": "compliant"}
+        ],
+        "overallScore": 82,
+        "lastAudit": "2024-01-15",
+        "nextAudit": "2024-07-15"
+    }
+    return compliance
+
+
+# =========================================
 # Background Tasks
 # =========================================
 
