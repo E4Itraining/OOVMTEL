@@ -97,6 +97,7 @@ export const translations = {
         opensearch: 'OpenSearch',
         kafka: 'Kafka',
         observability: 'Observabilité',
+        aiObservability: 'Observabilité IA',
         security: 'Sécurité & Conformité'
       },
       // Home page submenus
