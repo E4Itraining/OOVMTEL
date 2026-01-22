@@ -18,6 +18,7 @@ error structures, and token counting methods.
 import hashlib
 import json
 import logging
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -34,6 +35,31 @@ class ProviderDataFormat(str, Enum):
     OLLAMA = "ollama"
     AZURE_OPENAI = "azure_openai"
     CUSTOM = "custom"
+
+
+# Centralized provider name mapping for consistency across modules
+PROVIDER_NAME_MAP = {
+    "mistral": ProviderDataFormat.MISTRAL,
+    "claude": ProviderDataFormat.CLAUDE,
+    "anthropic": ProviderDataFormat.CLAUDE,
+    "openai": ProviderDataFormat.OPENAI,
+    "azure": ProviderDataFormat.AZURE_OPENAI,
+    "azure_openai": ProviderDataFormat.AZURE_OPENAI,
+    "ollama": ProviderDataFormat.OLLAMA,
+}
+
+
+def get_provider_enum(provider_name: str) -> ProviderDataFormat:
+    """
+    Convert provider name string to ProviderDataFormat enum.
+
+    Args:
+        provider_name: Provider name (case-insensitive)
+
+    Returns:
+        ProviderDataFormat enum value
+    """
+    return PROVIDER_NAME_MAP.get(provider_name.lower(), ProviderDataFormat.CUSTOM)
 
 
 class CompletionStatus(str, Enum):
@@ -355,8 +381,6 @@ class LLMDataNormalizer:
             "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
         }
         """
-        import uuid
-
         event_id = event_id or str(uuid.uuid4())
         request_data = request_data or {}
 
@@ -441,8 +465,6 @@ class LLMDataNormalizer:
             "usage": {"input_tokens": 10, "output_tokens": 20}
         }
         """
-        import uuid
-
         event_id = event_id or str(uuid.uuid4())
         request_data = request_data or {}
 
@@ -527,8 +549,6 @@ class LLMDataNormalizer:
             "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
         }
         """
-        import uuid
-
         event_id = event_id or str(uuid.uuid4())
         request_data = request_data or {}
 
@@ -604,8 +624,6 @@ class LLMDataNormalizer:
             "eval_count": 20
         }
         """
-        import uuid
-
         event_id = event_id or str(uuid.uuid4())
         request_data = request_data or {}
 
@@ -785,8 +803,6 @@ class LLMDataNormalizer:
         event_id: Optional[str] = None,
     ) -> NormalizedLLMEvent:
         """Generic normalization for unknown providers."""
-        import uuid
-
         event_id = event_id or str(uuid.uuid4())
         request_data = request_data or {}
 
@@ -860,16 +876,7 @@ def normalize_llm_event(
     Returns:
         NormalizedLLMEvent
     """
-    provider_map = {
-        "mistral": ProviderDataFormat.MISTRAL,
-        "claude": ProviderDataFormat.CLAUDE,
-        "anthropic": ProviderDataFormat.CLAUDE,
-        "openai": ProviderDataFormat.OPENAI,
-        "azure": ProviderDataFormat.AZURE_OPENAI,
-        "ollama": ProviderDataFormat.OLLAMA,
-    }
-
-    provider_enum = provider_map.get(provider.lower(), ProviderDataFormat.CUSTOM)
+    provider_enum = get_provider_enum(provider)
     normalizer = LLMDataNormalizer()
 
     return normalizer.normalize_response(

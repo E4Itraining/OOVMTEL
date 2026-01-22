@@ -30,6 +30,8 @@ from .normalizer import (
     LLMDataNormalizer,
     NormalizedLLMEvent,
     ProviderDataFormat,
+    get_provider_enum,
+    PROVIDER_NAME_MAP,
 )
 from .config import (
     LLMObservabilityConfig,
@@ -62,6 +64,8 @@ __all__ = [
     "LLMDataNormalizer",
     "NormalizedLLMEvent",
     "ProviderDataFormat",
+    "get_provider_enum",
+    "PROVIDER_NAME_MAP",
     # Industrial Normalizer
     "IndustrialDataNormalizer",
     "NormalizedIndustrialEvent",

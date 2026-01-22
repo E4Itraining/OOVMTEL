@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from collections import defaultdict
-from threading import Lock
+from threading import Lock, RLock
 
 from .config import get_observability_config, MetricsConfig
 from .normalizer import (
@@ -206,11 +206,13 @@ class LLMMetrics:
         """
         self.config = config or get_observability_config().metrics
         self._lock = Lock()
+        self._active_requests_lock = Lock()  # Separate lock for active requests counter
         self._initialized = False
 
         # Local metrics storage (for non-OTEL fallback and aggregation)
         self._events: List[NormalizedLLMEvent] = []
         self._max_events = 10000  # Rolling window
+        self._max_event_age_hours = 24  # Maximum age of events to keep
 
         # OTEL instruments (initialized lazily)
         self._meter = None
@@ -342,8 +344,15 @@ class LLMMetrics:
         with self._lock:
             # Store event locally
             self._events.append(event)
+
+            # Trim by size
             if len(self._events) > self._max_events:
                 self._events = self._events[-self._max_events:]
+
+            # Trim by age (only periodically to avoid overhead)
+            if len(self._events) % 100 == 0:
+                cutoff = datetime.utcnow() - timedelta(hours=self._max_event_age_hours)
+                self._events = [e for e in self._events if e.timestamp > cutoff]
 
             # Update hourly tracking
             self._update_hourly_tracking(event)
@@ -412,12 +421,14 @@ class LLMMetrics:
             logger.warning(f"Failed to emit OTEL metrics: {e}")
 
     def increment_active_requests(self):
-        """Increment active requests counter."""
-        self._active_requests += 1
+        """Increment active requests counter (thread-safe)."""
+        with self._active_requests_lock:
+            self._active_requests += 1
 
     def decrement_active_requests(self):
-        """Decrement active requests counter."""
-        self._active_requests = max(0, self._active_requests - 1)
+        """Decrement active requests counter (thread-safe)."""
+        with self._active_requests_lock:
+            self._active_requests = max(0, self._active_requests - 1)
 
     def get_aggregated_metrics(
         self,
