@@ -13,8 +13,9 @@
 3. [Points forts](#points-forts)
 4. [Corrections nécessaires](#corrections-nécessaires)
 5. [Améliorations recommandées](#améliorations-recommandées)
-6. [Évolutions stratégiques](#évolutions-stratégiques)
-7. [Plan d'action prioritaire](#plan-daction-prioritaire)
+6. [Audit UX et Expérience Utilisateur](#audit-ux-et-expérience-utilisateur)
+7. [Évolutions stratégiques](#évolutions-stratégiques)
+8. [Plan d'action prioritaire](#plan-daction-prioritaire)
 
 ---
 
@@ -22,7 +23,7 @@
 
 Le module **Synapsix LLM Observability** est un composant solide pour le monitoring des opérations LLM dans un environnement industriel OT/IT. Il intègre OpenTelemetry pour le tracing distribué et les métriques, avec une normalisation multi-provider (Mistral, Claude, OpenAI, Ollama).
 
-### Score global: **7.5/10**
+### Score global: **7.2/10**
 
 | Catégorie | Score | Commentaire |
 |-----------|-------|-------------|
@@ -32,6 +33,9 @@ Le module **Synapsix LLM Observability** est un composant solide pour le monitor
 | Performance | 8/10 | Optimisé pour la production |
 | Maintenabilité | 7/10 | Documentation interne correcte |
 | Tests | 3/10 | **Absence totale de tests unitaires** |
+| **UX/UI** | **7/10** | Dashboards riches, messages d'erreur à améliorer |
+| **Documentation** | **5/10** | Insuffisante pour utilisateurs finaux |
+| **Accessibilité** | **6/10** | Basique, WCAG partiel |
 
 ---
 
@@ -243,6 +247,363 @@ MAX_EVENTS_PER_SECOND = 100
 
 ---
 
+## Audit UX et Expérience Utilisateur
+
+### Score UX: **7/10**
+
+| Critère | Score | Commentaire |
+|---------|-------|-------------|
+| Visualisation | 8/10 | Dashboards Grafana riches et informatifs |
+| Accessibilité | 6/10 | Basique, améliorations possibles |
+| Documentation | 5/10 | Insuffisante pour les utilisateurs finaux |
+| Messages d'erreur | 6/10 | Techniques, peu explicatifs |
+| Onboarding | 7/10 | Tour guidé présent mais incomplet pour LLM |
+| Internationalisation | 8/10 | 4 langues supportées (FR, EN, NL, DE) |
+
+---
+
+### 1. Dashboards Grafana - Points Forts
+
+**Dashboard LLM Observability** (`llm-observability.json`):
+
+| Panneau | Type | Description |
+|---------|------|-------------|
+| Avg LLM Latency | Stat | Seuils colorés: vert <5s, jaune <15s, rouge ≥15s |
+| Requests/min | Stat | Taux de requêtes en temps réel |
+| Error Rate | Stat | Pourcentage d'erreurs |
+| Active Requests | Gauge | Requêtes en cours |
+| Token Usage | Counter | Prompt vs Completion |
+| Cost/Hour | Counter | Coûts estimés |
+| Latency Percentiles | Graph | P50, P95, P99 |
+| Errors by Category | Bar Chart | Répartition des erreurs |
+
+**Points positifs:**
+- Seuils colorés intuitifs (vert/jaune/rouge)
+- Organisation en lignes logiques
+- Liens de navigation entre dashboards
+
+**Améliorations suggérées:**
+- Ajouter un panneau "Top 5 requêtes les plus lentes"
+- Ajouter une heatmap latence par heure/jour
+- Panneau de comparaison de modèles côte-à-côte
+
+---
+
+### 2. Composants UI Frontend
+
+**Bibliothèque de composants** (`/dashboard-react/src/components/ui/`):
+
+| Composant | Usage | Score |
+|-----------|-------|-------|
+| `MetricCard` | Affichage KPI | 8/10 |
+| `StatusBadge` | États de services | 8/10 |
+| `RadialGauge` | Jauges circulaires | 9/10 |
+| `LineChart` | Séries temporelles | 7/10 |
+| `AlertBanner` | Notifications | 7/10 |
+
+**Palette de couleurs industrielles:**
+```css
+--industrial-dark: #0f172a;     /* Fond */
+--industrial-card: #1e293b;     /* Cartes */
+--industrial-accent: #06b6d4;   /* Cyan - Actions */
+--industrial-success: #22c55e;  /* Vert - OK */
+--industrial-warning: #f59e0b;  /* Ambre - Attention */
+--industrial-danger: #ef4444;   /* Rouge - Critique */
+```
+
+**Animations Framer Motion:**
+- `pulse-slow`: Pulsation douce (3s)
+- `glow`: Effet de brillance (2s)
+- `slide-up`: Entrée par le bas (0.3s)
+
+---
+
+### 3. Centre de Notifications
+
+**Fichier:** `NotificationCenter.jsx`
+
+**Types de notifications:**
+| Type | Icône | Couleur | Usage |
+|------|-------|---------|-------|
+| Critical | XCircle | Rouge | Alertes urgentes |
+| Warning | AlertTriangle | Jaune | Avertissements |
+| Success | CheckCircle2 | Vert | Confirmations |
+| Info | Info | Bleu | Informations |
+
+**Fonctionnalités:**
+- Badge compteur non-lu
+- Filtres: Tout / Non-lu / Critique
+- Marquer comme lu
+- Temps relatif ("Il y a 2 min")
+- Actions en lot
+
+**Manques identifiés:**
+- Pas d'intégration spécifique aux alertes LLM
+- Pas de notifications push
+- Pas de son pour alertes critiques
+
+---
+
+### 4. Messages d'Erreur API
+
+**État actuel - Exemples:**
+
+```json
+// Erreur générique (actuel)
+{
+  "detail": "NLP module not available"
+}
+
+// Erreur technique (actuel)
+{
+  "detail": "LLM Observability module not available"
+}
+```
+
+**Problèmes identifiés:**
+- Messages trop techniques
+- Pas de code d'erreur standardisé
+- Pas de suggestions de résolution
+- Pas de lien vers documentation
+
+**Format recommandé:**
+
+```json
+{
+  "error": {
+    "code": "LLM_OBS_001",
+    "message": "Le module d'observabilité LLM n'est pas disponible",
+    "details": "Le service OpenTelemetry Collector n'est pas accessible",
+    "suggestion": "Vérifiez que le conteneur otel-collector est démarré",
+    "doc_url": "/docs/troubleshooting/llm-observability"
+  }
+}
+```
+
+---
+
+### 5. Parcours Utilisateur (User Journey)
+
+**Personas identifiés:** (12 profils)
+
+| Persona | Focus | Dashboard par défaut |
+|---------|-------|---------------------|
+| Dirigeant | ROI, Stratégie | Business KPI |
+| DSI | Infrastructure | Technical View |
+| DevOps/SRE | Incidents | Observability |
+| Data/MLOps | IA, Modèles | AI Observability |
+| RSSI | Sécurité | Security |
+
+**Tour d'onboarding actuel:** 8 étapes
+- Manque: étape dédiée "Observabilité LLM"
+- Manque: tutoriel interactif sur les alertes LLM
+
+**Recommandation:** Ajouter une 9ème étape spécifique:
+```javascript
+{
+  id: 9,
+  title: "LLM Observability",
+  description: "Surveillez les performances de vos modèles IA",
+  targetPage: "/observability/llm",
+  icon: Brain
+}
+```
+
+---
+
+### 6. Accessibilité (a11y)
+
+**Implémenté:**
+- `aria-label` sur les champs de recherche
+- `role="main"` sur le contenu principal
+- Navigation clavier (flèches, Enter, Escape)
+- Contrastes couleurs WCAG AA
+
+**Manquant:**
+- `aria-live` pour les alertes en temps réel
+- Skip links pour navigation rapide
+- Mode haut contraste
+- Support lecteur d'écran complet
+
+**Corrections prioritaires:**
+
+```jsx
+// Ajouter aux alertes LLM
+<div aria-live="polite" aria-atomic="true">
+  {alerts.map(alert => (
+    <AlertBanner key={alert.id} {...alert} />
+  ))}
+</div>
+
+// Ajouter aux métriques temps réel
+<div
+  aria-label="Latence moyenne LLM"
+  role="status"
+  aria-live="polite"
+>
+  {latency}ms
+</div>
+```
+
+---
+
+### 7. Documentation Utilisateur
+
+**État actuel:**
+- Documentation technique dans `/docs/`
+- Pas de guide utilisateur pour LLM Observability
+- Pas de FAQ
+
+**Documentation manquante:**
+
+| Document | Public cible | Priorité |
+|----------|--------------|----------|
+| Guide démarrage rapide | Tous | Haute |
+| Comprendre les métriques LLM | Analystes | Haute |
+| Configuration des alertes | Admins | Moyenne |
+| Troubleshooting | DevOps | Moyenne |
+| Glossaire LLM | Tous | Basse |
+
+**Template de documentation suggéré:**
+
+```markdown
+# Guide: Comprendre les Métriques LLM
+
+## Qu'est-ce que la latence P95?
+La latence P95 indique que 95% des requêtes sont traitées
+en moins de ce temps. Une P95 de 2000ms signifie que
+seules 5% des requêtes prennent plus de 2 secondes.
+
+## Pourquoi surveiller les tokens?
+Chaque token consommé a un coût. Surveiller l'utilisation
+permet d'optimiser les prompts et maîtriser le budget.
+
+## Que faire si l'erreur rate dépasse 5%?
+1. Vérifiez le status du provider (Mistral, OpenAI...)
+2. Consultez les logs dans OpenSearch
+3. Vérifiez les quotas API
+```
+
+---
+
+### 8. Internationalisation
+
+**Langues supportées:** FR, EN, NL, DE
+
+**Clés de traduction existantes:**
+- `metrics.*` - Noms des métriques
+- `alerts.*` - Messages d'alerte
+- `nav.*` - Navigation
+
+**Clés manquantes pour LLM Observability:**
+
+```javascript
+// À ajouter dans translations.js
+llmObservability: {
+  fr: {
+    title: "Observabilité LLM",
+    latency: "Latence",
+    tokens: "Tokens",
+    cost: "Coût",
+    errorRate: "Taux d'erreur",
+    provider: "Fournisseur",
+    model: "Modèle",
+    alerts: {
+      latencyWarning: "Latence élevée détectée",
+      latencyCritical: "Latence critique!",
+      costExceeded: "Budget horaire dépassé",
+      tokenLimit: "Limite de tokens atteinte"
+    }
+  },
+  en: {
+    title: "LLM Observability",
+    latency: "Latency",
+    // ...
+  }
+}
+```
+
+---
+
+### 9. Feedback Utilisateur
+
+**Actuel:**
+- Pas de système de feedback intégré
+- Pas de rating des réponses LLM
+- Pas de collecte de satisfaction
+
+**Recommandations:**
+
+```jsx
+// Composant de feedback LLM
+<LLMResponseFeedback
+  responseId={event.event_id}
+  onRate={(rating) => recordFeedback(rating)}
+  options={['👍 Utile', '👎 Pas utile', '🚩 Signaler']}
+/>
+
+// Intégration dans les métriques
+export interface LLMFeedback {
+  response_id: string;
+  rating: 'positive' | 'negative' | 'flagged';
+  comment?: string;
+  timestamp: Date;
+}
+```
+
+---
+
+### 10. Recommandations UX Prioritaires
+
+#### Priorité HAUTE (Cette semaine)
+
+1. **Améliorer les messages d'erreur API**
+   - Ajouter codes d'erreur standardisés
+   - Inclure suggestions de résolution
+   - Traduire en langage utilisateur
+
+2. **Ajouter `aria-live` aux métriques temps réel**
+   - Accessibilité pour lecteurs d'écran
+   - Annonces des alertes critiques
+
+3. **Créer guide "Comprendre les métriques LLM"**
+   - Document d'une page
+   - Définitions simples
+   - Exemples concrets
+
+#### Priorité MOYENNE (2 semaines)
+
+4. **Intégrer alertes LLM au NotificationCenter**
+   - Catégorie dédiée "LLM"
+   - Filtres spécifiques
+   - Actions rapides
+
+5. **Ajouter étape onboarding LLM**
+   - Tour guidé du dashboard
+   - Explication des KPIs clés
+
+6. **Compléter traductions LLM**
+   - 4 langues (FR, EN, NL, DE)
+   - Messages d'alertes
+   - Labels des métriques
+
+#### Priorité BASSE (1 mois)
+
+7. **Système de feedback LLM**
+   - Rating des réponses
+   - Collecte de commentaires
+   - Analytics d'utilisation
+
+8. **Mode haut contraste**
+   - Accessibilité visuelle
+   - Switch dans préférences
+
+9. **Tutoriels vidéo**
+   - Démonstration dashboard
+   - Configuration alertes
+
+---
+
 ## Évolutions stratégiques
 
 ### Phase 1: Court terme (1-2 sprints)
@@ -322,24 +683,47 @@ class RequestReplay:
 
 ### Immédiat (Cette semaine)
 
-1. **Fix thread-safety active_requests** - 1h
-2. **Fix singleton thread-safety** - 1h
-3. **Centraliser les imports uuid** - 30min
+**Backend:**
+1. ~~**Fix thread-safety active_requests**~~ ✅ - Fait
+2. ~~**Fix singleton thread-safety**~~ ✅ - Fait
+3. ~~**Centraliser les imports uuid**~~ ✅ - Fait
 4. **Déplacer constantes magiques vers config** - 1h
+
+**UX:**
+5. **Améliorer messages d'erreur API** - 2h
+   - Codes standardisés (LLM_OBS_001, etc.)
+   - Suggestions de résolution
+6. **Ajouter `aria-live` aux métriques temps réel** - 1h
 
 ### Court terme (2 semaines)
 
-1. **Créer tests unitaires de base** - 2j
+**Backend:**
+1. ~~**Créer tests unitaires de base**~~ ✅ - Fait
 2. **Implémenter support streaming** - 1j
 3. **Ajouter health check endpoint** - 0.5j
 4. **Améliorer validation API** - 0.5j
 
+**UX:**
+5. **Créer guide "Comprendre les métriques LLM"** - 0.5j
+6. **Intégrer alertes LLM au NotificationCenter** - 1j
+7. **Ajouter étape onboarding LLM** - 0.5j
+8. **Compléter traductions LLM (4 langues)** - 1j
+
 ### Moyen terme (1 mois)
 
+**Backend:**
 1. **Suite de tests complète (80% coverage)** - 3j
 2. **Métriques de cache Claude** - 1j
-3. **Dashboard Grafana v2** - 2j
-4. **Documentation API Swagger** - 1j
+3. **Documentation API Swagger** - 1j
+
+**UX:**
+4. **Dashboard Grafana LLM v2** - 2j
+   - Panneau "Top 5 requêtes lentes"
+   - Heatmap latence
+   - Comparaison modèles
+5. **Système de feedback LLM** - 2j
+6. **Mode haut contraste** - 1j
+7. **Tutoriels vidéo (3 vidéos)** - 3j
 
 ---
 
