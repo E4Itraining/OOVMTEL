@@ -35,6 +35,7 @@ import {
   Database,
   ArrowUp,
   ArrowDown,
+  ArrowRight,
   Minus,
   Play,
   Pause,
